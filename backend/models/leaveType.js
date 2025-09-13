@@ -1,4 +1,3 @@
-// models/leaveType.js
 import mongoose from "mongoose";
 
 const leaveTypeSchema = new mongoose.Schema({

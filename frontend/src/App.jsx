@@ -62,6 +62,12 @@ import Leaves from "./components/Leaves.jsx";
 import EmployeeLeaves from "./components/EmployeeLeaves.jsx";
 import HRLeaves from "./components/HRLeaves.jsx";
 import AdminLeaves from "./components/AdminLeaves.jsx";
+import EmployeeAttendance from "./components/EmployeeAttendance.jsx";
+import AttendanceManagement from "./components/AttendanceManagement.jsx";
+import EmployeeAttendanceManagement from "./components/EmployeeAttendanceManagement.jsx";
+import EmployeePayroll from "./components/Payroll/EmployeePayroll.jsx";
+import HRPayrollManagement from "./components/Payroll/HRPayrollManagement.jsx";
+import AdminPayrollApproval from "./components/Payroll/AdminPayrollApproval.jsx";
 
 function App() {
   const { user } = useAuth();
@@ -96,7 +102,9 @@ function App() {
           <Route path="manage-employees" element={<ManageEmployees />} />
           <Route path="profile" element={<EmployeeProfile />} />
           <Route path="calendar" element={<CompanyCalendar />} />
-                                        <Route path="leaves" element={<AdminLeaves />} />
+          <Route path="leaves" element={<AdminLeaves />} />
+          <Route path="attendance" element={<EmployeeAttendanceManagement />} />
+          <Route path="payroll-approval" element={<AdminPayrollApproval />} />
 
         </Route>
 
@@ -124,8 +132,9 @@ function App() {
           <Route path="manage-employees" element={<ManageEmployees />} />
           <Route path="profile" element={<EmployeeProfile />} />
           <Route path="calendar" element={<CompanyCalendar />} />
-                              <Route path="leaves" element={<HRLeaves />} />
-
+          <Route path="leaves" element={<HRLeaves />} />
+          <Route path="attendance" element={<AttendanceManagement />} />
+          <Route path="payroll" element={<HRPayrollManagement/>} />
         </Route>
 
         {/* Employee Dashboard + nested routes */}
@@ -151,8 +160,10 @@ function App() {
           {/* Other nested routes */}
           <Route path="profile" element={<EmployeeProfile />} />
           <Route path="calendar" element={<CompanyCalendar />} />
-                    <Route path="leaves" element={<EmployeeLeaves />} />
-
+          <Route path="leaves" element={<EmployeeLeaves />} />
+          <Route path="leaves" element={<EmployeeLeaves />} />
+          <Route path="attendance" element={<EmployeeAttendance />} />
+          <Route path="payslip" element={<EmployeePayroll />} />
         </Route>
 
         {/* Default Route "/" -> role-based redirect */}

@@ -184,14 +184,20 @@ const Sidebar = ({ closeSidebar }) => {
         icon: Users,
       },
       { label: "My Profile", path: "/admin/profile", icon: UserCircle },
-      { label: "Calendar", path: "/admin/calendar", icon: Calendar },
-            { label: "Leaves Management", path: "/admin/leaves", icon: FileText },
+      {
+        label: "Attendance Management",
+        path: "/admin/attendance",
+        icon: Clock,
+      },
+      { label: "Payroll Approval", path: "/admin/payroll-approval", icon: CreditCard },
 
+      { label: "Calendar", path: "/admin/calendar", icon: Calendar },
+      { label: "Leaves Management", path: "/admin/leaves", icon: FileText },
     ],
     hr: [
       { label: "Dashboard", path: "/hr", icon: BarChart3 },
       { label: "Manage Employees", path: "/hr/manage-employees", icon: Users },
-      { label: "Attendance", path: "/hr/attendance", icon: Clock },
+      { label: "Attendance Management", path: "/hr/attendance", icon: Clock },
       { label: "Payroll", path: "/hr/payroll", icon: CreditCard },
       { label: "Leaves Management", path: "/hr/leaves", icon: FileText },
       { label: "My Profile", path: "/hr/profile", icon: UserCircle },

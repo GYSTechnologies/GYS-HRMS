@@ -8,6 +8,9 @@ import employeeRoutes from "./routes/employee.routes.js";
 import uploadRoutes from "./routes/upload.route.js";
 import eventRoutes from "./routes/event.routes.js";
 import leaveRoutes from "./routes/leave.routes.js";
+import attendanceRoutes from "./routes/attendance.routes.js";
+import payrollRoutes from "./routes/payroll.routes.js";
+
 
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
@@ -76,7 +79,12 @@ app.use("/api/employee", employeeRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/leave", leaveRoutes);
 
+app.use("/api/attendance", attendanceRoutes);
+app.use("/api/payroll", payrollRoutes);
+
+
 app.use("/api/upload-files", uploadRoutes);
+
 
 // Simple route
 app.get("/", (req, res) => {

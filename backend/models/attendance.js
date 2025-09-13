@@ -1,39 +1,113 @@
+// import mongoose from "mongoose";
+
+// const AttendanceSchema = new mongoose.Schema(
+//   {
+//     employee: {
+//       type: mongoose.Schema.Types.ObjectId,
+//       ref: "User",
+//       required: true,
+//     },
+//     date: {
+//       type: Date,
+//       required: true,
+//     },
+//     status: {
+//       type: String,
+//       enum: ["pending", "accepted", "rejected"],
+//       default: "pending",
+//     },
+//     checkIn: {
+//       type: Date,
+//     },
+//     checkOut: {
+//       type: Date,
+//     },
+//     taskDescription: {
+//       type: String,
+//     },
+//     workProgress: {
+//       type: String,
+//       enum: ["Planned", "In Progress", "Completed"],
+//       default: "Planned",
+//     },
+//     logoutDescription: {
+//       type: String,
+//     },
+//     earlyLogoutReason: {
+//       type: String,
+//     },
+//     remarks: {
+//       type: String,
+//     },
+//     approvedBy: {
+//       type: mongoose.Schema.Types.ObjectId,
+//       ref: "User",
+//     },
+//   },
+//   { timestamps: true }
+// );
+
+// export default mongoose.model("Attendance", AttendanceSchema);
+
 import mongoose from "mongoose";
 
 const AttendanceSchema = new mongoose.Schema(
   {
     employee: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Profile",
+      ref: "User",
       required: true,
     },
     date: {
-      // date for the attendance entry (normalized to 00:00 UTC)
-      type: String, // YYYY-MM-DD (string makes querying per-day easy)
+      type: Date,
       required: true,
     },
-    loginAt: { type: Date },
-    logoutAt: { type: Date },
-    loginTask: { type: String }, // "what you will do today"
-    logoutSummary: { type: String }, // "what you did today"
     status: {
       type: String,
-      enum: ["present", "absent", "on-leave", "half-day"],
-      default: "present",
+      enum: ["pending", "accepted", "rejected"],
+      default: "pending",
     },
-    corrections: [
-      {
-        editor: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-        reason: String,
-        correctedAt: Date,
-      },
-    ],
+    checkIn: {
+      type: Date,
+    },
+    checkOut: {
+      type: Date,
+    },
+    taskDescription: {
+      type: String,
+    },
+    workProgress: {
+      type: String,
+      enum: ["Planned", "In Progress", "Completed"],
+      default: "Planned",
+    },
+    logoutDescription: {
+      type: String,
+    },
+    earlyLogoutReason: {
+      type: String,
+    },
+    remarks: {
+      type: String,
+    },
+    approvedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    // New fields for regularization
+    isRegularization: {
+      type: Boolean,
+      default: false,
+    },
+    regularizationStatus: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+    },
+    regularizationReason: {
+      type: String,
+    },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-const Attendance = mongoose.model("Attendance", AttendanceSchema);
-
-export default Attendance;
+export default mongoose.model("Attendance", AttendanceSchema);
