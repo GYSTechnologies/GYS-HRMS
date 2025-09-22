@@ -8,41 +8,36 @@ import {
   getLatestPayrollForEmployee,
   submitPayrollForApproval,
   getPayslip,
+  generatePayslip,
+  getPayrollById,
+  downloadPayslip,
+  checkPayrollExists,
+  getPayrollPreview
 } from "../controllers/payroll.controller.js";
 import { protect, authorizeRoles } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// HR monthly payroll create
-router.post("/monthly", protect, authorizeRoles("hr"), createMonthlyPayroll);
+// ======= Payslip Routes =======
+router.get("/payslip/download/:id", protect, getPayslip);     
+router.post("/:id/generate-payslip", protect, generatePayslip);
+router.get("/payslip/:id", protect, downloadPayslip);
 
-// Get payrolls (HR/Admin )
-router.get("/", protect, authorizeRoles("admin", "hr"), getPayrolls);
-
-// Employee  approved payrolls
+// ======= Employee Payroll Routes =======
 router.get("/employee/my-payrolls", protect, getEmployeePayrolls);
-router.get(
-  "/employee/:employeeId/latest",
-  protect,
-  authorizeRoles("hr"),
-  getLatestPayrollForEmployee
-);
+router.get("/employee/:employeeId/exists", protect, checkPayrollExists);
+router.get("/employee/:employeeId/latest", protect, authorizeRoles("hr"), getLatestPayrollForEmployee);
 
-// HR edit  (only DRAFT status )
+
+// ======= Payroll by ID Routes =======
+router.get("/preview", protect, authorizeRoles("hr"), getPayrollPreview);
+router.get("/:id", protect, getPayrollById);
 router.put("/:id", protect, authorizeRoles("hr"), updatePayroll);
-
-// Admin approve/reject
 router.patch("/:id/approve", protect, authorizeRoles("admin"), approvePayroll);
+router.patch("/:id/submit", protect, authorizeRoles("hr"), submitPayrollForApproval);
 
-// HR submit for approval
-router.patch(
-  "/:id/submit",
-  protect,
-  authorizeRoles("hr"),
-  submitPayrollForApproval
-);
-
-// Payslip download (accessible to authenticated users)
-router.get("/payslip/download/:id", protect, getPayslip);
+// ======= General / Monthly Payroll Routes =======
+router.post("/monthly", protect, authorizeRoles("hr"), createMonthlyPayroll);
+router.get("/", protect, authorizeRoles("admin", "hr"), getPayrolls);
 
 export default router;

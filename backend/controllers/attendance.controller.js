@@ -1,7 +1,37 @@
 import Attendance from "../models/attendance.js";
 import Profile from "../models/profile.js";
 import User from "../models/user.js";
+import Event from "../models/companyCalendar.js";
 import moment from "moment";
+import mongoose from "mongoose";
+import { getEmployeeAttendanceSummary } from "../config/payrollCalculator.js";
+
+// Get employee attendance for payroll creation
+export const getEmployeeAttendanceForPayroll = async (req, res) => {
+  try {
+    const { employeeId, month, year } = req.query;
+
+    if (!employeeId || !month || !year) {
+      return res.status(400).json({
+        success: false,
+        message: "Employee ID, month, and year are required"
+      });
+    }
+
+    const attendanceSummary = await getEmployeeAttendanceSummary(employeeId, parseInt(month), parseInt(year));
+
+    res.status(200).json({
+      success: true,
+      data: attendanceSummary
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching attendance data",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined
+    });
+  }
+};
 
 // ----------------- EMPLOYEE -----------------
 
@@ -23,63 +53,95 @@ export const getTodayAttendance = async (req, res) => {
   }
 };
 
+//......----working code h 
+
 // Employee Login — set checkIn and date = start of day
-export const employeeLogin = async (req, res) => {
-  try {
-    const { taskDescription, workProgress } = req.body;
-    const employeeId = req.user._id;
+// export const employeeLogin = async (req, res) => {
+//   try {
+//     const { taskDescription, workProgress, earlyLoginReason, lateLoginReason } = req.body;
+//     const employeeId = req.user._id;
 
-    const profile = await Profile.findOne({ user: employeeId });
-    if (!profile?.shiftTiming?.start || !profile?.shiftTiming?.end) {
-      return res
-        .status(400)
-        .json({ message: "Shift timings not set in profile" });
-    }
+//     // employeeLogin function mein holiday check add karo:
+// const isHoliday = await Event.findOne({
+//   startDate: { $lte: moment().startOf('day').toDate() },
+//   endDate: { $gte: moment().startOf('day').toDate() },
+//   isHoliday: true
+// });
 
-    const shiftStart = moment(profile.shiftTiming.start, "hh:mm A"); // use hh:mm A
-    const now = moment();
+// if (isHoliday) {
+//   return res.status(400).json({
+//     message: "Cannot mark attendance on holiday"
+//   });
+// }
 
-    // already logged in today? use day-range detection
-    const startOfDay = moment().startOf("day").toDate();
-    const endOfDay = moment().endOf("day").toDate();
+//     const profile = await Profile.findOne({ user: employeeId });
+//     if (!profile?.shiftTiming?.start || !profile?.shiftTiming?.end) {
+//       return res
+//         .status(400)
+//         .json({ message: "Shift timings not set in profile" });
+//     }
 
-    const existing = await Attendance.findOne({
-      employee: employeeId,
-      date: { $gte: startOfDay, $lte: endOfDay },
-    });
-    if (existing) {
-      return res.status(400).json({ message: "Already logged in today" });
-    }
+//     const shiftStart = moment(profile.shiftTiming.start, "hh:mm A");
+//     const now = moment();
 
-    // login allowed check (within 8 hours from shift start)
-    if (
-      now.isBefore(shiftStart) ||
-      now.isAfter(shiftStart.clone().add(8, "hour"))
-    ) {
-      return res.status(400).json({
-        message: `Login allowed only between ${
-          profile.shiftTiming.start
-        } - ${shiftStart.clone().add(8, "hour").format("hh:mm A")}`,
-      });
-    }
+//     // already logged in today? use day-range detection
+//     const startOfDay = moment().startOf("day").toDate();
+//     const endOfDay = moment().endOf("day").toDate();
 
-    const attendance = await Attendance.create({
-      employee: employeeId,
-      date: moment().startOf("day").toDate(), // store canonical day
-      checkIn: now.toDate(), // <-- important (schema uses checkIn)
-      taskDescription,
-      workProgress,
-      status: "pending",
-    });
+//     const existing = await Attendance.findOne({
+//       employee: employeeId,
+//       date: { $gte: startOfDay, $lte: endOfDay },
+//     });
+//     if (existing) {
+//       return res.status(400).json({ message: "Already logged in today" });
+//     }
 
-    return res.status(201).json({
-      message: "Attendance submitted, pending HR approval",
-      attendance,
-    });
-  } catch (err) {
-    return res.status(500).json({ message: err.message });
-  }
-};
+//     // Check for early login (before shift start)
+//     const isEarlyLogin = now.isBefore(shiftStart);
+//     if (isEarlyLogin && !earlyLoginReason) {
+//       return res.status(400).json({
+//         message: "Early login reason required before shift start"
+//       });
+//     }
+
+//     // Check for late login (after shift start + 1 hour grace period)
+//     const oneHourAfterShiftStart = shiftStart.clone().add(1, 'hour');
+//     const isLateLogin = now.isAfter(oneHourAfterShiftStart);
+//     if (isLateLogin && !lateLoginReason) {
+//       return res.status(400).json({
+//         message: "Late login reason required after 1 hour from shift start"
+//       });
+//     }
+
+//     // login allowed check (within 8 hours from shift start)
+//     if (now.isAfter(shiftStart.clone().add(1, "hour"))) {
+//       return res.status(400).json({
+//         message: `Login allowed only between ${
+//           profile.shiftTiming.start
+//         } - ${shiftStart.clone().add(1, "hour").format("hh:mm A")}`,
+//       });
+//     }
+
+//     const attendance = await Attendance.create({
+//       employee: employeeId,
+//       date: moment().startOf("day").toDate(),
+//       checkIn: now.toDate(),
+//       taskDescription,
+//       workProgress,
+//       status: "pending",
+//       earlyLoginReason: isEarlyLogin ? earlyLoginReason : undefined,
+//       lateLoginReason: isLateLogin ? lateLoginReason : undefined
+//     });
+
+//     return res.status(201).json({
+//       message: "Attendance submitted, pending HR approval",
+//       attendance,
+//     });
+//   } catch (err) {
+//     return res.status(500).json({ message: err.message });
+//   }
+// };
+
 
 // Employee Logout — set checkOut (and optional earlyLogoutReason)
 export const employeeLogout = async (req, res) => {
@@ -172,13 +234,14 @@ export const getAttendanceHistory = async (req, res) => {
   }
 };
 
-
 // ----------------- HR -----------------
-
-//  HR View Pending Attendances
+//  HR View Pending Attendances (excluding self)
 export const getPendingAttendances = async (req, res) => {
   try {
-    const pending = await Attendance.find({ status: "pending" })
+    const pending = await Attendance.find({
+      status: "pending",
+      employee: { $ne: req.user.id }, // exclude logged-in HR's own attendance
+    })
       .populate("employee", "email role")
       .populate({
         path: "employee",
@@ -194,6 +257,7 @@ export const getPendingAttendances = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
 
 //  HR Approve Attendance
 export const approveAttendance = async (req, res) => {
@@ -239,40 +303,6 @@ export const rejectAttendance = async (req, res) => {
   }
 };
 
-// Get attendance stats for HR dashboard
-// export const getAttendanceStats = async (req, res) => {
-//   try {
-//     // Get total employees count
-//     const totalEmployees = await User.countDocuments({ role: "employee" });
-
-//     // Get today's date
-//     const today = new Date().toDateString();
-
-//     // Get present employees (those with attendance records for today)
-//     const present = await Attendance.countDocuments({
-//       date: today,
-//       status: { $in: ["accepted", "pending"] },
-//     });
-
-//     // Get pending approvals count
-//     const pending = await Attendance.countDocuments({
-//       date: today,
-//       status: "pending",
-//     });
-
-//     // Calculate absent employees (total - present)
-//     const absent = totalEmployees - present;
-
-//     res.status(200).json({
-//       totalEmployees,
-//       present,
-//       absent,
-//       pending,
-//     });
-//   } catch (err) {
-//     res.status(500).json({ message: err.message });
-//   }
-// };
 
 export const getAttendanceStats = async (req, res) => {
   try {
@@ -313,9 +343,18 @@ export const getAttendanceStats = async (req, res) => {
 // ----------------- ADMIN -----------------
 
 // 6. Admin View All Attendance (Read Only)
+
 export const getAllAttendanceForAdmin = async (req, res) => {
   try {
-    const records = await Attendance.find()
+    const currentUser = req.user;
+
+    let query = {};
+
+    if (currentUser.role === "hr") {
+      query = { employee: { $ne: currentUser._id } };
+    }
+
+    const records = await Attendance.find(query)
       .populate("employee", "email role")
       .populate({
         path: "employee",
@@ -331,7 +370,6 @@ export const getAllAttendanceForAdmin = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
 
 
 // ----------------- HR SELF ATTENDANCE -----------------
@@ -484,164 +522,6 @@ export const adminRejectAttendance = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
-// ----------------- MONTHLY REPORTS -----------------
-
-// Get Monthly Attendance Report
-// export const getMonthlyReport = async (req, res) => {
-//   try {
-//     const { month, year, department } = req.query;
-//     const targetMonth = parseInt(month) || moment().month() + 1;
-//     const targetYear = parseInt(year) || moment().year();
-
-//     const startDate = moment(`${targetYear}-${targetMonth}-01`).startOf('month');
-//     const endDate = moment(startDate).endOf('month');
-
-//     // Get all users based on department filter
-//     let userQuery = { role: { $in: ["employee", "hr"] } };
-//     if (department) {
-//       const profiles = await Profile.find({ department }).select('user');
-//       userQuery._id = { $in: profiles.map(p => p.user) };
-//     }
-
-//     const users = await User.find(userQuery).populate('profileRef');
-
-//     const report = await Promise.all(
-//       users.map(async (user) => {
-//         const attendances = await Attendance.find({
-//           employee: user._id,
-//           date: { $gte: startDate.toDate(), $lte: endDate.toDate() }
-//         });
-
-//         const presentDays = attendances.filter(a => a.status === 'accepted').length;
-//         const pendingDays = attendances.filter(a => a.status === 'pending').length;
-//         const rejectedDays = attendances.filter(a => a.status === 'rejected').length;
-
-//         // Get holidays for the month
-//         const holidays = await Event.find({
-//           startDate: { $gte: startDate.toDate(), $lte: endDate.toDate() }
-//         });
-
-//         const totalWorkingDays = endDate.diff(startDate, 'days') + 1 - holidays.length;
-//         const absentDays = totalWorkingDays - presentDays - pendingDays;
-
-//         return {
-//           employeeId: user._id,
-//           employeeName: `${user.profileRef?.firstName} ${user.profileRef?.lastName}`,
-//           department: user.profileRef?.department,
-//           month: `${targetMonth}/${targetYear}`,
-//           totalWorkingDays,
-//           presentDays,
-//           absentDays: absentDays > 0 ? absentDays : 0,
-//           pendingDays,
-//           rejectedDays,
-//           holidays: holidays.length
-//         };
-//       })
-//     );
-
-//     res.status(200).json(report);
-//   } catch (err) {
-//     res.status(500).json({ message: err.message });
-//   }
-// };
-
-// In your attendance.controller.js
-export const getMonthlyReport = async (req, res) => {
-  try {
-    const { month, year, department } = req.query;
-    
-    // Calculate date range for the month
-    const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 0, 23, 59, 59, 999);
-
-    // Build match query
-    const matchQuery = {
-      date: { $gte: startDate, $lte: endDate }
-    };
-
-    if (department) {
-      matchQuery['employee.profileRef.department'] = department;
-    }
-
-    // Aggregate attendance data
-    const reportData = await Attendance.aggregate([
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'employee',
-          foreignField: '_id',
-          as: 'employee'
-        }
-      },
-      { $unwind: '$employee' },
-      {
-        $lookup: {
-          from: 'profiles',
-          localField: 'employee.profileRef',
-          foreignField: '_id',
-          as: 'employee.profileRef'
-        }
-      },
-      { $unwind: { path: '$employee.profileRef', preserveNullAndEmptyArrays: true } },
-      { $match: matchQuery },
-      {
-        $group: {
-          _id: '$employee._id',
-          employeeId: { $first: '$employee.profileRef.employeeId' },
-          employeeName: { 
-            $first: { 
-              $concat: [
-                { $ifNull: ['$employee.profileRef.firstName', ''] },
-                ' ',
-                { $ifNull: ['$employee.profileRef.lastName', ''] }
-              ]
-            }
-          },
-          employeeEmail: { $first: '$employee.email' },
-          department: { $first: '$employee.profileRef.department' },
-          present: {
-            $sum: { $cond: [{ $eq: ['$status', 'accepted'] }, 1, 0] }
-          },
-          absent: {
-            $sum: { $cond: [{ $eq: ['$status', 'rejected'] }, 1, 0] }
-          },
-          pending: {
-            $sum: { $cond: [{ $eq: ['$status', 'pending'] }, 1, 0] }
-          },
-          totalDays: { $sum: 1 }
-        }
-      },
-      {
-        $project: {
-          _id: 0,
-          employeeId: 1,
-          employeeName: 1,
-          employeeEmail: 1,
-          department: 1,
-          present: 1,
-          absent: 1,
-          pending: 1,
-          rejected: '$absent',
-          totalDays: 1,
-          attendancePercentage: {
-            $multiply: [
-              { $divide: ['$present', '$totalDays'] },
-              100
-            ]
-          }
-        }
-      },
-      { $sort: { employeeName: 1 } }
-    ]);
-
-    res.status(200).json(reportData);
-  } catch (err) {
-    console.error("Error generating monthly report:", err);
-    res.status(500).json({ message: "Error generating monthly report", error: err.message });
-  }
-};
-
 // ----------------- REGULARIZATION -----------------
 
 // Create Regularization Request
@@ -742,18 +622,292 @@ export const rejectRegularization = async (req, res) => {
 
 // ----------------- HOLIDAY CHECK -----------------
 
-// Check if date is holiday
+export const updateAttendanceForLeave = async (employeeId, fromDate, toDate, leaveType) => {
+  try {
+    const leaveDates = [];
+    let currentDate = new Date(fromDate);
+    const endDate = new Date(toDate);
+
+    // Generate all dates between fromDate and toDate
+    while (currentDate <= endDate) {
+      leaveDates.push(new Date(currentDate));
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    for (const date of leaveDates) {
+      const startOfDay = moment(date).startOf('day').toDate();
+      const endOfDay = moment(date).endOf('day').toDate();
+
+      // Check if date is Sunday or holiday
+      if (date.getDay() === 0) {
+        continue; // Skip Sundays
+      }
+
+      const isHoliday = await Event.findOne({
+        startDate: { $lte: endOfDay },
+        endDate: { $gte: startOfDay },
+        isHoliday: true
+      });
+
+      if (isHoliday) {
+        continue; // Skip holidays
+      }
+
+      // Check if attendance already exists
+      const existingAttendance = await Attendance.findOne({
+        employee: employeeId,
+        date: { $gte: startOfDay, $lte: endOfDay }
+      });
+
+      if (!existingAttendance) {
+        // Create new attendance for leave
+        await Attendance.create({
+          employee: employeeId,
+          date: startOfDay,
+          status: "accepted",
+          isLeave: true,
+          leaveType: leaveType // Using the dynamic leaveType
+        });
+      } else {
+        // Update existing attendance
+        existingAttendance.isLeave = true;
+        existingAttendance.leaveType = leaveType;
+        if (existingAttendance.status === "rejected") {
+          existingAttendance.status = "accepted";
+        }
+        await existingAttendance.save();
+      }
+    }
+  } catch (error) {
+    console.error("Error updating attendance for leave:", error);
+    throw error;
+  }
+};
+
+//new code
+export const getMonthlyReport = async (req, res) => {
+  try {
+    const { month, year, department } = req.query;
+    
+    // Calculate date range for the month
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+
+    // Build match query for attendance
+    const attendanceMatch = {
+      date: { $gte: startDate, $lte: endDate }
+    };
+
+    // Build match query for employees
+    let employeeMatch = {};
+    if (department) {
+      employeeMatch['employee.profileRef.department'] = department;
+    }
+
+    // Aggregate attendance data with proper department filtering
+    const reportData = await Attendance.aggregate([
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'employee',
+          foreignField: '_id',
+          as: 'employee'
+        }
+      },
+      { $unwind: '$employee' },
+      {
+        $lookup: {
+          from: 'profiles',
+          localField: 'employee.profileRef',
+          foreignField: '_id',
+          as: 'employee.profileRef'
+        }
+      },
+      { $unwind: { path: '$employee.profileRef', preserveNullAndEmptyArrays: true } },
+      { $match: attendanceMatch },
+      { $match: employeeMatch }, // ✅ Department filter applied here
+      {
+        $group: {
+          _id: '$employee._id',
+          employeeId: { $first: '$employee.profileRef.employeeId' },
+          employeeName: { 
+            $first: { 
+              $concat: [
+                { $ifNull: ['$employee.profileRef.firstName', ''] },
+                ' ',
+                { $ifNull: ['$employee.profileRef.lastName', ''] }
+              ]
+            }
+          },
+          employeeEmail: { $first: '$employee.email' },
+          department: { $first: '$employee.profileRef.department' },
+          present: {
+            $sum: { $cond: [{ $eq: ['$status', 'accepted'] }, 1, 0] }
+          },
+          absent: {
+            $sum: { $cond: [{ $eq: ['$status', 'rejected'] }, 1, 0] }
+          },
+          pending: {
+            $sum: { $cond: [{ $eq: ['$status', 'pending'] }, 1, 0] }
+          },
+          totalDays: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          employeeId: 1,
+          employeeName: 1,
+          employeeEmail: 1,
+          department: 1,
+          present: 1,
+          absent: 1,
+          pending: 1,
+          rejected: '$absent',
+          totalDays: 1,
+          attendancePercentage: {
+            $multiply: [
+              { $divide: ['$present', '$totalDays'] },
+              100
+            ]
+          }
+        }
+      },
+      { $sort: { employeeName: 1 } }
+    ]);
+
+    res.status(200).json(reportData);
+  } catch (err) {
+    console.error("Error generating monthly report:", err);
+    res.status(500).json({ message: "Error generating monthly report", error: err.message });
+  }
+};
+
+
+export const employeeLogin = async (req, res) => {
+  try {
+    const { taskDescription, workProgress, earlyLoginReason, lateLoginReason } = req.body;
+    const employeeId = req.user._id;
+
+    // ✅ 1. Check if Sunday
+    if (moment().day() === 0) {
+      return res.status(400).json({
+        message: "Cannot mark attendance on Sunday"
+      });
+    }
+
+    // ✅ 2. Check if holiday
+    const todayStart = moment().startOf('day').toDate();
+    const todayEnd = moment().endOf('day').toDate();
+    
+    const isHoliday = await Event.findOne({
+      startDate: { $lte: todayEnd },
+      endDate: { $gte: todayStart },
+      isHoliday: true
+    });
+
+    if (isHoliday) {
+      return res.status(400).json({
+        message: "Cannot mark attendance on holiday"
+      });
+    }
+
+    // ✅ 3. Get employee profile for shift timing
+    const profile = await Profile.findOne({ user: employeeId });
+    if (!profile?.shiftTiming?.start || !profile?.shiftTiming?.end) {
+      return res
+        .status(400)
+        .json({ message: "Shift timings not set in profile" });
+    }
+
+    // ✅ 4. Check if already logged in today
+    const startOfDay = moment().startOf("day").toDate();
+    const endOfDay = moment().endOf("day").toDate();
+
+    const existing = await Attendance.findOne({
+      employee: employeeId,
+      date: { $gte: startOfDay, $lte: endOfDay },
+    });
+    if (existing) {
+      return res.status(400).json({ message: "Already logged in today" });
+    }
+
+    // ✅ 5. Check shift timing validations
+    const shiftStart = moment(profile.shiftTiming.start, "hh:mm A");
+    const now = moment();
+
+    // Check for early login (before shift start)
+    const isEarlyLogin = now.isBefore(shiftStart);
+    if (isEarlyLogin && !earlyLoginReason) {
+      return res.status(400).json({
+        message: "Early login reason required before shift start"
+      });
+    }
+
+    // Check for late login (after shift start + 1 hour grace period)
+    const oneHourAfterShiftStart = shiftStart.clone().add(1, 'hour');
+    const isLateLogin = now.isAfter(oneHourAfterShiftStart);
+    if (isLateLogin && !lateLoginReason) {
+      return res.status(400).json({
+        message: "Late login reason required after 1 hour from shift start"
+      });
+    }
+
+    // Login allowed check (within 8 hours from shift start)
+    // if (now.isAfter(shiftStart.clone().add(1, "hour"))) {
+    //   return res.status(400).json({
+    //     message: `Login allowed only between ${
+    //       profile.shiftTiming.start
+    //     } - ${shiftStart.clone().add(1, "hour").format("hh:mm A")}`,
+    //   });
+    // }
+
+    // ✅ 6. Create attendance record
+    const attendance = await Attendance.create({
+      employee: employeeId,
+      date: moment().startOf("day").toDate(),
+      checkIn: now.toDate(),
+      taskDescription,
+      workProgress,
+      status: "pending",
+      earlyLoginReason: isEarlyLogin ? earlyLoginReason : undefined,
+      lateLoginReason: isLateLogin ? lateLoginReason : undefined
+    });
+
+    return res.status(201).json({
+      message: "Attendance submitted, pending HR approval",
+      attendance,
+    });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+
 export const checkIsHoliday = async (req, res) => {
   try {
     const { date } = req.params;
     const checkDate = new Date(date);
 
+    // ✅ Check if Sunday
+    if (checkDate.getDay() === 0) {
+      return res.status(200).json({ 
+        isHoliday: true, 
+        holiday: { title: "Sunday", isHoliday: true } 
+      });
+    }
+
+    // ✅ Check if company holiday
     const holiday = await Event.findOne({
       startDate: { $lte: checkDate },
-      endDate: { $gte: checkDate }
+      endDate: { $gte: checkDate },
+      isHoliday: true
     });
 
-    res.status(200).json({ isHoliday: !!holiday, holiday });
+    res.status(200).json({ 
+      isHoliday: !!holiday, 
+      holiday: holiday 
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

@@ -7,10 +7,25 @@ import {
   getEmployeeProfile,
   updateProfileImage
 } from "../controllers/employee.controller.js";
+import {
+  addOrUpdateBankDetail,
+  getMyBankDetail,
+  getEmployeeBankDetail,
+} from "../controllers/bankDetail.controller.js";
+
 import { protect, authorizeRoles } from "../middleware/authMiddleware.js";
+
 import { upload } from '../config/cloudinary.js';
 
 const router = express.Router();
+
+// Employee add/update & get own bank detail
+router.post("/bank", protect, addOrUpdateBankDetail);
+router.get("/bank/me", protect, getMyBankDetail);
+
+// HR/Admin fetch employee bank detail
+router.get("/bank/:employeeId", protect, getEmployeeBankDetail);
+
 
 // Add new employee (Admin can add HR & Employee, HR can add only Employee)
 router.post("/add", protect, authorizeRoles("admin", "hr"), addEmployee);

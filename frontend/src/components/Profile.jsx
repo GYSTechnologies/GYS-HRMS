@@ -1,14 +1,134 @@
 import React, { useState, useEffect } from "react";
 import axiosInstance from "../utils/axiosInstance";
-import { Camera, Loader } from "lucide-react";
+import { Camera, Loader, Edit, Plus } from "lucide-react";
 
+// ----- Bank Modal -----
+const BankDetailsModal = ({ isOpen, onClose, onSave, existingData }) => {
+  const [form, setForm] = useState({
+    accountHolderName: "",
+    accountNumber: "",
+    bankName: "",
+    ifscCode: "",
+    accountType: "savings",
+  });
+
+  useEffect(() => {
+    if (existingData) setForm(existingData);
+  }, [existingData]);
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    await onSave(form);
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+        <h2 className="text-lg font-semibold mb-4">
+          {existingData ? "Update Bank Details" : "Add Bank Details"}
+        </h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Account Holder Name
+            </label>
+            <input
+              type="text"
+              name="accountHolderName"
+              value={form.accountHolderName}
+              onChange={handleChange}
+              required
+              className="w-full p-2 border rounded"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Account Number
+            </label>
+            <input
+              type="text"
+              name="accountNumber"
+              value={form.accountNumber}
+              onChange={handleChange}
+              required
+              className="w-full p-2 border rounded"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Bank Name</label>
+            <input
+              type="text"
+              name="bankName"
+              value={form.bankName}
+              onChange={handleChange}
+              required
+              className="w-full p-2 border rounded"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">IFSC Code</label>
+            <input
+              type="text"
+              name="ifscCode"
+              value={form.ifscCode}
+              onChange={handleChange}
+              required
+              className="w-full p-2 border rounded uppercase"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Account Type
+            </label>
+            <select
+              name="accountType"
+              value={form.accountType}
+              onChange={handleChange}
+              className="w-full p-2 border rounded"
+            >
+              <option value="savings">Savings</option>
+              <option value="current">Current</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div className="flex justify-end gap-3 pt-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 border rounded hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-[#104774] text-white rounded hover:bg-[#0d3a5f]"
+            >
+              {existingData ? "Update" : "Save"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// ----- Main Employee Profile -----
 const EmployeeProfile = () => {
   const [employee, setEmployee] = useState(null);
+  const [bankDetails, setBankDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     fetchEmployeeProfile();
+    fetchBankDetails();
   }, []);
 
   const fetchEmployeeProfile = async () => {
@@ -22,18 +142,36 @@ const EmployeeProfile = () => {
     }
   };
 
+  const fetchBankDetails = async () => {
+    try {
+      const res = await axiosInstance.get("/employee/bank/me");
+      setBankDetails(res.data || null);
+    } catch (error) {
+      console.error("Error fetching bank details:", error);
+    }
+  };
+
+  const handleSaveBankDetails = async (form) => {
+    try {
+      await axiosInstance.post("/employee/bank", form);
+      alert(bankDetails ? "Bank details updated!" : "Bank details added!");
+      setModalOpen(false);
+      fetchBankDetails();
+    } catch (error) {
+      console.error(error);
+      alert(error.response?.data?.message || "Failed to save bank details");
+    }
+  };
+
   const handleImageUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Validate file type
     const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
     if (!allowedTypes.includes(file.type)) {
       alert("Please select a valid image file (JPEG, PNG, GIF)");
       return;
     }
-
-    // Validate file size (5MB)
     if (file.size > 5 * 1024 * 1024) {
       alert("Image size should be less than 5MB");
       return;
@@ -44,58 +182,31 @@ const EmployeeProfile = () => {
     try {
       const formData = new FormData();
       formData.append("image", file);
-
       const response = await axiosInstance.patch(
         "/employee/profile/image",
         formData,
         {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
+          headers: { "Content-Type": "multipart/form-data" },
         }
       );
-
-      // Update local state with new image URL
       setEmployee((prev) => ({
         ...prev,
         avatarUrl: response.data.data.avatarUrl,
       }));
-
       alert("Profile image updated successfully!");
     } catch (error) {
-      console.error("Error uploading image:", error);
+      console.error(error);
       alert(error.response?.data?.message || "Failed to upload image");
     } finally {
       setUploading(false);
-      // Reset file input
       event.target.value = "";
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#104774]"></div>
-      </div>
-    );
-  }
-
-  if (!employee) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-red-500">Employee profile not found</p>
-      </div>
-    );
-  }
-
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
+  const maskAccountNumber = (num) => {
+    if (!num) return "N/A";
+    const last4 = num.slice(-4);
+    return `XXXX-XXXX-${last4}`;
   };
 
   function formatShiftTiming(shiftTiming) {
@@ -243,12 +354,38 @@ const EmployeeProfile = () => {
     return String(shiftTiming);
   }
 
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#104774]"></div>
+      </div>
+    );
+  }
+
+  if (!employee) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-red-500">Employee profile not found</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="max-w-6xl mx-auto min-h-[75vh]">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-2">
         <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-          {/* Profile Image with Upload Option */}
+          {/* Profile Image */}
           <div className="flex-shrink-0 relative">
             <div className="w-32 h-32 rounded-full bg-gray-100 flex items-center justify-center border-2 border-gray-200 relative group">
               {employee.avatarUrl ? (
@@ -281,7 +418,6 @@ const EmployeeProfile = () => {
               </label>
             </div>
 
-            {/* Upload Text */}
             <div className="text-center mt-3">
               <label className="text-sm text-[#104774] cursor-pointer hover:underline">
                 Change Photo
@@ -338,7 +474,6 @@ const EmployeeProfile = () => {
         </div>
       </div>
 
-      {/* Rest of your existing code remains the same */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Column - Personal Information */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -442,53 +577,110 @@ const EmployeeProfile = () => {
         </div>
       </div>
 
-      {/* Documents Section */}
-      <div className="mt-6 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-3 border-b border-gray-100">
-          Documents
-        </h2>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-2 ">
+        {/* Bank Details Section */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 h-60 overflow-y-scroll ">
+          <div className="flex justify-between items-center mb-4 border-b border-gray-100 pb-3">
+            <h2 className="text-lg font-semibold text-gray-900">
+              Bank Details
+            </h2>
+            <button
+              onClick={() => setModalOpen(true)}
+              className="flex items-center gap-2 px-3 py-1.5 bg-[#104774] text-white text-sm rounded hover:bg-[#0d3a5f]"
+            >
+              {bankDetails ? <Edit size={16} /> : <Plus size={16} />}
+              {bankDetails ? "Edit" : "Add"}
+            </button>
+          </div>
 
-        {employee.documents && employee.documents.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {employee.documents.map((doc, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors"
-              >
-                <div className="flex items-center min-w-0 flex-1">
-                  <div className="w-10 h-10 bg-gray-50 border border-gray-200 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
-                    <span className="text-gray-500 text-sm">📄</span>
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {doc.name}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Uploaded:{" "}
-                      {doc.uploadedAt ? formatDate(doc.uploadedAt) : "N/A"}
-                    </p>
-                  </div>
-                </div>
-                <a
-                  href={doc.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="ml-3 text-[#104774] hover:text-[#0d3a5f] text-sm font-medium flex-shrink-0"
-                >
-                  View
-                </a>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8">
-            <div className="w-16 h-16 bg-gray-50 border border-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
-              <span className="text-gray-400 text-2xl">📂</span>
+          {bankDetails ? (
+            <div className="space-y-3 text-gray-700">
+              <p>
+                <span className="font-medium">Account Holder:</span>{" "}
+                {bankDetails.accountHolderName}
+              </p>
+              <p>
+                <span className="font-medium">Account Number:</span>{" "}
+                {maskAccountNumber(bankDetails.accountNumber)}
+              </p>
+              <p>
+                <span className="font-medium">Bank Name:</span>{" "}
+                {bankDetails.bankName}
+              </p>
+              <p>
+                <span className="font-medium">IFSC:</span>{" "}
+                {bankDetails.ifscCode}
+              </p>
+              <p>
+                <span className="font-medium">Account Type:</span>{" "}
+                {bankDetails.accountType}
+              </p>
             </div>
-            <p className="text-gray-500 font-medium">No documents available</p>
-          </div>
-        )}
+          ) : (
+            <div className="text-center py-4 text-gray-500">
+              No bank details added yet.
+            </div>
+          )}
+        </div>
+
+        {/* Documents Section */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 h-60 overflow-y-scroll">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-3 border-b border-gray-100">
+            Documents
+          </h2>
+
+          {employee.documents && employee.documents.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-4">
+              {employee.documents.map((doc, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors"
+                >
+                  <div className="flex items-center min-w-0 flex-1">
+                    <div className="w-10 h-10 bg-gray-50 border border-gray-200 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
+                      <span className="text-gray-500 text-sm">📄</span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {doc.name}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Uploaded:{" "}
+                        {doc.uploadedAt ? formatDate(doc.uploadedAt) : "N/A"}
+                      </p>
+                    </div>
+                  </div>
+                  <a
+                    href={doc.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-3 text-[#104774] hover:text-[#0d3a5f] text-sm font-medium flex-shrink-0"
+                  >
+                    View
+                  </a>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <div className="w-16 h-16 bg-gray-50 border border-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
+                <span className="text-gray-400 text-2xl">📂</span>
+              </div>
+              <p className="text-gray-500 font-medium">
+                No documents available
+              </p>
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Bank Modal */}
+      <BankDetailsModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSave={handleSaveBankDetails}
+        existingData={bankDetails}
+      />
     </div>
   );
 };

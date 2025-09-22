@@ -10,59 +10,20 @@ import eventRoutes from "./routes/event.routes.js";
 import leaveRoutes from "./routes/leave.routes.js";
 import attendanceRoutes from "./routes/attendance.routes.js";
 import payrollRoutes from "./routes/payroll.routes.js";
+import departmentRoutes from "./routes/department.routes.js";
+import dashboardRoutes from "./routes/dashboard.routes.js";
+
+import path from "path";
+import { fileURLToPath } from "url";
 
 
-import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
-import User from "./models/user.js";
 
 // DB Connect
 connectDB();
 
 const app = express();
 
-// 👉 Seed function (run only once)
-// const seedUsers = async () => {
-//   try {
-//     await mongoose.connect(process.env.MONGO_URI);
 
-//     // Clear old users
-//     await User.deleteMany();
-
-//     const hashedPassword = await bcrypt.hash("123456", 10);
-
-//     await User.insertMany([
-//       {
-//         name: "Super Admin",
-//         email: "admin@gmail.com",
-//         password: hashedPassword,
-//         role: "admin",
-//       },
-//       {
-//         name: "HR Manager",
-//         email: "hr@gmail.com",
-//         password: hashedPassword,
-//         role: "hr",
-//       },
-//       {
-//         name: "Employee One",
-//         email: "em1@gmail.com",
-//         password: hashedPassword,
-//         role: "employee",
-//       },
-//     ]);
-
-//     console.log("Users seeded ✅");
-//     process.exit();
-//   } catch (error) {
-//     console.error(error);
-//     process.exit(1);
-//   }
-// };
-
-//  seedUsers();
-
-// Middleware (JSON parse)
 app.use(
   cors({
     origin: "*",
@@ -81,9 +42,25 @@ app.use("/api/leave", leaveRoutes);
 
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/payroll", payrollRoutes);
+app.use("/api/departments", departmentRoutes);
 
+app.use('/api/dashboard', dashboardRoutes);
 
 app.use("/api/upload-files", uploadRoutes);
+
+
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// serve frontend build in production
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "../frontend/build")));
+
+  app.get("*", (req, res) =>
+    res.sendFile(path.resolve(__dirname, "../frontend/build", "index.html"))
+  );
+}
 
 
 // Simple route
@@ -96,3 +73,4 @@ const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`🚀 Server is running on PORT ${PORT}`);
 });
+

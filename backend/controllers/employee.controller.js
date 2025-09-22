@@ -6,16 +6,34 @@ import mongoose from "mongoose";
 import { sendWelcomeEmail } from "../config/email.js";
 import { cloudinary } from '../config/cloudinary.js';
 
-// Helper function to generate employee ID
-const generateEmployeeId = async (department) => {
-  const departmentCode = department
-    ? department.substring(0, 3).toUpperCase()
-    : "EMP";
-  const count = await Profile.countDocuments({});
-  return `${departmentCode}${(count + 1).toString().padStart(4, "0")}`;
+
+export const generateEmployeeId = async (departmentName) => {
+  // Prefix: first 3 uppercase letters of department
+  const prefix = departmentName.substring(0, 3).toUpperCase();
+
+  // Find the last employeeId with this prefix
+  const lastProfile = await Profile.findOne({
+    employeeId: { $regex: `^${prefix}-\\d+$` },
+  })
+    .sort({ employeeId: -1 })
+    .lean();
+
+  let nextNumber = 1;
+
+  if (lastProfile?.employeeId) {
+    // Extract numeric part (e.g. "SOF-0002" → 2)
+    const match = lastProfile.employeeId.match(/\d+$/);
+    if (match) {
+      nextNumber = parseInt(match[0], 10) + 1;
+    }
+  }
+
+  // Pad with leading zeros (e.g. 2 → "0002")
+  const padded = String(nextNumber).padStart(4, "0");
+
+  return `${prefix}-${padded}`; // Example: SOF-0002
 };
 
-//get all employee
 export const getAllEmployees = async (req, res) => {
   try {
     const employees = await Profile.find()
@@ -38,19 +56,186 @@ export const getAllEmployees = async (req, res) => {
 };
 
 //create employee , admin and hr only
+// export const addEmployee = async (req, res) => {
+//   try {
+
+//     let payload = req.body;
+//     if (typeof payload.data === "string") {
+//       // if data present and is string, try parse but guard against invalid JSON
+//       try {
+//         payload = JSON.parse(payload.data);
+//       } catch (parseErr) {
+//         return res.status(400).json({ message: "Invalid JSON in request body 'data' field" });
+//       }
+//     }
+
+//     // Destructure with safe defaults
+//     const {
+//       basicInfo = {},
+//       jobInfo = {},
+//       payrollInfo = {},
+//       password,
+//       role,
+//     } = payload;
+
+//     // Basic validation early-return
+//     if (!basicInfo.email) {
+//       return res.status(400).json({ message: "Email (basicInfo.email) is required" });
+//     }
+//     if (!password) {
+//       return res.status(400).json({ message: "Password is required" });
+//     }
+
+//     // **Step 0: Check if user already exists**
+//     const existingUser = await User.findOne({ email: basicInfo.email });
+//     if (existingUser) {
+//       return res
+//         .status(400)
+//         .json({ message: "User with this email already exists" });
+//     }
+
+//     // **Step 1: Determine role**
+//     let employeeRole = "employee"; // Default role
+//     if (req.user?.role === "admin") {
+//       employeeRole = role || "employee";
+//     } else if (req.user?.role === "hr") {
+//       employeeRole = "employee"; // HR can only create employees
+//     }
+
+//     // **Step 2: Create User**
+//     const hashedPassword = await bcrypt.hash(password, 10);
+//     const user = await User.create({
+//       email: basicInfo.email,
+//       password: hashedPassword,
+//       role: employeeRole,
+//       isActive: true,
+//     });
+
+//     // **Step 3: Generate Employee ID**
+//     const employeeId = await generateEmployeeId(jobInfo.department);
+
+//     // Ensure arrays exist
+//     const documentsArr = Array.isArray(basicInfo.documents) ? basicInfo.documents : [];
+
+//     // Normalize profileImage: could be {url} or string
+//     let avatarUrl = null;
+//     if (basicInfo.profileImage) {
+//       avatarUrl =
+//         typeof basicInfo.profileImage === "string"
+//           ? basicInfo.profileImage
+//           : basicInfo.profileImage.url || null;
+//     }
+
+//     // **Step 4: Create Profile with new fields**
+//     const profileData = {
+//       user: user._id,
+//       firstName: basicInfo.firstName || "",
+//       lastName: basicInfo.lastName || "",
+//       phone: basicInfo.phone || "",
+//       dob: basicInfo.dob || null,
+//       gender: basicInfo.gender || null,
+//       address: basicInfo.address || null,
+//       designation: jobInfo.designation || null,
+//       department: jobInfo.department || null,
+//       dateOfJoining: jobInfo.dateOfJoining || null,
+//       employeeId: employeeId,
+//       documents: documentsArr,
+//       avatarUrl,
+//     };
+
+//     // Optional fields
+//     if (jobInfo.employmentType) profileData.employmentType = jobInfo.employmentType;
+//     if (jobInfo.shiftTiming) profileData.shiftTiming = jobInfo.shiftTiming;
+//     if (jobInfo.workMode) profileData.workMode = jobInfo.workMode;
+
+//     const profile = await Profile.create(profileData);
+
+//     // **Step 5: Link User ↔ Profile**
+//     user.profileRef = profile._id;
+//     await user.save();
+
+//     // Normalize payroll input
+//     const payroll = {
+//       employee: profile._id,
+//       basic: Number(payrollInfo.basic) || 0,
+//       hra: Number(payrollInfo.hra) || 0,
+//       allowances: Array.isArray(payrollInfo.allowances) ? payrollInfo.allowances : [],
+//       deductions: Array.isArray(payrollInfo.deductions) ? payrollInfo.deductions : [],
+//       tax: Number(payrollInfo.tax) || 0,
+//       month: payrollInfo.month || new Date().toISOString().slice(0, 7),
+//       generatedBy: req.user?._id || null,
+//       status: payrollInfo.status || "draft",
+//     };
+
+//     // Totals
+//     const totalAllowances = payroll.allowances.reduce((sum, a) => sum + (Number(a.amount) || 0), 0);
+//     const totalDeductions = payroll.deductions.reduce((sum, d) => sum + (Number(d.amount) || 0), 0) + payroll.tax;
+//     const totalEarnings = payroll.basic + payroll.hra + totalAllowances;
+//     const netPay = totalEarnings - totalDeductions;
+
+//     payroll.totalEarnings = totalEarnings;
+//     payroll.totalDeductions = totalDeductions;
+//     payroll.netPay = netPay;
+
+//     // **Step 7: Create Payroll (DRAFT)**
+//     const payrollDoc = await Payroll.create(payroll);
+
+//     // ✅ Final Response
+//     return res.status(201).json({
+//       message: "Employee created successfully",
+//       data: {
+//         user: { _id: user._id, email: user.email, role: user.role },
+//         profile: { _id: profile._id, firstName: profile.firstName, lastName: profile.lastName, employeeId: profile.employeeId },
+//         payroll: { _id: payrollDoc._id, netPay: payrollDoc.netPay, status: payrollDoc.status },
+//       },
+//     });
+//   } catch (err) {
+//     console.error("Employee creation error:", err);
+
+//     if (err.code === 11000) {
+//       return res.status(400).json({
+//         message:
+//           "Duplicate field value entered. Employee ID or email might already exist.",
+//       });
+//     }
+
+//     return res.status(500).json({
+//       message: "Server Error during employee creation",
+//       error: process.env.NODE_ENV === "development" ? err.message : undefined,
+//     });
+//   }
+// };
+
 export const addEmployee = async (req, res) => {
   try {
-    // Parse the JSON data from the form
-    const { data } = req.body;
-    const {
-      basicInfo, // step1
-      jobInfo, // step2
-      payrollInfo, // step3
-      password, // step4
-      role, // assigned role (optional, only admin can set)
-    } = JSON.parse(data);
+    let payload = req.body;
+    if (typeof payload.data === "string") {
+      try {
+        payload = JSON.parse(payload.data);
+      } catch (parseErr) {
+        return res
+          .status(400)
+          .json({ message: "Invalid JSON in request body 'data' field" });
+      }
+    }
 
-    // **Step 0: Check if user already exists**
+    const {
+      basicInfo = {},
+      jobInfo = {},
+      payrollInfo = {}, // still accept this for backward compatibility
+      password,
+      role,
+    } = payload;
+
+    if (!basicInfo.email) {
+      return res
+        .status(400)
+        .json({ message: "Email (basicInfo.email) is required" });
+    }
+    if (!password) {
+      return res.status(400).json({ message: "Password is required" });
+    }
+
     const existingUser = await User.findOne({ email: basicInfo.email });
     if (existingUser) {
       return res
@@ -58,15 +243,13 @@ export const addEmployee = async (req, res) => {
         .json({ message: "User with this email already exists" });
     }
 
-    // **Step 1: Determine role**
-    let employeeRole = "employee"; // Default role
-    if (req.user.role === "admin") {
+    let employeeRole = "employee";
+    if (req.user?.role === "admin") {
       employeeRole = role || "employee";
-    } else if (req.user.role === "hr") {
-      employeeRole = "employee"; // HR can only create employees
+    } else if (req.user?.role === "hr") {
+      employeeRole = "employee";
     }
 
-    // **Step 2: Create User**
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await User.create({
       email: basicInfo.email,
@@ -75,115 +258,78 @@ export const addEmployee = async (req, res) => {
       isActive: true,
     });
 
-    // **Step 3: Generate Employee ID**
     const employeeId = await generateEmployeeId(jobInfo.department);
 
-    // **Step 4: Create Profile with new fields**
+    const documentsArr = Array.isArray(basicInfo.documents)
+      ? basicInfo.documents
+      : [];
+
+    let avatarUrl = null;
+    if (basicInfo.profileImage) {
+      avatarUrl =
+        typeof basicInfo.profileImage === "string"
+          ? basicInfo.profileImage
+          : basicInfo.profileImage.url || null;
+    }
+
+    // Profile creation (with basicSalary)
     const profileData = {
       user: user._id,
-      firstName: basicInfo.firstName,
-      lastName: basicInfo.lastName,
-      phone: basicInfo.phone,
-      dob: basicInfo.dob,
-      gender: basicInfo.gender,
-      address: basicInfo.address,
-      designation: jobInfo.designation,
-      department: jobInfo.department,
-      dateOfJoining: jobInfo.dateOfJoining,
+      firstName: basicInfo.firstName || "",
+      lastName: basicInfo.lastName || "",
+      phone: basicInfo.phone || "",
+      dob: basicInfo.dob || null,
+      gender: basicInfo.gender || null,
+      address: basicInfo.address || null,
+      designation: jobInfo.designation || null,
+      department: jobInfo.department || null,
+      dateOfJoining: jobInfo.dateOfJoining || null,
       employeeId: employeeId,
-      documents: basicInfo.documents || [],
-      avatarUrl: basicInfo.profileImage ? basicInfo.profileImage.url : null,
+      documents: documentsArr,
+      avatarUrl,
+      basicSalary: Number(payrollInfo.basic) || 0, // 👈 store directly in profile
     };
 
-    // Add new fields if they exist in the request
-    if (jobInfo.employmentType) {
-      profileData.employmentType = jobInfo.employmentType;
-    }
-    
-    if (jobInfo.shiftTiming) {
-      profileData.shiftTiming = jobInfo.shiftTiming;
-    }
-    
-    if (jobInfo.workMode) {
-      profileData.workMode = jobInfo.workMode;
-    }
+    if (jobInfo.employmentType) profileData.employmentType = jobInfo.employmentType;
+    if (jobInfo.shiftTiming) profileData.shiftTiming = jobInfo.shiftTiming;
+    if (jobInfo.workMode) profileData.workMode = jobInfo.workMode;
 
     const profile = await Profile.create(profileData);
 
-    // **Step 5: Link User ↔ Profile**
     user.profileRef = profile._id;
     await user.save();
 
-    // **Step 6: Calculate Payroll Totals**
-    const totalAllowances = payrollInfo.allowances
-      ? payrollInfo.allowances.reduce(
-          (sum, item) => sum + (item.amount || 0),
-          0
-        )
-      : 0;
-
-    const totalDeductions =
-      (payrollInfo.deductions
-        ? payrollInfo.deductions.reduce(
-            (sum, item) => sum + (item.amount || 0),
-            0
-          )
-        : 0) + (payrollInfo.tax || 0);
-
-    const totalEarnings =
-      (payrollInfo.basic || 0) + (payrollInfo.hra || 0) + totalAllowances;
-    const netPay = totalEarnings - totalDeductions;
-
-    // **Step 7: Create Payroll (DRAFT)**
-    const payroll = await Payroll.create({
-      employee: profile._id,
-      basic: payrollInfo.basic || 0,
-      hra: payrollInfo.hra || 0,
-      allowances: payrollInfo.allowances || [],
-      deductions: payrollInfo.deductions || [],
-      tax: payrollInfo.tax || 0,
-      month: payrollInfo.month || new Date().toISOString().slice(0, 7), // yyyy-mm
-      totalEarnings,
-      totalDeductions,
-      netPay,
-      generatedBy: req.user._id,
+    //  But still return payroll-like data so frontend doesn't break
+    const dummyPayroll = {
+      _id: null,
+      netPay: profile.basicSalary, // just basic salary for now
       status: "draft",
-    });
+    };
 
-    // **Step 8: Send Welcome Email**
-    await sendWelcomeEmail(user.email, {
-      firstName: profile.firstName,
-      email: user.email,
-      password, // plain password (already hashed in DB, but send original here)
-      dateOfJoining: profile.dateOfJoining,
-    });
+    await sendWelcomeEmail(basicInfo.email, {
+        firstName: profile.firstName,
+        email: basicInfo.email,
+        password, 
+        dateOfJoining: profile.dateOfJoining,
+      });
 
-    // ✅ Final Response
     return res.status(201).json({
       message: "Employee created successfully",
       data: {
-        user: {
-          _id: user._id,
-          email: user.email,
-          role: user.role,
-        },
+        user: { _id: user._id, email: user.email, role: user.role },
         profile: {
           _id: profile._id,
           firstName: profile.firstName,
           lastName: profile.lastName,
           employeeId: profile.employeeId,
+          basicSalary: profile.basicSalary,
         },
-        payroll: {
-          _id: payroll._id,
-          netPay: payroll.netPay,
-          status: payroll.status,
-        },
+        payroll: dummyPayroll, // frontend still gets 'payroll' key
       },
     });
   } catch (err) {
     console.error("Employee creation error:", err);
 
-    // Duplicate key error (email or employeeId)
     if (err.code === 11000) {
       return res.status(400).json({
         message:
@@ -193,19 +339,45 @@ export const addEmployee = async (req, res) => {
 
     return res.status(500).json({
       message: "Server Error during employee creation",
-      error: process.env.NODE_ENV === "development" ? err.message : undefined,
+      error:
+        process.env.NODE_ENV === "development" ? err.message : undefined,
     });
   }
 };
 
-//update employee
+
+// helper: safely parse JSON-like inputs
+function safeParseJSON(value) {
+  if (value === undefined || value === null) return null;
+  if (typeof value === "object") return value; // already parsed
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed || trimmed === "undefined" || trimmed === "null") return null;
+    try {
+      return JSON.parse(trimmed);
+    } catch (err) {
+      // not a JSON string — return the original string
+      return trimmed;
+    }
+  }
+  return value;
+}
+
+// update employee
 export const updateEmployee = async (req, res) => {
   try {
-    const { id } = req.params; // profile ID
-    const { data } = req.body; // Get the data string from request body
+    const { id } = req.params;
 
-    // Parse the JSON data from the form (same as addEmployee)
-    const { basicInfo, jobInfo, payrollInfo } = JSON.parse(data);
+    // Try to get data in multiple forms:
+    // 1) client may send `data` as a JSON-string (FormData case)
+    // 2) or send each section directly in the body (JSON request)
+    const rawData = req.body?.data;
+    const parsedData = safeParseJSON(rawData) || {};
+
+    // If parsedData is empty, read fields directly from body (they may already be objects)
+    const basicInfo = parsedData.basicInfo ?? safeParseJSON(req.body.basicInfo) ?? req.body.basicInfo ?? null;
+    const jobInfo = parsedData.jobInfo ?? safeParseJSON(req.body.jobInfo) ?? req.body.jobInfo ?? null;
+    const payrollInfo = parsedData.payrollInfo ?? safeParseJSON(req.body.payrollInfo) ?? req.body.payrollInfo ?? null;
 
     // Step 1: Find Profile
     const profile = await Profile.findById(id);
@@ -215,111 +387,129 @@ export const updateEmployee = async (req, res) => {
 
     // Step 2: Update Profile fields
     if (basicInfo) {
-      profile.firstName = basicInfo.firstName || profile.firstName;
-      profile.lastName = basicInfo.lastName || profile.lastName;
-      profile.phone = basicInfo.phone || profile.phone;
-      profile.dob = basicInfo.dob || profile.dob;
-      profile.gender = basicInfo.gender || profile.gender;
-      profile.address = basicInfo.address || profile.address; // Added address field
+      profile.firstName = basicInfo.firstName ?? profile.firstName;
+      profile.lastName = basicInfo.lastName ?? profile.lastName;
+      profile.phone = basicInfo.phone ?? profile.phone;
+      profile.dob = basicInfo.dob ?? profile.dob;
+      profile.gender = basicInfo.gender ?? profile.gender;
+      profile.address = basicInfo.address ?? profile.address;
 
       // Handle profile image update
-      if (basicInfo.profileImage) {
-        profile.avatarUrl = basicInfo.profileImage.url || profile.avatarUrl;
+      if (basicInfo.profileImage && basicInfo.profileImage.url) {
+        profile.avatarUrl = basicInfo.profileImage.url;
       }
 
-      // Handle documents update (append new documents to existing ones)
-      if (basicInfo.documents && basicInfo.documents.length > 0) {
-        profile.documents = [...profile.documents, ...basicInfo.documents];
+      // Handle documents update (append new docs but avoid duplicates by url)
+      if (Array.isArray(basicInfo.documents) && basicInfo.documents.length > 0) {
+        // ensure profile.documents is an array
+        profile.documents = profile.documents || [];
+
+        // normalize incoming docs
+        const incomingDocs = basicInfo.documents.map((d) => ({
+          type: d.type ?? d.docType ?? null,
+          name: d.name ?? d.originalName ?? d.filename ?? d._id ?? "",
+          originalName: d.originalName ?? d.name ?? null,
+          url: d.url ?? d.path ?? d.secure_url ?? d.link ?? "",
+          fileType: d.fileType ?? d.type ?? null,
+          uploadedAt: d.uploadedAt ?? d.createdAt ?? null,
+          raw: d,
+        }));
+
+        // merge without duplicates by url (if url missing, dedupe by name+type)
+        const existing = profile.documents || [];
+        const merged = [...existing];
+
+        incomingDocs.forEach((inc) => {
+          const already = merged.find(
+            (m) =>
+              (m.url && inc.url && m.url === inc.url) ||
+              (m.name && inc.name && m.name === inc.name && m.type === inc.type)
+          );
+          if (!already) merged.push(inc);
+        });
+
+        profile.documents = merged;
       }
     }
 
     if (jobInfo) {
-      profile.designation = jobInfo.designation || profile.designation;
-      profile.department = jobInfo.department || profile.department;
-      
-      // Update new fields
-      profile.employmentType = jobInfo.employmentType || profile.employmentType;
-      profile.workMode = jobInfo.workMode || profile.workMode;
-      
-      // Update shift timing if provided
+      profile.designation = jobInfo.designation ?? profile.designation;
+      profile.department = jobInfo.department ?? profile.department;
+
+      profile.employmentType = jobInfo.employmentType ?? profile.employmentType;
+      profile.workMode = jobInfo.workMode ?? profile.workMode;
+
       if (jobInfo.shiftTiming) {
         profile.shiftTiming = {
-          start: jobInfo.shiftTiming.start || profile.shiftTiming?.start,
-          end: jobInfo.shiftTiming.end || profile.shiftTiming?.end
+          start: jobInfo.shiftTiming.start ?? profile.shiftTiming?.start,
+          end: jobInfo.shiftTiming.end ?? profile.shiftTiming?.end,
         };
       }
-      
-      // Don't update dateOfJoining as it shouldn't change
+      // don't update dateOfJoining per your comment
     }
 
     await profile.save();
 
     // Step 3: Update Payroll (latest draft payroll for this employee)
     if (payrollInfo) {
-      const payroll = await Payroll.findOne({
-        employee: id,
-        status: "draft",
-      }).sort({ createdAt: -1 });
+      // Normalize payrollInfo fields (they might be strings if sent via FormData)
+      const normalizedPayroll = {
+        basic: Number(payrollInfo.basic ?? payrollInfo.basicAmount ?? 0),
+        hra: Number(payrollInfo.hra ?? 0),
+        allowances: Array.isArray(payrollInfo.allowances) ? payrollInfo.allowances : safeParseJSON(payrollInfo.allowances) ?? [],
+        deductions: Array.isArray(payrollInfo.deductions) ? payrollInfo.deductions : safeParseJSON(payrollInfo.deductions) ?? [],
+        tax: payrollInfo.tax ?? 0,
+        month: payrollInfo.month ?? new Date().toISOString().slice(0, 7),
+      };
+
+      let incomingTaxValue = Number(normalizedPayroll.tax || 0);
+ 
+      const payroll = await Payroll.findOne({ employee: id, status: "draft" }).sort({ createdAt: -1 });
 
       if (payroll) {
-        payroll.basic = payrollInfo.basic ?? payroll.basic;
-        payroll.hra = payrollInfo.hra ?? payroll.hra;
-        payroll.allowances = payrollInfo.allowances ?? payroll.allowances;
-        payroll.deductions = payrollInfo.deductions ?? payroll.deductions;
-        payroll.tax = payrollInfo.tax ?? payroll.tax;
-        payroll.month = payrollInfo.month ?? payroll.month;
+        payroll.basic = normalizedPayroll.basic ?? payroll.basic;
+        payroll.hra = normalizedPayroll.hra ?? payroll.hra;
+        payroll.allowances = normalizedPayroll.allowances ?? payroll.allowances;
+        payroll.deductions = normalizedPayroll.deductions ?? payroll.deductions;
+        payroll.tax = incomingTaxValue ?? payroll.tax;
+        payroll.month = normalizedPayroll.month ?? payroll.month;
 
         // recalc totals
         const totalAllowances = payroll.allowances
-          ? payroll.allowances.reduce(
-              (sum, item) => sum + (item.amount || 0),
-              0
-            )
+          ? payroll.allowances.reduce((sum, item) => sum + (Number(item.amount) || 0), 0)
           : 0;
 
         const totalDeductions =
           (payroll.deductions
-            ? payroll.deductions.reduce(
-                (sum, item) => sum + (item.amount || 0),
-                0
-              )
-            : 0) + (payroll.tax || 0);
+            ? payroll.deductions.reduce((sum, item) => sum + (Number(item.amount) || 0), 0)
+            : 0) + (Number(payroll.tax) || 0);
 
-        payroll.totalEarnings =
-          (payroll.basic || 0) + (payroll.hra || 0) + totalAllowances;
+        payroll.totalEarnings = (Number(payroll.basic) || 0) + (Number(payroll.hra) || 0) + totalAllowances;
         payroll.totalDeductions = totalDeductions;
         payroll.netPay = payroll.totalEarnings - payroll.totalDeductions;
 
         await payroll.save();
       } else {
-        // Create a new payroll if none exists
-        const totalAllowances = payrollInfo.allowances
-          ? payrollInfo.allowances.reduce(
-              (sum, item) => sum + (item.amount || 0),
-              0
-            )
+        const totalAllowances = normalizedPayroll.allowances
+          ? normalizedPayroll.allowances.reduce((sum, item) => sum + (Number(item.amount) || 0), 0)
           : 0;
 
         const totalDeductions =
-          (payrollInfo.deductions
-            ? payrollInfo.deductions.reduce(
-                (sum, item) => sum + (item.amount || 0),
-                0
-              )
-            : 0) + (payrollInfo.tax || 0);
+          (normalizedPayroll.deductions
+            ? normalizedPayroll.deductions.reduce((sum, item) => sum + (Number(item.amount) || 0), 0)
+            : 0) + (incomingTaxValue || 0);
 
-        const totalEarnings =
-          (payrollInfo.basic || 0) + (payrollInfo.hra || 0) + totalAllowances;
+        const totalEarnings = (normalizedPayroll.basic || 0) + (normalizedPayroll.hra || 0) + totalAllowances;
         const netPay = totalEarnings - totalDeductions;
 
         await Payroll.create({
           employee: id,
-          basic: payrollInfo.basic || 0,
-          hra: payrollInfo.hra || 0,
-          allowances: payrollInfo.allowances || [],
-          deductions: payrollInfo.deductions || [],
-          tax: payrollInfo.tax || 0,
-          month: payrollInfo.month || new Date().toISOString().slice(0, 7),
+          basic: normalizedPayroll.basic || 0,
+          hra: normalizedPayroll.hra || 0,
+          allowances: normalizedPayroll.allowances || [],
+          deductions: normalizedPayroll.deductions || [],
+          tax: incomingTaxValue || 0,
+          month: normalizedPayroll.month,
           totalEarnings,
           totalDeductions,
           netPay,
@@ -341,6 +531,8 @@ export const updateEmployee = async (req, res) => {
     });
   }
 };
+
+
 
 // GET Single Employee by ID with all details
 export const getEmployeeById = async (req, res) => {

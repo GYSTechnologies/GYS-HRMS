@@ -1,7 +1,7 @@
 import LeaveRequest from "../models/leaves.js";
 import LeavePolicy from "../models/leavePolicy.js";
 import LeaveType from "../models/leaveType.js";
-
+import Event from "../models/companyCalendar.js";
 import User from "../models/user.js";
 
 /**
@@ -138,80 +138,71 @@ export const getPolicyByRoleYear = async (req, res) => {
   }
 };
 
-/**
- * Controller: createLeaveRequest
- * - calculates totalDays
- * - validates against remaining leaves for the year
- * - stores balanceSnapshot (remaining at creation time)
- */
-export const createLeaveRequest = async (req, res) => {
-  try {
-    const { leaveType, fromDate, toDate, reason } = req.body;
-    const role = req.user.role;
+//crate leave---------workiing code h 
+// export const createLeaveRequest = async (req, res) => {
+//   try {
+//     const { leaveType, fromDate, toDate, reason } = req.body;
+//     const role = req.user.role;
 
-    if (role === "admin") {
-      return res.status(403).json({ message: "Admin cannot request leaves." });
-    }
+//     if (role === "admin") {
+//       return res.status(403).json({ message: "Admin cannot request leaves." });
+//     }
 
-    if (!leaveType || !fromDate || !toDate) {
-      return res.status(400).json({ message: "leaveType, fromDate and toDate are required." });
-    }
+//     if (!leaveType || !fromDate || !toDate) {
+//       return res.status(400).json({ message: "leaveType, fromDate and toDate are required." });
+//     }
 
-    const from = new Date(fromDate);
-    const to = new Date(toDate);
-    if (isNaN(from) || isNaN(to) || to < from) {
-      return res.status(400).json({ message: "Invalid fromDate/toDate." });
-    }
+//     const from = new Date(fromDate);
+//     const to = new Date(toDate);
+//     if (isNaN(from) || isNaN(to) || to < from) {
+//       return res.status(400).json({ message: "Invalid fromDate/toDate." });
+//     }
 
-    const totalDays = daysInclusive(from, to);
-    const year = from.getFullYear();
+//     const totalDays = daysInclusive(from, to);
+//     const year = from.getFullYear();
 
-    // compute remaining for that employee & year
-    const { policy, remaining } = await computeRemainingForUserAndYear(req.user.id, year);
-    if (!policy) {
-      return res.status(400).json({ message: `Leave policy not set for role=${req.user.role} year=${year}` });
-    }
+//     // compute remaining for that employee & year
+//     const { policy, remaining } = await computeRemainingForUserAndYear(req.user.id, year);
+//     if (!policy) {
+//       return res.status(400).json({ message: `Leave policy not set for role=${req.user.role} year=${year}` });
+//     }
 
-    if (typeof remaining[leaveType] === "undefined") {
-      return res.status(400).json({ message: `Invalid leave type: ${leaveType}` });
-    }
+//     if (typeof remaining[leaveType] === "undefined") {
+//       return res.status(400).json({ message: `Invalid leave type: ${leaveType}` });
+//     }
 
-    if (totalDays > remaining[leaveType]) {
-      return res.status(400).json({
-        message: `Requested ${totalDays} days but only ${remaining[leaveType]} ${leaveType} days remain for year ${year}.`,
-      });
-    }
+//     if (totalDays > remaining[leaveType]) {
+//       return res.status(400).json({
+//         message: `Requested ${totalDays} days but only ${remaining[leaveType]} ${leaveType} days remain for year ${year}.`,
+//       });
+//     }
 
-    const leave = new LeaveRequest({
-      employee: req.user.id,
-      leaveType,
-      fromDate: from,
-      toDate: to,
-      totalDays,
-      reason,
-      // snapshot of remaining at the time of request
-      balanceSnapshot: {
-        year,
-        remaining,
-      },
-    });
+//     const leave = new LeaveRequest({
+//       employee: req.user.id,
+//       leaveType,
+//       fromDate: from,
+//       toDate: to,
+//       totalDays,
+//       reason,
+//       // snapshot of remaining at the time of request
+//       balanceSnapshot: {
+//         year,
+//         remaining,
+//       },
+//     });
 
-    await leave.save();
-    // populate employee for response (light)
-    await leave.populate("employee", "email role");
+//     await leave.save();
+//     // populate employee for response (light)
+//     await leave.populate("employee", "email role");
 
-    res.status(201).json({ message: "Leave request created", leave });
-  } catch (err) {
-    res.status(500).json({ message: "Error creating leave request", error: err.message });
-  }
-};
+//     res.status(201).json({ message: "Leave request created", leave });
+//   } catch (err) {
+//     res.status(500).json({ message: "Error creating leave request", error: err.message });
+//   }
+// };
 
-/**
- * Controller: getLeaveRequests (role-based)
- * - employee: their own
- * - hr: all employee leaves (pending/others) + remaining snapshot per request
- * - admin: all leaves (including HR)
- */
+
+ // Controller: getLeaveRequests (role-based)
 export const getLeaveRequests = async (req, res) => {
   try {
     const role = req.user.role;
@@ -222,32 +213,68 @@ export const getLeaveRequests = async (req, res) => {
       return res.json(leaves);
     }
 
-    if (role === "hr") {
-      // HR should see employee leaves
-      const employees = await User.find({ role: "employee" }).select("_id");
-      const ids = employees.map((e) => e._id);
-      leaves = await LeaveRequest.find({ employee: { $in: ids } }).populate("employee", "email role");
-      // attach live remaining for each leave's relevant year/type
-      const enhanced = [];
-      for (const l of leaves) {
-        const startYear = new Date(l.fromDate).getFullYear();
-        const { remaining } = await computeRemainingForUserAndYear(l.employee._id, startYear);
-        enhanced.push({ ...l.toObject(), currentRemaining: remaining });
-      }
-      return res.json(enhanced);
-    }
+    // if (role === "hr") {
+    //   // HR should see employee leaves
+    //   const employees = await User.find({ role: "employee" }).select("_id");
+    //   const ids = employees.map((e) => e._id);
+    //   leaves = await LeaveRequest.find({ employee: { $in: ids } }).populate("employee", "email role");
+    //   // attach live remaining for each leave's relevant year/type
+    //   const enhanced = [];
+    //   for (const l of leaves) {
+    //     const startYear = new Date(l.fromDate).getFullYear();
+    //     const { remaining } = await computeRemainingForUserAndYear(l.employee._id, startYear);
+    //     enhanced.push({ ...l.toObject(), currentRemaining: remaining });
+    //   }
+    //   return res.json(enhanced);
+    // }
 
-    if (role === "admin") {
-      leaves = await LeaveRequest.find().populate("employee", "email role");
-      // attach live remaining for each leave
-      const enhanced = [];
-      for (const l of leaves) {
-        const startYear = new Date(l.fromDate).getFullYear();
-        const { remaining } = await computeRemainingForUserAndYear(l.employee._id, startYear);
-        enhanced.push({ ...l.toObject(), currentRemaining: remaining });
-      }
-      return res.json(enhanced);
+    // if (role === "admin") {
+    //   leaves = await LeaveRequest.find().populate("employee", "email role");
+    //   // attach live remaining for each leave
+    //   const enhanced = [];
+    //   for (const l of leaves) {
+    //     const startYear = new Date(l.fromDate).getFullYear();
+    //     const { remaining } = await computeRemainingForUserAndYear(l.employee._id, startYear);
+    //     enhanced.push({ ...l.toObject(), currentRemaining: remaining });
+    //   }
+    //   return res.json(enhanced);
+    // }
+
+    if (role === "hr") {
+  const employees = await User.find({ role: "employee" }).select("_id");
+  const ids = employees.map((e) => e._id);
+  leaves = await LeaveRequest.find({ employee: { $in: ids } })
+    .populate("employee", "email role");
+
+  const enhanced = [];
+  for (const l of leaves) {
+    if (!l.employee) {
+      enhanced.push({ ...l.toObject(), currentRemaining: null });
+      continue;
     }
+    const startYear = new Date(l.fromDate).getFullYear();
+    const { remaining } = await computeRemainingForUserAndYear(l.employee._id, startYear);
+    enhanced.push({ ...l.toObject(), currentRemaining: remaining });
+  }
+  return res.json(enhanced);
+}
+
+if (role === "admin") {
+  leaves = await LeaveRequest.find().populate("employee", "email role");
+
+  const enhanced = [];
+  for (const l of leaves) {
+    if (!l.employee) {
+      enhanced.push({ ...l.toObject(), currentRemaining: null });
+      continue;
+    }
+    const startYear = new Date(l.fromDate).getFullYear();
+    const { remaining } = await computeRemainingForUserAndYear(l.employee._id, startYear);
+    enhanced.push({ ...l.toObject(), currentRemaining: remaining });
+  }
+  return res.json(enhanced);
+}
+
 
     res.status(403).json({ message: "Unauthorized" });
   } catch (err) {
@@ -268,122 +295,7 @@ export const getMyLeaveRequests = async (req, res) => {
   }
 };
 
- //Controller: approveOrRejectLeave
-export const approveOrRejectLeave = async (req, res) => {
-  try {
-    const { leaveId } = req.params;
-    const { action, reason } = req.body;
-
-    if (!["approve", "reject"].includes(action)) {
-      return res.status(400).json({ message: "Invalid action. Must be 'approve' or 'reject'." });
-    }
-
-    const leave = await LeaveRequest.findById(leaveId).populate("employee", "email role");
-    if (!leave) return res.status(404).json({ message: "Leave not found" });
-
-    // Role validation
-    if (leave.employee.role === "hr" && req.user.role !== "admin") {
-      return res.status(403).json({ message: "Only admin can handle HR leave requests" });
-    }
-    if (leave.employee.role === "employee" && !["hr", "admin"].includes(req.user.role)) {
-      return res.status(403).json({ message: "Only HR/Admin can handle employee leave requests" });
-    }
-
-    if (action === "reject") {
-      leave.status = "rejected";
-      leave.processedBy = req.user.id;
-      leave.processedAt = new Date();
-      leave.remarks = reason || null;
-      await leave.save();
-      return res.json({ message: "Leave rejected", leave });
-    }
-
-    // action === 'approve'
-    const startYear = new Date(leave.fromDate).getFullYear();
-    const { policy, remaining } = await computeRemainingForUserAndYear(leave.employee._id, startYear);
-    if (!policy) {
-      return res.status(400).json({ message: `Leave policy not set for role=${leave.employee.role} year=${startYear}` });
-    }
-
-    if (leave.totalDays > remaining[leave.leaveType]) {
-      return res.status(400).json({
-        message: `Cannot approve: requested ${leave.totalDays} days but only ${remaining[leave.leaveType]} ${leave.leaveType} days remain for ${startYear}.`,
-      });
-    }
-
-    leave.status = "approved";
-    leave.processedBy = req.user.id;
-    leave.processedAt = new Date();
-    leave.remarks = reason || null;
-
-    await leave.save();
-    res.json({ message: "Leave approved", leave });
-  } catch (err) {
-    res.status(500).json({ message: "Error updating leave", error: err.message });
-  }
-};
-
-
- // Get leave balance
-export const getLeaveBalance = async (req, res) => {
-  try {
-    const userId = req.user._id; // from protect middleware
-    const currentYear = new Date().getFullYear();
-
-    // Get leave policy for user's role
-    const user = await User.findById(userId);
-    const policy = await LeavePolicy.findOne({ 
-      role: user.role, 
-      year: currentYear 
-    }).lean();
-
-    if (!policy) {
-      return res.status(404).json({ message: "Leave policy not set for your role and current year" });
-    }
-
-    // Get approved leaves of user for the current year
-    const yearStart = new Date(Date.UTC(currentYear, 0, 1));
-    const yearEnd = new Date(Date.UTC(currentYear, 11, 31, 23, 59, 59, 999));
-    
-    const approvedLeaves = await LeaveRequest.find({ 
-      employee: userId, 
-      status: "approved",
-      fromDate: { $lte: yearEnd },
-      toDate: { $gte: yearStart }
-    });
-
-    // Calculate taken leaves correctly using totalDays
-    const taken = { casual: 0, sick: 0, paid: 0 };
-    
-    for (const leave of approvedLeaves) {
-      const overlap = overlapDays(
-        new Date(leave.fromDate), 
-        new Date(leave.toDate), 
-        yearStart, 
-        yearEnd
-      );
-      taken[leave.leaveType] += overlap;
-    }
-
-    // Calculate balance
-    const balance = {};
-    for (const type in policy.leaves) {
-      balance[type] = policy.leaves[type] - (taken[type] || 0);
-    }
-
-    res.json({ balance, policy, taken });
-  } catch (err) {
-    res.status(500).json({ 
-      message: "Error fetching leave balance", 
-      error: err.message 
-    });
-  }
-};
-
-
-// @desc    Get a single leave request by ID
-// @route   GET /api/leave/requests/:id
-// @access  Private
+//   Get a single leave request by ID
 export const getSingleLeaveRequest = async (req, res) => {
   try {
     const leave = await LeaveRequest.findById(req.params.id).populate("employee", "email").populate("processedBy", "email");
@@ -406,9 +318,7 @@ export const getSingleLeaveRequest = async (req, res) => {
   }
 };
 
-// @desc    Cancel a pending leave request
-// @route   PUT /api/leave/requests/:id/cancel
-// @access  Private (Employee - can only cancel their own)
+//cancel leave req
 export const cancelLeaveRequest = async (req, res) => {
   try {
     const leave = await LeaveRequest.findById(req.params.id);
@@ -523,5 +433,247 @@ export const toggleLeaveTypeStatus = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ message: "Error updating leave type status", error: err.message });
+  }
+};
+
+
+
+
+//..........new code h 
+
+
+export const createLeaveRequest = async (req, res) => {
+  try {
+    const { leaveType, fromDate, toDate, reason } = req.body;
+    const role = req.user.role;
+
+    if (role === "admin") {
+      return res.status(403).json({ message: "Admin cannot request leaves." });
+    }
+
+    if (!leaveType || !fromDate || !toDate) {
+      return res.status(400).json({ message: "leaveType, fromDate and toDate are required." });
+    }
+
+    const from = new Date(fromDate);
+    const to = new Date(toDate);
+    if (isNaN(from) || isNaN(to) || to < from) {
+      return res.status(400).json({ message: "Invalid fromDate/toDate." });
+    }
+
+    // ✅ NEW: Check for Sundays and holidays in selected date range
+    let currentDate = new Date(from);
+    while (currentDate <= to) {
+      // Check if Sunday
+      // if (currentDate.getDay() === 0) {
+      //   return res.status(400).json({
+      //     message: `Cannot apply leave on Sunday (${currentDate.toLocaleDateString()})`
+      //   });
+      // }
+
+      // Check if holiday
+      const isHoliday = await Event.findOne({
+        startDate: { $lte: currentDate },
+        endDate: { $gte: currentDate },
+        isHoliday: true
+      });
+
+      if (isHoliday) {
+        return res.status(400).json({
+          message: `Cannot apply leave on holiday (${currentDate.toLocaleDateString()})`
+        });
+      }
+
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    const totalDays = daysInclusive(from, to);
+    const year = from.getFullYear();
+
+    // compute remaining for that employee & year
+    const { policy, remaining } = await computeRemainingForUserAndYear(req.user.id, year);
+    if (!policy) {
+      return res.status(400).json({ message: `Leave policy not set for role=${req.user.role} year=${year}` });
+    }
+
+    if (typeof remaining[leaveType] === "undefined") {
+      return res.status(400).json({ message: `Invalid leave type: ${leaveType}` });
+    }
+
+    if (totalDays > remaining[leaveType]) {
+      return res.status(400).json({
+        message: `Requested ${totalDays} days but only ${remaining[leaveType]} ${leaveType} days remain for year ${year}.`,
+      });
+    }
+
+    const leave = new LeaveRequest({
+      employee: req.user.id,
+      leaveType,
+      fromDate: from,
+      toDate: to,
+      totalDays,
+      reason,
+      // snapshot of remaining at the time of request
+      balanceSnapshot: {
+        year,
+        remaining,
+      },
+    });
+
+    await leave.save();
+    // populate employee for response (light)
+    await leave.populate("employee", "email role");
+
+    res.status(201).json({ message: "Leave request created", leave });
+  } catch (err) {
+    res.status(500).json({ message: "Error creating leave request", error: err.message });
+  }
+};
+
+
+export const approveOrRejectLeave = async (req, res) => {
+  try {
+    const { leaveId } = req.params;
+    const { action, reason } = req.body;
+
+    if (!["approve", "reject"].includes(action)) {
+      return res.status(400).json({ message: "Invalid action. Must be 'approve' or 'reject'." });
+    }
+
+    const leave = await LeaveRequest.findById(leaveId).populate("employee", "email role");
+    if (!leave) return res.status(404).json({ message: "Leave not found" });
+
+    // Role validation
+    if (leave.employee.role === "hr" && req.user.role !== "admin") {
+      return res.status(403).json({ message: "Only admin can handle HR leave requests" });
+    }
+    if (leave.employee.role === "employee" && !["hr", "admin"].includes(req.user.role)) {
+      return res.status(403).json({ message: "Only HR/Admin can handle employee leave requests" });
+    }
+
+    if (action === "reject") {
+      leave.status = "rejected";
+      leave.processedBy = req.user.id;
+      leave.processedAt = new Date();
+      leave.remarks = reason || null;
+      await leave.save();
+      return res.json({ message: "Leave rejected", leave });
+    }
+
+    // action === 'approve'
+    const startYear = new Date(leave.fromDate).getFullYear();
+    const { policy, remaining } = await computeRemainingForUserAndYear(leave.employee._id, startYear);
+    if (!policy) {
+      return res.status(400).json({ message: `Leave policy not set for role=${leave.employee.role} year=${startYear}` });
+    }
+
+    if (leave.totalDays > remaining[leave.leaveType]) {
+      return res.status(400).json({
+        message: `Cannot approve: requested ${leave.totalDays} days but only ${remaining[leave.leaveType]} ${leave.leaveType} days remain for ${startYear}.`,
+      });
+    }
+
+    // ✅ NEW: Update Attendance for approved leave
+    try {
+      const { updateAttendanceForLeave } = await import('./attendance.controller.js');
+      await updateAttendanceForLeave(leave.employee._id, leave.fromDate, leave.toDate, leave.leaveType);
+    } catch (error) {
+      console.error("Error updating attendance for leave:", error);
+      // Don't fail the request, just log the error
+    }
+
+    // ✅ NEW: Update Profile's leave balance in real-time
+    try {
+      const profile = await Profile.findOne({ user: leave.employee._id });
+      if (profile && profile.leaveBalance && profile.leaveBalance[leave.leaveType] !== undefined) {
+        profile.leaveBalance[leave.leaveType] -= leave.totalDays;
+        await profile.save();
+      }
+    } catch (error) {
+      console.error("Error updating leave balance:", error);
+      // Don't fail the request, just log the error
+    }
+
+    leave.status = "approved";
+    leave.processedBy = req.user.id;
+    leave.processedAt = new Date();
+    leave.remarks = reason || null;
+
+    await leave.save();
+    res.json({ message: "Leave approved", leave });
+  } catch (err) {
+    res.status(500).json({ message: "Error updating leave", error: err.message });
+  }
+};
+
+
+export const getLeaveBalance = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const currentYear = new Date().getFullYear();
+
+    // Get leave policy for user's role
+    const user = await User.findById(userId);
+    const policy = await LeavePolicy.findOne({ 
+      role: user.role, 
+      year: currentYear 
+    }).lean();
+
+    if (!policy) {
+      return res.status(404).json({ message: "Leave policy not set for your role and current year" });
+    }
+
+    // Get approved leaves of user for the current year
+    const yearStart = new Date(Date.UTC(currentYear, 0, 1));
+    const yearEnd = new Date(Date.UTC(currentYear, 11, 31, 23, 59, 59, 999));
+    
+    const approvedLeaves = await LeaveRequest.find({ 
+      employee: userId, 
+      status: "approved",
+      fromDate: { $lte: yearEnd },
+      toDate: { $gte: yearStart }
+    });
+
+    // ✅ IMPROVED: Calculate taken leaves correctly excluding Sundays/holidays
+    const taken = { casual: 0, sick: 0, paid: 0 };
+    
+    for (const leave of approvedLeaves) {
+      let leaveDays = 0;
+      let currentDate = new Date(leave.fromDate);
+      const endDate = new Date(leave.toDate);
+
+      // Count only working days (exclude Sundays and holidays)
+      while (currentDate <= endDate) {
+        // Skip Sundays
+        if (currentDate.getDay() !== 0) {
+          // Skip holidays
+          const isHoliday = await Event.findOne({
+            startDate: { $lte: currentDate },
+            endDate: { $gte: currentDate },
+            isHoliday: true
+          });
+          
+          if (!isHoliday) {
+            leaveDays++;
+          }
+        }
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+      
+      taken[leave.leaveType] += leaveDays;
+    }
+
+    // Calculate balance
+    const balance = {};
+    for (const type in policy.leaves) {
+      balance[type] = policy.leaves[type] - (taken[type] || 0);
+    }
+
+    res.json({ balance, policy, taken });
+  } catch (err) {
+    res.status(500).json({ 
+      message: "Error fetching leave balance", 
+      error: err.message 
+    });
   }
 };

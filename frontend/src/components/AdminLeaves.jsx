@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import axiosInstance from "../utils/axiosInstance";
 import { useAuth } from "../context/AppContext";
+import { format } from "date-fns";
 
 const AdminLeaves = () => {
   const { token } = useAuth();
@@ -37,12 +38,12 @@ const AdminLeaves = () => {
   const [policyForm, setPolicyForm] = useState({
     role: "employee",
     year: new Date().getFullYear(),
-    leaves: {}
+    leaves: {},
   });
 
   const [leaveTypeForm, setLeaveTypeForm] = useState({
     name: "",
-    isActive: true
+    isActive: true,
   });
 
   const [selectedRequest, setSelectedRequest] = useState(null);
@@ -51,7 +52,7 @@ const AdminLeaves = () => {
   const [actionRemark, setActionRemark] = useState("");
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("pending");
   const [typeFilter, setTypeFilter] = useState("all");
   const [expandedRequest, setExpandedRequest] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -75,7 +76,7 @@ const AdminLeaves = () => {
         }),
         axiosInstance.get("/leave/get-leaveTypes", {
           headers: { Authorization: `Bearer ${token}` },
-        })
+        }),
       ]);
 
       setLeaveRequests(leavesRes.data);
@@ -199,7 +200,7 @@ const AdminLeaves = () => {
       setPolicyForm({
         role: "employee",
         year: new Date().getFullYear(),
-        leaves: {}
+        leaves: {},
       });
       document.getElementById("policyModal").classList.add("hidden");
     } catch (err) {
@@ -218,11 +219,11 @@ const AdminLeaves = () => {
     } else {
       Object.assign(leavesObj, policy.leaves);
     }
-    
+
     setPolicyForm({
       role: policy.role,
       year: policy.year,
-      leaves: leavesObj
+      leaves: leavesObj,
     });
     document.getElementById("policyModal").classList.remove("hidden");
   };
@@ -244,7 +245,7 @@ const AdminLeaves = () => {
           { headers: { Authorization: `Bearer ${token}` } }
         );
       }
-      
+
       setLeaveTypeForm({ name: "", isActive: true });
       setSelectedLeaveType(null);
       fetchData();
@@ -258,7 +259,7 @@ const AdminLeaves = () => {
   const handleDeleteLeaveType = async (id) => {
     try {
       await axiosInstance.delete(`/leave/delete-leaveType/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       fetchData();
     } catch (err) {
@@ -269,9 +270,13 @@ const AdminLeaves = () => {
   // Toggle leave type status
   const handleToggleLeaveTypeStatus = async (id) => {
     try {
-      await axiosInstance.patch(`/leave/toggle-leaveType-status/${id}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axiosInstance.patch(
+        `/leave/toggle-leaveType-status/${id}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       fetchData();
     } catch (err) {
       console.error("Error toggling leave type status:", err);
@@ -382,10 +387,10 @@ const AdminLeaves = () => {
   );
 
   // Get active leave types for filter dropdown
-  const activeLeaveTypes = leaveTypes.filter(lt => lt.isActive);
+  const activeLeaveTypes = leaveTypes.filter((lt) => lt.isActive);
 
   return (
-    <div className="flex flex-col md:flex-row gap-6 p-4 md:p-6 bg-gray-50 min-h-screen">
+    <div className="flex flex-col md:flex-row gap-6 p-4 md:p-6 bg-gray-50 h-[70vh]">
       {/* Mobile Sidebar Toggle */}
       <div className="md:hidden flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold text-gray-800">
@@ -411,7 +416,9 @@ const AdminLeaves = () => {
               className="flex items-center bg-[#104774] text-white px-4 py-2 rounded-lg font-medium hover:bg-[#0d3a61] transition-all duration-200"
               onClick={() => {
                 setSelectedPolicy(null);
-                document.getElementById("policyModal").classList.remove("hidden");
+                document
+                  .getElementById("policyModal")
+                  .classList.remove("hidden");
               }}
             >
               <Plus size={18} className="mr-2" /> Set Policy
@@ -495,7 +502,9 @@ const AdminLeaves = () => {
                 <option value="all">All Types</option>
                 {activeLeaveTypes.map((type) => (
                   <option key={type._id} value={type.name}>
-                    {type.name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    {type.name
+                      .replace(/_/g, " ")
+                      .replace(/\b\w/g, (l) => l.toUpperCase())}
                   </option>
                 ))}
               </select>
@@ -530,7 +539,7 @@ const AdminLeaves = () => {
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto">
+              {/* <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead className="bg-[#104774] text-white">
                     <tr>
@@ -728,7 +737,6 @@ const AdminLeaves = () => {
                 </table>
               </div>
 
-              {/* Pagination */}
               {totalPages > 1 && (
                 <div className="p-4 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4">
                   <div className="text-sm text-gray-500">
@@ -785,6 +793,320 @@ const AdminLeaves = () => {
                     </button>
                   </div>
                 </div>
+              )} */}
+              <div className="overflow-x-auto">
+                <div className="max-h-[300px] overflow-y-auto border border-gray-200 rounded-xl shadow-sm">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    {/* Header */}
+                    <thead className="bg-[#104774] text-white sticky top-0 z-10">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                          Employee
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                          Type
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                          From
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                          To
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                          Days
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                          Balance
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+
+                    {/* Body */}
+
+                    <tbody className="divide-y divide-gray-100">
+                      {currentItems
+                        .sort(
+                          (a, b) =>
+                            new Date(b.appliedAt) - new Date(a.appliedAt)
+                        ) // 👈 latest first
+                        .map((req, index) => {
+                          const hasSufficientBalance =
+                            req.currentRemaining &&
+                            req.currentRemaining[req.leaveType] >=
+                              req.totalDays;
+
+                          return (
+                            <React.Fragment key={req._id}>
+                              {/* Row */}
+                              <tr
+                                className={`${
+                                  index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                                } hover:bg-gray-100 transition-colors`}
+                              >
+                                <td className="px-6 py-3 text-sm">
+                                  {req.employee?.email || "N/A"}
+                                </td>
+                                <td className="px-6 py-3 text-sm capitalize">
+                                  {req.leaveType.replace(/_/g, " ")}
+                                </td>
+                                <td className="px-6 py-3 text-sm">
+                                  {format(
+                                    new Date(req.fromDate),
+                                    "dd MMM yyyy"
+                                  )}
+                                </td>
+                                <td className="px-6 py-3 text-sm">
+                                  {format(new Date(req.toDate), "dd MMM yyyy")}
+                                </td>
+                                <td className="px-6 py-3 text-sm">
+                                  {req.totalDays}
+                                </td>
+                                <td className="px-6 py-3 text-sm">
+                                  <div className="flex items-center">
+                                    {req.currentRemaining ? (
+                                      <>
+                                        <span
+                                          className={
+                                            hasSufficientBalance
+                                              ? "text-green-600 font-medium"
+                                              : "text-red-600 font-medium"
+                                          }
+                                        >
+                                          {req.currentRemaining[req.leaveType]}/
+                                          {
+                                            req.balanceSnapshot?.remaining[
+                                              req.leaveType
+                                            ]
+                                          }
+                                        </span>
+                                        {!hasSufficientBalance && (
+                                          <AlertCircle
+                                            size={16}
+                                            className="text-red-500 ml-1"
+                                          />
+                                        )}
+                                      </>
+                                    ) : (
+                                      <span className="text-gray-400">N/A</span>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="px-6 py-3">
+                                  <StatusBadge status={req.status} />
+                                </td>
+                                <td className="px-6 py-3">
+                                  <div className="flex space-x-2">
+                                    <button
+                                      className="p-1.5 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200"
+                                      onClick={() =>
+                                        setExpandedRequest(
+                                          expandedRequest === req._id
+                                            ? null
+                                            : req._id
+                                        )
+                                      }
+                                      title="View Details"
+                                    >
+                                      <Eye size={16} />
+                                    </button>
+                                    {req.status === "pending" && (
+                                      <>
+                                        <button
+                                          className="p-1.5 rounded-full bg-green-100 text-green-600 hover:bg-green-200"
+                                          onClick={() => {
+                                            setSelectedRequest(req);
+                                            document
+                                              .getElementById("actionModal")
+                                              .classList.remove("hidden");
+                                          }}
+                                          title="Approve"
+                                        >
+                                          <CheckCircle size={16} />
+                                        </button>
+                                        <button
+                                          className="p-1.5 rounded-full bg-red-100 text-red-600 hover:bg-red-200"
+                                          onClick={() => {
+                                            setSelectedRequest(req);
+                                            document
+                                              .getElementById("actionModal")
+                                              .classList.remove("hidden");
+                                          }}
+                                          title="Reject"
+                                        >
+                                          <XCircle size={16} />
+                                        </button>
+                                      </>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+
+                              {/* Expanded details */}
+                              {expandedRequest === req._id && (
+                                <tr>
+                                  <td colSpan="8" className="p-6 bg-gray-50">
+                                    <div className="grid md:grid-cols-2 gap-6">
+                                      {/* Request Details */}
+                                      <div className="bg-white p-5 rounded-xl shadow-sm border">
+                                        <h4 className="text-[#104774] font-semibold text-base mb-3">
+                                          Request Details
+                                        </h4>
+                                        <div className="space-y-2 text-sm">
+                                          <p>
+                                            <span className="font-medium">
+                                              Reason:
+                                            </span>{" "}
+                                            {req.reason || "-"}
+                                          </p>
+                                          <p>
+                                            <span className="font-medium">
+                                              Applied On:
+                                            </span>{" "}
+                                            {format(
+                                              new Date(req.appliedAt),
+                                              "dd MMM yyyy, hh:mm a"
+                                            )}
+                                          </p>
+                                          {req.processedBy && (
+                                            <p>
+                                              <span className="font-medium">
+                                                Processed By:
+                                              </span>{" "}
+                                              {req.processedBy?.email ||
+                                                "Admin"}
+                                            </p>
+                                          )}
+                                          {req.processedAt && (
+                                            <p>
+                                              <span className="font-medium">
+                                                Processed At:
+                                              </span>{" "}
+                                              {format(
+                                                new Date(req.processedAt),
+                                                "dd MMM yyyy, hh:mm a"
+                                              )}
+                                            </p>
+                                          )}
+                                          {req.remarks && (
+                                            <p>
+                                              <span className="font-medium">
+                                                Remarks:
+                                              </span>{" "}
+                                              {req.remarks}
+                                            </p>
+                                          )}
+                                        </div>
+                                      </div>
+
+                                      {/* Balance Info */}
+                                      <div className="bg-white p-5 rounded-xl shadow-sm border">
+                                        <h4 className="text-[#104774] font-semibold text-base mb-3">
+                                          Balance Information
+                                        </h4>
+                                        <div className="space-y-2 text-sm">
+                                          <p>
+                                            <span className="font-medium">
+                                              Remaining at request:
+                                            </span>{" "}
+                                            {req.balanceSnapshot?.remaining?.[
+                                              req.leaveType
+                                            ] ?? "-"}
+                                          </p>
+                                          <p>
+                                            <span className="font-medium">
+                                              Current remaining:
+                                            </span>{" "}
+                                            {req.currentRemaining?.[
+                                              req.leaveType
+                                            ] ?? "-"}
+                                          </p>
+                                          {!hasSufficientBalance && (
+                                            <p className="text-red-600 font-medium flex items-center mt-2">
+                                              <AlertCircle
+                                                size={16}
+                                                className="mr-1"
+                                              />
+                                              Insufficient balance for this
+                                              request
+                                            </p>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </td>
+                                </tr>
+                              )}
+                            </React.Fragment>
+                          );
+                        })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="p-4 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4">
+                  <div className="text-sm text-gray-500">
+                    Showing {indexOfFirstItem + 1} to{" "}
+                    {Math.min(indexOfLastItem, filteredRequests.length)} of{" "}
+                    {filteredRequests.length} entries
+                  </div>
+                  <div className="flex space-x-1">
+                    <button
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.max(prev - 1, 1))
+                      }
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm hover:bg-gray-100"
+                    >
+                      Previous
+                    </button>
+
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => setCurrentPage(pageNum)}
+                          className={`px-3 py-1 rounded-lg border text-sm transition ${
+                            currentPage === pageNum
+                              ? "bg-[#104774] text-white border-[#104774]"
+                              : "hover:bg-gray-100 border-gray-300"
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+
+                    <button
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                      }
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm hover:bg-gray-100"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
               )}
             </>
           )}
@@ -792,7 +1114,11 @@ const AdminLeaves = () => {
       </div>
 
       {/* Sidebar */}
-      <div className={`w-full md:w-80 space-y-6 ${mobileSidebarOpen ? 'block' : 'hidden'} md:block`}>
+      <div
+        className={`w-full md:w-80 space-y-6 ${
+          mobileSidebarOpen ? "block" : "hidden"
+        } md:block`}
+      >
         {/* Leave Policies */}
         <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
           <div className="flex items-center justify-between mb-4">
@@ -801,7 +1127,9 @@ const AdminLeaves = () => {
               className="text-[#104774] hover:text-[#0d3a61]"
               onClick={() => {
                 setSelectedPolicy(null);
-                document.getElementById("policyModal").classList.remove("hidden");
+                document
+                  .getElementById("policyModal")
+                  .classList.remove("hidden");
               }}
             >
               <Plus size={20} />
@@ -815,9 +1143,11 @@ const AdminLeaves = () => {
           ) : (
             <div className="space-y-3 max-h-80 overflow-y-auto">
               {policies.map((p) => {
-                const leaves = p.leaves instanceof Map ? 
-                  Object.fromEntries(p.leaves) : p.leaves;
-                
+                const leaves =
+                  p.leaves instanceof Map
+                    ? Object.fromEntries(p.leaves)
+                    : p.leaves;
+
                 return (
                   <div
                     key={p._id}
@@ -839,7 +1169,7 @@ const AdminLeaves = () => {
                       {Object.entries(leaves).map(([type, days]) => (
                         <p key={type} className="flex justify-between">
                           <span className="capitalize">
-                            {type.replace(/_/g, ' ')}:
+                            {type.replace(/_/g, " ")}:
                           </span>{" "}
                           <span className="font-medium">{days}</span>
                         </p>
@@ -861,7 +1191,9 @@ const AdminLeaves = () => {
               onClick={() => {
                 setSelectedLeaveType(null);
                 setLeaveTypeForm({ name: "", isActive: true });
-                document.getElementById("leaveTypeModal").classList.remove("hidden");
+                document
+                  .getElementById("leaveTypeModal")
+                  .classList.remove("hidden");
               }}
             >
               <Plus size={20} />
@@ -880,11 +1212,21 @@ const AdminLeaves = () => {
                   className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0"
                 >
                   <div className="flex items-center">
-                    <span className={`text-sm ${type.isActive ? 'text-gray-800' : 'text-gray-400 line-through'}`}>
-                      {type.name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    <span
+                      className={`text-sm ${
+                        type.isActive
+                          ? "text-gray-800"
+                          : "text-gray-400 line-through"
+                      }`}
+                    >
+                      {type.name
+                        .replace(/_/g, " ")
+                        .replace(/\b\w/g, (l) => l.toUpperCase())}
                     </span>
                     {!type.isActive && (
-                      <span className="ml-2 text-xs text-gray-400">(Inactive)</span>
+                      <span className="ml-2 text-xs text-gray-400">
+                        (Inactive)
+                      </span>
                     )}
                   </div>
                   <div className="flex space-x-2">
@@ -896,9 +1238,13 @@ const AdminLeaves = () => {
                     </button>
                     <button
                       onClick={() => handleToggleLeaveTypeStatus(type._id)}
-                      className={type.isActive ? "text-yellow-500 hover:text-yellow-700" : "text-green-500 hover:text-green-700"}
+                      className={
+                        type.isActive
+                          ? "text-yellow-500 hover:text-yellow-700"
+                          : "text-green-500 hover:text-green-700"
+                      }
                     >
-                      {type.isActive ? 'Disable' : 'Enable'}
+                      {type.isActive ? "Disable" : "Enable"}
                     </button>
                     <button
                       onClick={() => handleDeleteLeaveType(type._id)}
@@ -917,9 +1263,12 @@ const AdminLeaves = () => {
       {/* Policy Modal */}
       <div
         id="policyModal"
-        className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden z-50 p-4"
+        className="fixed inset-0 backdrop-blur-sm bg-opacity-40 flex items-center justify-center hidden z-50 p-4"
       >
-        <div className="bg-white p-6 rounded-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div
+          className="bg-white p-6 rounded-xl w-full max-w-md max-h-[90vh] overflow-y-auto"
+          shadow-2xl
+        >
           <h3 className="text-lg font-semibold mb-4">
             {selectedPolicy ? "Edit Leave Policy" : "Create Leave Policy"}
           </h3>
@@ -953,32 +1302,36 @@ const AdminLeaves = () => {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#104774]"
               />
             </div>
-            
+
             <div>
-              <label className="block text-sm font-medium mb-1">Leave Types</label>
+              <label className="block text-sm font-medium mb-1">
+                Leave Types
+              </label>
               <div className="space-y-3">
-                {leaveTypes.filter(lt => lt.isActive).map((type) => (
-                  <div key={type._id}>
-                    <label className="block text-sm font-medium mb-1 capitalize">
-                      {type.name.replace(/_/g, ' ')} Leaves
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={policyForm.leaves[type.name] || 0}
-                      onChange={(e) =>
-                        setPolicyForm({
-                          ...policyForm,
-                          leaves: {
-                            ...policyForm.leaves,
-                            [type.name]: parseInt(e.target.value) || 0,
-                          }
-                        })
-                      }
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#104774]"
-                    />
-                  </div>
-                ))}
+                {leaveTypes
+                  .filter((lt) => lt.isActive)
+                  .map((type) => (
+                    <div key={type._id}>
+                      <label className="block text-sm font-medium mb-1 capitalize">
+                        {type.name.replace(/_/g, " ")} Leaves
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={policyForm.leaves[type.name] || 0}
+                        onChange={(e) =>
+                          setPolicyForm({
+                            ...policyForm,
+                            leaves: {
+                              ...policyForm.leaves,
+                              [type.name]: parseInt(e.target.value) || 0,
+                            },
+                          })
+                        }
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#104774]"
+                      />
+                    </div>
+                  ))}
               </div>
             </div>
 
@@ -1006,9 +1359,9 @@ const AdminLeaves = () => {
       {/* Leave Type Modal */}
       <div
         id="leaveTypeModal"
-        className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden z-50 p-4"
+        className="fixed inset-0 backdrop-blur-sm bg-opacity-40 flex items-center justify-center hidden z-50 p-4"
       >
-        <div className="bg-white p-6 rounded-xl w-full max-w-md">
+        <div className="bg-white p-6 rounded-xl w-full max-w-md border border-gray-200 shadow-2xl">
           <h3 className="text-lg font-semibold mb-4">
             {selectedLeaveType ? "Edit Leave Type" : "Add Leave Type"}
           </h3>
@@ -1031,13 +1384,15 @@ const AdminLeaves = () => {
                 Use underscores for spaces (e.g., "work_from_home")
               </p>
             </div>
-            
+
             <div className="flex justify-end space-x-2 pt-2">
               <button
                 type="button"
                 className="px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition-colors"
                 onClick={() => {
-                  document.getElementById("leaveTypeModal").classList.add("hidden");
+                  document
+                    .getElementById("leaveTypeModal")
+                    .classList.add("hidden");
                   setSelectedLeaveType(null);
                 }}
               >
@@ -1057,9 +1412,9 @@ const AdminLeaves = () => {
       {/* Action Modal */}
       <div
         id="actionModal"
-        className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden z-50 p-4"
+        className="fixed inset-0 backdrop-blur-sm bg-opacity-40 flex items-center justify-center hidden z-50 p-4"
       >
-        <div className="bg-white p-6 rounded-xl w-full max-w-md">
+        <div className="bg-white p-6 rounded-xl w-full max-w-md border border-gray-200 shadow-2xl">
           <h3 className="text-lg font-semibold mb-4">Process Leave Request</h3>
           {selectedRequest && (
             <>
@@ -1125,7 +1480,9 @@ const AdminLeaves = () => {
                 <button
                   className="px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition-colors"
                   onClick={() => {
-                    document.getElementById("actionModal").classList.add("hidden");
+                    document
+                      .getElementById("actionModal")
+                      .classList.add("hidden");
                     setActionRemark("");
                   }}
                 >

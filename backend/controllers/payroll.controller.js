@@ -1,132 +1,319 @@
-// controllers/payroll.controller.js
 import Payroll from "../models/payroll.js";
 import Profile from "../models/profile.js";
+import Event from "../models/companyCalendar.js";
 import Attendance from "../models/attendance.js";
+import LeaveRequest from "../models/leaves.js";
 import { calculateAttendanceDeductions } from "../config/payrollCalculator.js";
+import Payslip from "../models/payslip.js";
+
 import mongoose from "mongoose";
 import fs from "fs";
 import path from "path";
+import PDFDocument from "pdfkit";
 
-// HR monthly payroll create 
+
+// Utility to get all dates between two dates
+const getDatesBetween = (startDate, endDate) => {
+  const dates = [];
+  let current = new Date(startDate);
+  while (current <= endDate) {
+    dates.push(new Date(current));
+    current.setDate(current.getDate() + 1);
+  }
+  return dates;
+};
+
+// Controller
 export const createMonthlyPayroll = async (req, res) => {
   try {
-    const { employeeId, month, year, basic, hra, allowances, deductions, tax } = req.body;
-    const hrId = req.user._id;
+    const {
+      employeeId,
+      month, // numeric 1–12
+      year,
+      basic,
+      hra,
+      allowances = [],
+      deductions = [],
+      taxPercentage = 0,
+    } = req.body;
 
-    // Check if payroll already exists for this month
-    const existingPayroll = await Payroll.findOne({
-      employee: employeeId,
-      month: `${year}-${month.toString().padStart(2, '0')}`,
-      year: year
+    if (!employeeId || !month || !year) {
+      return res.status(400).json({ message: "Employee, month, and year required" });
+    }
+
+    const employee = await Profile.findById(employeeId);
+    if (!employee) return res.status(404).json({ message: "Employee not found" });
+
+    // Define payroll cycle: 8th current month -> 7th next month
+    let cycleStart = new Date(year, month - 1, 8);
+    let cycleEnd = new Date(year, month, 7);
+
+    // Handle first joining month (prorated)
+    if (employee.dateOfJoining > cycleStart) {
+      cycleStart = new Date(employee.dateOfJoining);
+    }
+
+    const allDates = getDatesBetween(cycleStart, cycleEnd);
+
+    // Fetch holidays
+    const holidays = await Event.find({
+      startDate: { $lte: cycleEnd },
+      endDate: { $gte: cycleStart },
+      isHoliday: true,
     });
 
-    if (existingPayroll) {
-      return res.status(400).json({
-        message: "Payroll already exists for this month"
-      });
-    }
+    const holidayDates = holidays.map(h => h.startDate.toDateString());
 
-    // Get employee profile
-    const employee = await Profile.findById(employeeId);
-    if (!employee) {
-      return res.status(404).json({ message: "Employee not found" });
-    }
+    // Fetch leaves
+    const leaveRequests = await LeaveRequest.find({
+      employee: employeeId,
+      status: "approved",
+      $or: [
+        { fromDate: { $lte: cycleEnd, $gte: cycleStart } },
+        { toDate: { $lte: cycleEnd, $gte: cycleStart } },
+        { fromDate: { $lte: cycleStart }, toDate: { $gte: cycleEnd } }
+      ]
+    });
 
-    // Calculate attendance deductions
-    const attendanceData = await calculateAttendanceDeductions(employeeId, month, year);
-    
-    // Calculate totals
-    const totalAllowances = allowances.reduce((sum, item) => sum + (item.amount || 0), 0);
-    const totalDeductions = deductions.reduce((sum, item) => sum + (item.amount || 0), 0) + tax + attendanceData.absentDeduction;
-    const totalEarnings = basic + hra + totalAllowances;
+    let leaveDates = [];
+    leaveRequests.forEach(leave => {
+      const dates = getDatesBetween(
+        leave.fromDate > cycleStart ? leave.fromDate : cycleStart,
+        leave.toDate < cycleEnd ? leave.toDate : cycleEnd
+      );
+      leaveDates.push(...dates.map(d => d.toDateString()));
+    });
+
+    // Fetch attendance
+    const attendances = await Attendance.find({
+      employee: employeeId,
+      date: { $gte: cycleStart, $lte: cycleEnd }
+    });
+
+    const absentDates = allDates
+      .filter(d => {
+        const day = d.getDay();
+        const isSunday = day === 0;
+        const isHoliday = holidayDates.includes(d.toDateString());
+        const isLeave = leaveDates.includes(d.toDateString());
+        const att = attendances.find(a => a.date.toDateString() === d.toDateString());
+        const isAbsent = !att && !isSunday && !isHoliday && !isLeave;
+        return isAbsent;
+      })
+      .map(d => d.toDateString());
+
+    const workingDays = allDates.filter(d => {
+      const day = d.getDay();
+      const isSunday = day === 0;
+      const isHoliday = holidayDates.includes(d.toDateString());
+      return !isSunday && !isHoliday;
+    }).length;
+
+    const presentDays = workingDays - absentDates.length - leaveDates.length;
+    const leaveDays = leaveDates.length;
+    const absentDays = absentDates.length;
+
+    // Basic salary prorated
+    const monthDays = 31; // assuming 31 days for simplicity; could adjust with actual month days
+    const perDaySalary = basic / monthDays;
+    const absentDeduction = perDaySalary * absentDays;
+    const totalEarnings = basic + hra + allowances.reduce((acc, a) => acc + a.amount, 0);
+    const totalDeductions =
+      absentDeduction + deductions.reduce((acc, d) => acc + d.amount, 0) + (basic * (taxPercentage / 100));
     const netPay = totalEarnings - totalDeductions;
 
-    // Create payroll
     const payroll = await Payroll.create({
       employee: employeeId,
       basic,
       hra,
       allowances,
       deductions,
-      tax,
-      month: `${year}-${month.toString().padStart(2, '0')}`,
+      tax: Math.round(basic * (taxPercentage / 100)),
+      month: `${year}-${String(month).padStart(2, "0")}`,
       year,
-      absentDays: attendanceData.absentDays,
-      absentDeduction: attendanceData.absentDeduction,
-      totalEarnings,
-      totalDeductions,
-      netPay,
-      generatedBy: hrId,
+      absentDays,
+      absentDeduction: Math.round(absentDeduction),
+      presentDays,
+      leaveDays,
+      workingDays,
+      totalEarnings: Math.round(totalEarnings),
+      totalDeductions: Math.round(totalDeductions),
+      netPay: Math.round(netPay),
+      generatedBy: req.user._id,
       status: "draft"
     });
 
-    const populatedPayroll = await Payroll.findById(payroll._id)
-      .populate('employeeProfile')
-      .populate('generatedByUser', 'email');
-
-    res.status(201).json({
+    return res.status(201).json({
       message: "Payroll created successfully",
-      data: populatedPayroll
+      data: payroll
     });
-
   } catch (error) {
-    console.error("Create payroll error:", error);
-    res.status(500).json({
+    console.error("Payroll creation error:", error);
+    return res.status(500).json({
       message: "Error creating payroll",
       error: process.env.NODE_ENV === "development" ? error.message : undefined
     });
   }
 };
 
-// Get payrolls (role-based access)
-// export const getPayrolls = async (req, res) => {
-//   try {
-//     const { month, year, status, department } = req.query;
-//     const userRole = req.user.role;
 
-//     let query = {};
+export const getLatestPayrollForEmployee = async (req, res) => {
+  try {
+    const { employeeId } = req.params;
+    const latestPayroll = await Payroll.findOne({ employee: employeeId }).sort({ createdAt: -1 });
+    if (!latestPayroll) return res.status(404).json({ message: "No payroll found for this employee" });
 
-//     // Filter by month and year
-//     if (month && year) {
-//       query.month = `${year}-${month.toString().padStart(2, '0')}`;
-//       query.year = parseInt(year);
-//     }
+    res.status(200).json({
+      message: "Latest payroll fetched successfully",
+      data: latestPayroll
+    });
+  } catch (error) {
+    console.error("Get latest payroll error:", error);
+    res.status(500).json({ message: "Error fetching latest payroll", error: process.env.NODE_ENV === "development" ? error.message : undefined });
+  }
+};
 
-//     // Filter by status
-//     if (status) {
-//       query.status = status;
-//     }
+export const checkPayrollExists = async (req, res) => {
+  try {
+    const { employeeId } = req.params;
+    const { month, year } = req.query;
+    if (!month || !year) return res.status(400).json({ message: "Month and year required" });
 
-//     // HR can only see their created payrolls
-//     if (userRole === "hr") {
-//       query.generatedBy = req.user._id;
-//     }
+    const exists = await Payroll.exists({ employee: employeeId, month: Number(month), year: Number(year) });
+    res.status(200).json({ exists: !!exists });
+  } catch (error) {
+    console.error("Check payroll error:", error);
+    res.status(500).json({ message: "Error checking payroll", error: process.env.NODE_ENV === "development" ? error.message : undefined });
+  }
+};
 
-//     // Filter by department
-//     if (department) {
-//       const employeesInDept = await Profile.find({ department }).select('_id');
-//       query.employee = { $in: employeesInDept.map(emp => emp._id) };
-//     }
+export const getPayrollPreview = async (req, res) => {
+  try {
+    let {
+      employeeId,
+      month,
+      year,
+      basic = 30000,
+      hra = 12000,
+      allowances = '[]',
+      deductions = '[]',
+      taxPercentage = 0
+    } = req.query;
 
-//     const payrolls = await Payroll.find(query)
-//       .populate('employeeProfile', 'firstName lastName employeeId department designation')
-//       .populate('generatedByUser', 'email')
-//       .populate('approvedByUser', 'email')
-//       .sort({ createdAt: -1 });
+    // parse allowances/deductions from query string to arrays
+    try {
+      allowances = JSON.parse(allowances);
+      deductions = JSON.parse(deductions);
+    } catch (err) {
+      return res.status(400).json({ message: "Allowances or deductions are not valid JSON arrays" });
+    }
 
-//     res.status(200).json({
-//       message: "Payrolls fetched successfully",
-//       data: payrolls
-//     });
+    if (!employeeId || !month || !year) {
+      return res.status(400).json({ message: "Employee, month, and year required" });
+    }
 
-//   } catch (error) {
-//     console.error("Get payrolls error:", error);
-//     res.status(500).json({
-//       message: "Error fetching payrolls",
-//       error: process.env.NODE_ENV === "development" ? error.message : undefined
-//     });
-//   }
-// };
+    const employee = await Profile.findById(employeeId);
+    if (!employee) return res.status(404).json({ message: "Employee not found" });
+
+    let cycleStart = new Date(year, month - 1, 8);
+    let cycleEnd = new Date(year, month, 7);
+
+    if (employee.dateOfJoining > cycleStart) {
+      cycleStart = new Date(employee.dateOfJoining);
+    }
+
+    const allDates = getDatesBetween(cycleStart, cycleEnd);
+
+    // Fetch holidays
+    const holidays = await Event.find({
+      startDate: { $lte: cycleEnd },
+      endDate: { $gte: cycleStart },
+      isHoliday: true,
+    });
+    const holidayDates = holidays.map(h => h.startDate.toDateString());
+
+    // Fetch approved leaves
+    const leaveRequests = await LeaveRequest.find({
+      employee: employeeId,
+      status: "approved",
+      $or: [
+        { fromDate: { $lte: cycleEnd, $gte: cycleStart } },
+        { toDate: { $lte: cycleEnd, $gte: cycleStart } },
+        { fromDate: { $lte: cycleStart }, toDate: { $gte: cycleEnd } }
+      ]
+    });
+
+    let leaveDates = [];
+    leaveRequests.forEach(leave => {
+      const dates = getDatesBetween(
+        leave.fromDate > cycleStart ? leave.fromDate : cycleStart,
+        leave.toDate < cycleEnd ? leave.toDate : cycleEnd
+      );
+      leaveDates.push(...dates.map(d => d.toDateString()));
+    });
+
+    // Fetch attendance
+    const attendances = await Attendance.find({
+      employee: employeeId,
+      date: { $gte: cycleStart, $lte: cycleEnd }
+    });
+
+    const absentDates = allDates
+      .filter(d => {
+        const day = d.getDay();
+        const isSunday = day === 0;
+        const isHoliday = holidayDates.includes(d.toDateString());
+        const isLeave = leaveDates.includes(d.toDateString());
+        const att = attendances.find(a => a.date.toDateString() === d.toDateString());
+        return !att && !isSunday && !isHoliday && !isLeave;
+      })
+      .map(d => d.toDateString());
+
+    const workingDays = allDates.filter(d => {
+      const day = d.getDay();
+      const isSunday = day === 0;
+      const isHoliday = holidayDates.includes(d.toDateString());
+      return !isSunday && !isHoliday;
+    }).length;
+
+    const leaveDays = leaveDates.length;
+    const absentDays = absentDates.length;
+
+    const monthDays = 31; // simple assumption
+    const perDaySalary = Number(basic) / monthDays;
+    const absentDeduction = perDaySalary * absentDays;
+
+    const totalEarnings =
+      Number(basic) +
+      Number(hra) +
+      allowances.reduce((acc, a) => acc + Number(a.amount || 0), 0);
+
+    const totalDeductions =
+      absentDeduction +
+      deductions.reduce((acc, d) => acc + Number(d.amount || 0), 0) +
+      Number(basic) * (Number(taxPercentage) / 100);
+
+    const netPay = totalEarnings - totalDeductions;
+
+    res.status(200).json({
+      cycleDays: allDates.length,
+      sundaysHolidays: allDates.length - workingDays,
+      workingDays,
+      approvedLeaves: leaveDays,
+      absent: absentDays,
+      absentDeduction: Math.round(absentDeduction),
+      totalEarnings: Math.round(totalEarnings),
+      totalDeductions: Math.round(totalDeductions),
+      payableSalary: Math.round(netPay),
+    });
+  } catch (error) {
+    console.error("Payroll preview error:", error);
+    res.status(500).json({
+      message: "Error generating payroll preview",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined
+    });
+  }
+};
 
 // HR edit  (only DRAFT status )
 export const updatePayroll = async (req, res) => {
@@ -191,94 +378,11 @@ export const updatePayroll = async (req, res) => {
   }
 };
 
-// Admin approve  (DRAFT → APPROVED)
-export const approvePayroll = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { action, rejectionReason } = req.body; // action: 'approve' or 'reject'
 
-    const payroll = await Payroll.findById(id);
-    
-    if (!payroll) {
-      return res.status(404).json({ message: "Payroll not found" });
-    }
-
-    // Only DRAFT or PENDING_APPROVAL payrolls can be processed
-    if (!["draft", "pending_approval"].includes(payroll.status)) {
-      return res.status(400).json({ message: "Payroll cannot be processed in current status" });
-    }
-
-    if (action === "approve") {
-      payroll.status = "approved";
-      payroll.approvedBy = req.user._id;
-      payroll.approvedAt = new Date();
-      payroll.rejectionReason = undefined;
-    } else if (action === "reject") {
-      if (!rejectionReason) {
-        return res.status(400).json({ message: "Rejection reason is required" });
-      }
-      payroll.status = "rejected";
-      payroll.rejectionReason = rejectionReason;
-      payroll.approvedBy = req.user._id;
-      payroll.approvedAt = new Date();
-    } else {
-      return res.status(400).json({ message: "Invalid action" });
-    }
-
-    const updatedPayroll = await payroll.save();
-    const populatedPayroll = await Payroll.findById(updatedPayroll._id)
-      .populate('employeeProfile', 'firstName lastName employeeId department designation')
-      .populate('generatedByUser', 'email')
-      .populate('approvedByUser', 'email');
-
-    res.status(200).json({
-      message: `Payroll ${action}ed successfully`,
-      data: populatedPayroll
-    });
-
-  } catch (error) {
-    console.error("Approve payroll error:", error);
-    res.status(500).json({
-      message: "Error processing payroll",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined
-    });
-  }
-};
 
 // Employee  approved payrolls
-// export const getEmployeePayrolls = async (req, res) => {
-//   try {
-//     const { month, year } = req.query;
-//     const employeeId = req.user.profileRef; // Assuming profileRef is stored in token
-
-//     let query = {
-//       employee: employeeId,
-//       status: "approved"
-//     };
-
-//     if (month && year) {
-//       query.month = `${year}-${month.toString().padStart(2, '0')}`;
-//       query.year = parseInt(year);
-//     }
-
-//     const payrolls = await Payroll.find(query)
-//       .populate('employeeProfile', 'firstName lastName employeeId department designation')
-//       .sort({ month: -1 });
-
-//     res.status(200).json({
-//       message: "Payrolls fetched successfully",
-//       data: payrolls
-//     });
-
-//   } catch (error) {
-//     console.error("Get employee payrolls error:", error);
-//     res.status(500).json({
-//       message: "Error fetching payrolls",
-//       error: process.env.NODE_ENV === "development" ? error.message : undefined
-//     });
-//   }
-// };
 export const getEmployeePayrolls = async (req, res) => {
+  
   try {
     const { month, year } = req.query;
     const employeeId = req.user.profileRef?._id || req.user.profileRef; 
@@ -313,97 +417,130 @@ export const getEmployeePayrolls = async (req, res) => {
 };
 
 
-
-//  Get latest payroll of an employee (HR only)
-export const getLatestPayrollForEmployee = async (req, res) => {
-  try {
-    const { employeeId } = req.params;
-
-    const latestPayroll = await Payroll.findOne({ employee: employeeId })
-      .sort({ createdAt: -1 });
-
-    if (!latestPayroll) {
-      return res.status(404).json({
-        message: "No payroll found for this employee"
-      });
-    }
-
-    res.status(200).json({
-      message: "Latest payroll fetched successfully",
-      data: latestPayroll
-    });
-  } catch (error) {
-    console.error("Get latest payroll error:", error);
-    res.status(500).json({
-      message: "Error fetching latest payroll",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined
-    });
-  }
-};
-
-
-
-
-/* -------------------------
-   Updated getPayrolls (add employee filter + safe populates)
-   ------------------------- */
 export const getPayrolls = async (req, res) => {
   try {
-    const { month, year, status, department, employee } = req.query;
+    const { month, year, status, department, employee, fullData } = req.query;
     const userRole = req.user.role;
 
     let query = {};
 
-    // Filter by month and year
+    // Month & Year
     if (month && year) {
-      query.month = `${year}-${month.toString().padStart(2, '0')}`;
+      query.month = `${year}-${month.toString().padStart(2, "0")}`;
       query.year = parseInt(year);
     }
 
-    // Filter by status
-    if (status) {
-      query.status = status;
-    }
+    // Status
+    if (status) query.status = status;
 
-    // Filter by specific employee (frontend sends employee id)
+    // Employee + Department combined safely
+    let employeeIds = [];
+    if (department) {
+      const deptEmps = await Profile.find({ department }).select("_id");
+      employeeIds = deptEmps.map((e) => e._id);
+    }
     if (employee) {
-      // accept either string id or object form — convert to ObjectId if looks like one
       try {
-        query.employee = mongoose.Types.ObjectId(employee);
-      } catch (err) {
-        query.employee = employee;
+        employeeIds.push(mongoose.Types.ObjectId(employee));
+      } catch {
+        employeeIds.push(employee);
       }
     }
-
-    // HR can only see their created payrolls (keeps existing behavior)
-    if (userRole === "hr") {
-      query.generatedBy = req.user._id;
+    if (employeeIds.length > 0) {
+      query.employee = { $in: employeeIds };
     }
 
-    // Filter by department
-    if (department) {
-      const employeesInDept = await Profile.find({ department }).select('_id');
-      query.employee = { $in: employeesInDept.map(emp => emp._id) };
-    }
+    // HR restriction
+    if (userRole === "hr") query.generatedBy = req.user._id;
 
+    // Fetch payrolls with proper population
     const payrolls = await Payroll.find(query)
-      // try to populate both possible field names so frontend gets generatedBy email either way
-      .populate('employeeProfile', 'firstName lastName employeeId department designation avatarUrl')
-      .populate('generatedByUser', 'email')
-      .populate('generatedBy', 'email')
-      .populate('approvedByUser', 'email')
-      .populate('approvedBy', 'email')
+      .populate({
+        path: "employee",
+        select: "firstName lastName employeeId avatarUrl user",
+        populate: { 
+          path: "user", 
+          select: "email" 
+        }
+      })
+      .populate({ 
+        path: "generatedBy", 
+        select: "email firstName lastName" 
+      })
+      .populate({ 
+        path: "approvedBy", 
+        select: "email firstName lastName" 
+      })
       .sort({ createdAt: -1 });
+
+    // Format the response
+    const formattedPayrolls = payrolls.map((p) => ({
+      _id: p._id,
+      employee: {
+        _id: p.employee?._id,
+        firstName: p.employee?.firstName || null,
+        lastName: p.employee?.lastName || null,
+        employeeId: p.employee?.employeeId || null,
+        avatarUrl: p.employee?.avatarUrl || null,
+        email: p.employee?.user?.email || null,
+      },
+      status: p.status,
+      generatedBy: p.generatedBy?.email || null,
+      approvedBy: p.approvedBy?.email || null,
+      month: p.month,
+      year: p.year,
+      netPay: p.netPay,
+      totalEarnings: p.totalEarnings,
+      totalDeductions: p.totalDeductions,
+      // Modal ke liye required fields
+      basic: p.basic,
+      hra: p.hra,
+      tax: p.tax,
+      allowances: p.allowances,
+      deductions: p.deductions,
+      rejectionReason: p.rejectionReason,
+      generatedAt: p.createdAt,
+      // Employee profile for modal title
+      employeeProfile: {
+        firstName: p.employee?.firstName || null,
+        lastName: p.employee?.lastName || null,
+        employeeId: p.employee?.employeeId || null,
+      }
+    }));
 
     return res.status(200).json({
       message: "Payrolls fetched successfully",
-      data: payrolls
+      data: formattedPayrolls,
     });
-
   } catch (error) {
     console.error("Get payrolls error:", error);
     return res.status(500).json({
       message: "Error fetching payrolls",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+};
+export const getPayrollById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const payroll = await Payroll.findById(id)
+      .populate('employeeProfile', 'firstName lastName employeeId department designation avatarUrl')
+      .populate('generatedByUser', 'email')
+      .populate('approvedByUser', 'email');
+
+    if (!payroll) {
+      return res.status(404).json({ message: "Payroll not found" });
+    }
+
+    res.status(200).json({
+      message: "Payroll fetched successfully",
+      data: payroll
+    });
+  } catch (error) {
+    console.error("Get payroll error:", error);
+    res.status(500).json({
+      message: "Error fetching payroll",
       error: process.env.NODE_ENV === "development" ? error.message : undefined
     });
   }
@@ -455,60 +592,441 @@ export const submitPayrollForApproval = async (req, res) => {
   }
 };
 
-/* -------------------------
-   Get Payslip (download)
-   GET /api/payroll/payslip/download/:id
-   Expects payroll.payslipPath (filesystem path) OR payroll.payslipFilename
-   ------------------------- */
+
+   // controllers/payroll.controller.js
+
 export const getPayslip = async (req, res) => {
   try {
     const { id } = req.params;
+    console.log("📥 Download request for payroll ID:", id);
+
     const payroll = await Payroll.findById(id)
       .populate('employeeProfile', 'firstName lastName employeeId');
+
+    if (!payroll) {
+      console.log("❌ Payroll not found in database");
+      return res.status(404).json({ message: "Payroll not found" });
+    }
+
+    console.log("✅ Payroll found:", payroll.employeeProfile.employeeId);
+
+    if (!payroll.payslipPath) {
+      console.log("❌ No payslipPath in payroll document");
+      return res.status(404).json({ message: "Payslip not generated yet" });
+    }
+
+    // Resolve absolute path
+    let filePath = payroll.payslipPath;
+    if (!path.isAbsolute(filePath)) {
+      filePath = path.join(process.cwd(), filePath.replace(/^\/+/, "")); // remove leading slash
+    }
+
+    console.log("🔍 Absolute file path:", filePath);
+
+    if (!fs.existsSync(filePath)) {
+      console.log("❌ File not found on server");
+      return res.status(404).json({ message: "Payslip file missing on server" });
+    }
+
+    // Set headers and stream PDF
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="payslip-${payroll.employeeProfile.employeeId}-${payroll.month}.pdf"`);
+
+    const fileStream = fs.createReadStream(filePath);
+    fileStream.pipe(res);
+
+    fileStream.on("error", (err) => {
+      console.error("❌ Stream error:", err);
+      res.status(500).json({ message: "Error streaming file" });
+    });
+
+    fileStream.on("end", () => {
+      console.log("✅ File streamed successfully");
+    });
+
+  } catch (error) {
+    console.error("❌ Get payslip error:", error);
+    res.status(500).json({
+      message: "Error fetching payslip",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+};
+
+export const generatePayslip = async (req, res) => {
+  try {
+    const { id } = req.params; // payrollId
+    console.log("Generating payslip for payroll ID:", id);
+
+    const payroll = await Payroll.findById(id)
+      .populate("employeeProfile", "firstName lastName employeeId department designation")
+      .populate("generatedByUser", "email");
+
+    if (!payroll) {
+      console.log("Payroll not found with ID:", id);
+      return res.status(404).json({ message: "Payroll not found" });
+    }
+
+    console.log("Payroll found for employee:", payroll.employeeProfile.employeeId);
+
+    // Check if payslip already exists
+    const existingPayslip = await Payslip.findOne({ payrollRef: id });
+    if (existingPayslip) {
+      console.log("Payslip already exists");
+      return res.status(400).json({ message: "Payslip already generated" });
+    }
+
+    // Create PDF document
+    const doc = new PDFDocument();
+    const fileName = `payslip-${payroll.employeeProfile.employeeId}-${payroll.month}.pdf`;
+    const filePath = path.join(process.cwd(), "uploads", "payslips", fileName);
+
+    // Ensure directory exists
+    const dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+
+    // Fill PDF content
+    doc.fontSize(20).text("PAYSLIP", { align: "center" });
+    doc.moveDown();
+    doc.fontSize(12).text(`Employee: ${payroll.employeeProfile.firstName} ${payroll.employeeProfile.lastName}`);
+    doc.text(`Employee ID: ${payroll.employeeProfile.employeeId}`);
+    doc.text(`Department: ${payroll.employeeProfile.department}`);
+    doc.text(`Designation: ${payroll.employeeProfile.designation}`);
+    doc.text(`Period: ${payroll.month}-${payroll.year}`);
+    doc.moveDown();
+
+    doc.fontSize(14).text("EARNINGS", { underline: true });
+    doc.text(`Basic Salary: ₹${payroll.basic.toLocaleString()}`);
+    doc.text(`HRA: ₹${payroll.hra.toLocaleString()}`);
+    payroll.allowances.forEach(a => doc.text(`${a.title}: ₹${a.amount.toLocaleString()}`));
+    doc.text(`Total Earnings: ₹${payroll.totalEarnings.toLocaleString()}`);
+    doc.moveDown();
+
+    doc.fontSize(14).text("DEDUCTIONS", { underline: true });
+    doc.text(`Tax: ₹${payroll.tax.toLocaleString()}`);
+    payroll.deductions.forEach(d => doc.text(`${d.title}: ₹${d.amount.toLocaleString()}`));
+    if (payroll.absentDeduction > 0) {
+      doc.text(`Absent Deduction (${payroll.absentDays} days): ₹${payroll.absentDeduction.toLocaleString()}`);
+    }
+    doc.text(`Total Deductions: ₹${payroll.totalDeductions.toLocaleString()}`);
+    doc.moveDown();
+
+    doc.fontSize(16).text(`NET PAY: ₹${payroll.netPay.toLocaleString()}`, { align: "center" });
+    doc.moveDown();
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`);
+    doc.text(`Status: ${payroll.status.toUpperCase()}`);
+
+    // PDF generation helper
+    const createPdf = (doc, filePath) => {
+      return new Promise((resolve, reject) => {
+        const stream = fs.createWriteStream(filePath);
+        doc.pipe(stream);
+        doc.end();
+        stream.on("finish", resolve);
+        stream.on("error", reject);
+      });
+    };
+
+    // Wait for PDF to be written
+    await createPdf(doc, filePath);
+
+    console.log("PDF created successfully, saving to database...");
+
+    // Save payslip in DB
+    const payslip = await Payslip.create({
+      payrollRef: id,
+      employee: payroll.employee,
+      month: payroll.month,
+      pdfUrl: `/uploads/payslips/${fileName}`,
+    });
+
+    // Update payroll with payslipPath
+    payroll.payslipPath = `/uploads/payslips/${fileName}`;
+    await payroll.save();
+
+    console.log("Payroll updated with payslip path and Payslip record created");
+
+    res.status(201).json({
+      message: "Payslip generated successfully",
+      data: {
+        payslipId: payslip._id,
+        downloadUrl: `/api/payroll/payslip/download/${id}`,
+      },
+    });
+
+  } catch (error) {
+    console.error("Generate payslip error:", error);
+    res.status(500).json({
+      message: "Error generating payslip",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+};
+
+
+// Admin approves payroll + AUTO-GENERATE PAYSLIP
+
+export const downloadPayslip = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const payroll = await Payroll.findById(id)
+      .populate("employeeProfile", "firstName lastName employeeId department designation")
+      .populate("generatedByUser", "name email")
+      .populate("approvedByUser", "name email");
 
     if (!payroll) {
       return res.status(404).json({ message: "Payroll not found" });
     }
 
-    // check for path field (common names: payslipPath, payslipUrl, payslipFilename)
-    const possiblePaths = [
-      payroll.payslipPath,
-      payroll.payslipUrl,
-      payroll.payslipFilename,
-      payroll.payslip // generic
-    ].filter(Boolean);
+    // ✅ Create PDF
+    const doc = new PDFDocument({ margin: 50, size: "A4" });
+    const fileName = `payslip-${payroll.employeeProfile.employeeId}-${payroll.month}.pdf`;
+    const filePath = path.join(process.cwd(), "uploads", "payslips", fileName);
 
-    if (possiblePaths.length === 0) {
-      return res.status(404).json({ message: "Payslip file not found for this payroll" });
+    if (!fs.existsSync(path.dirname(filePath))) {
+      fs.mkdirSync(path.dirname(filePath), { recursive: true });
     }
 
-    // If path looks like URL (http(s)), redirect
-    const firstPath = possiblePaths[0];
-    if (/^https?:\/\//.test(firstPath)) {
-      return res.redirect(firstPath);
-    }
+    const stream = fs.createWriteStream(filePath);
+    doc.pipe(stream);
 
-    // Assume it's a filesystem path relative to project root or absolute
-    const absolutePath = path.isAbsolute(firstPath) ? firstPath : path.join(process.cwd(), firstPath);
+    // ========== HEADER ==========
+    doc.fontSize(20).font("Helvetica-Bold").fillColor("#000")
+      .text("GYS TECHNOLOGIES PVT. LTD", { align: "center" });
+    doc.fontSize(10).fillColor("#555")
+      .text("Innovating Tomorrow, Today", { align: "center" });
+    doc.moveDown(0.3);
+    doc.fontSize(9).fillColor("#333")
+      .text("H N C 1 Sayam Enklavya, Haridwar, Dehradun, Uttarakhand, India - 249401", { align: "center" });
+    doc.text("Phone: +91-8273370028 | Email: info@gystechnologies.com", { align: "center" });
 
-    if (!fs.existsSync(absolutePath)) {
-      return res.status(404).json({ message: "Payslip file missing on server" });
-    }
+    doc.moveDown(0.5);
+    doc.strokeColor("#000").lineWidth(1).moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+    doc.moveDown(1);
 
-    // Stream file with proper headers
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename="payslip-${payroll._id}.pdf"`);
+    // ========= TITLE =========
+    doc.fontSize(16).font("Helvetica-Bold").fillColor("#000")
+      .text("SALARY PAYSLIP", { align: "center" });
+    doc.moveDown(0.5);
 
-    const stream = fs.createReadStream(absolutePath);
-    stream.pipe(res);
-    stream.on('error', (err) => {
-      console.error("Payslip stream error:", err);
-      return res.status(500).end();
+    const monthNames = [
+      "January","February","March","April","May","June",
+      "July","August","September","October","November","December"
+    ];
+    const [year, month] = payroll.month.split("-");
+    const monthName = monthNames[parseInt(month) - 1];
+    doc.fontSize(10).font("Helvetica-Oblique").fillColor("#444")
+      .text(`Payment Period: ${monthName} ${year}`, { align: "center" });
+    doc.moveDown(1);
+
+    // ========= EMPLOYEE / COMPANY DETAILS =========
+    const tableTop = doc.y;
+    const tableLeft = 50;
+    const tableWidth = 500;
+
+    // Table headers
+    doc.font("Helvetica-Bold").fontSize(10).fillColor("#000");
+    doc.text("EMPLOYEE DETAILS", tableLeft + 10, tableTop);
+    doc.text("COMPANY DETAILS", tableLeft + 260, tableTop);
+
+    doc.font("Helvetica").fontSize(9).fillColor("#000");
+    doc.text(`Name: ${payroll.employeeProfile.firstName} ${payroll.employeeProfile.lastName}`, tableLeft + 10, tableTop + 20);
+    doc.text(`ID: ${payroll.employeeProfile.employeeId}`, tableLeft + 10, tableTop + 35);
+    doc.text(`Dept: ${payroll.employeeProfile.department}`, tableLeft + 10, tableTop + 50);
+    doc.text(`Designation: ${payroll.employeeProfile.designation}`, tableLeft + 10, tableTop + 65);
+
+    doc.text("GYS Technologies Pvt. Ltd.", tableLeft + 260, tableTop + 20);
+    doc.text("Registered Office:", tableLeft + 260, tableTop + 35);
+    doc.text("H N C 1 Sayam Enklavya,", tableLeft + 260, tableTop + 50);
+    doc.text("Haridwar, Dehradun, Uttarakhand 249401", tableLeft + 260, tableTop + 65);
+
+    doc.moveTo(tableLeft, tableTop + 85).lineTo(tableLeft + tableWidth, tableTop + 85)
+      .strokeColor("#aaa").lineWidth(0.5).stroke();
+    doc.moveDown(2);
+
+    // ========= EARNINGS =========
+    doc.font("Helvetica-Bold").fontSize(11).fillColor("#000")
+      .text("EARNINGS", tableLeft + 10, doc.y);
+    doc.text("AMOUNT (₹)", tableLeft + 400, doc.y);
+
+    let currentY = doc.y + 15;
+    doc.font("Helvetica").fontSize(10).fillColor("#000");
+
+    doc.text("Basic Salary", tableLeft + 10, currentY);
+    doc.text(payroll.basic.toLocaleString("en-IN"), tableLeft + 400, currentY, { align: "right" });
+    currentY += 15;
+
+    doc.text("House Rent Allowance (HRA)", tableLeft + 10, currentY);
+    doc.text(payroll.hra.toLocaleString("en-IN"), tableLeft + 400, currentY, { align: "right" });
+    currentY += 15;
+
+    payroll.allowances.forEach((a) => {
+      doc.text(a.title, tableLeft + 10, currentY);
+      doc.text(a.amount.toLocaleString("en-IN"), tableLeft + 400, currentY, { align: "right" });
+      currentY += 15;
     });
+
+    doc.moveTo(tableLeft, currentY).lineTo(tableLeft + tableWidth, currentY).strokeColor("#000").lineWidth(0.5).stroke();
+    currentY += 10;
+
+    doc.font("Helvetica-Bold").text("TOTAL EARNINGS", tableLeft + 10, currentY);
+    doc.text(payroll.totalEarnings.toLocaleString("en-IN"), tableLeft + 400, currentY, { align: "right" });
+    currentY += 25;
+
+    // ========= DEDUCTIONS =========
+    doc.font("Helvetica-Bold").fontSize(11).fillColor("#000")
+      .text("DEDUCTIONS", tableLeft + 10, currentY);
+    doc.text("AMOUNT (₹)", tableLeft + 400, currentY);
+
+    currentY += 15;
+    doc.font("Helvetica").fontSize(10).fillColor("#000");
+
+    doc.text("Professional Tax", tableLeft + 10, currentY);
+    doc.text(payroll.tax.toLocaleString("en-IN"), tableLeft + 400, currentY, { align: "right" });
+    currentY += 15;
+
+    if (payroll.absentDeduction > 0) {
+      doc.text(`Absent Deduction (${payroll.absentDays} days)`, tableLeft + 10, currentY);
+      doc.text(`-${payroll.absentDeduction.toLocaleString("en-IN")}`, tableLeft + 400, currentY, { align: "right" });
+      currentY += 15;
+    }
+
+    payroll.deductions.forEach((d) => {
+      doc.text(d.title, tableLeft + 10, currentY);
+      doc.text(`-${d.amount.toLocaleString("en-IN")}`, tableLeft + 400, currentY, { align: "right" });
+      currentY += 15;
+    });
+
+    doc.moveTo(tableLeft, currentY).lineTo(tableLeft + tableWidth, currentY).strokeColor("#000").lineWidth(0.5).stroke();
+    currentY += 10;
+
+    doc.font("Helvetica-Bold").text("TOTAL DEDUCTIONS", tableLeft + 10, currentY);
+    doc.text(`-${payroll.totalDeductions.toLocaleString("en-IN")}`, tableLeft + 400, currentY, { align: "right" });
+    currentY += 25;
+
+    // ========= NET PAY =========
+    doc.font("Helvetica-Bold").fontSize(12).fillColor("#000")
+      .text("NET PAY", tableLeft + 10, currentY);
+    doc.text(`₹${payroll.netPay.toLocaleString("en-IN")}`, tableLeft + 400, currentY, { align: "right" });
+    currentY += 30;
+
+    // ========= APPROVAL =========
+    doc.font("Helvetica").fontSize(9).fillColor("#555");
+    if (payroll.approvedByUser) {
+      doc.text(`Approved By: ${payroll.approvedByUser.name} (${payroll.approvedByUser.email})`, tableLeft, currentY);
+      doc.text(`Approval Date: ${new Date(payroll.approvedAt).toLocaleDateString("en-IN")}`, tableLeft, currentY + 12);
+      currentY += 30;
+    }
+
+    // ========= FOOTER =========
+    doc.moveDown(1);
+    doc.strokeColor("#aaa").lineWidth(0.5).moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+    doc.moveDown(0.5);
+
+    doc.font("Helvetica").fontSize(8).fillColor("#777")
+      .text("This is a computer generated payslip and does not require signature.", { align: "center" });
+    doc.text(`Generated on: ${new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })}`, { align: "center" });
+    doc.text(`Status: ${payroll.status.toUpperCase()}`, { align: "center" });
+
+    doc.moveDown(0.5);
+    doc.fontSize(7).fillColor("#aaa")
+      .text(`Payroll ID: ${payroll._id} • Employee ID: ${payroll.employeeProfile.employeeId}`, { align: "center" });
+
+    doc.end();
+
+    await new Promise((resolve, reject) => {
+      stream.on("finish", resolve);
+      stream.on("error", reject);
+    });
+
+    payroll.payslipPath = `/uploads/payslips/${fileName}`;
+    await payroll.save();
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+    fs.createReadStream(filePath).pipe(res);
+
   } catch (error) {
-    console.error("Get payslip error:", error);
-    return res.status(500).json({
-      message: "Error fetching payslip",
+    console.error("Download payslip error:", error);
+    res.status(500).json({ message: "Error generating payslip" });
+  }
+};
+
+
+
+export const approvePayroll = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { action, rejectionReason } = req.body;
+
+    const payroll = await Payroll.findById(id)
+      .populate("employeeProfile", "firstName lastName employeeId department designation")
+      .populate("generatedByUser", "email");
+
+    if (!payroll) {
+      return res.status(404).json({ message: "Payroll not found" });
+    }
+
+    if (!["draft", "pending_approval"].includes(payroll.status)) {
+      return res.status(400).json({ message: "Payroll cannot be processed in current status" });
+    }
+
+    if (action === "approve") {
+      // ✅ GET FRESH ATTENDANCE DATA WITH LEAVES
+      const [year, month] = payroll.month.split('-');
+      const attendanceData = await calculateAttendanceDeductions(
+        payroll.employee, 
+        parseInt(month), 
+        parseInt(year)
+      );
+
+      // ✅ UPDATE PAYROLL WITH LATEST DATA
+      payroll.absentDays = attendanceData.absentDays;
+      payroll.absentDeduction = attendanceData.absentDeduction;
+      payroll.presentDays = attendanceData.presentDays;
+      payroll.leaveDays = attendanceData.leaveDays; // ✅ NEW: Leave days
+      payroll.workingDays = attendanceData.totalWorkingDays; // ✅ CHANGED: workingDays
+
+      // ✅ RECALCULATE TOTALS
+      const totalAllowances = payroll.allowances.reduce((sum, item) => sum + (item.amount || 0), 0);
+      const totalDeductions = payroll.deductions.reduce((sum, item) => sum + (item.amount || 0), 0) + 
+                            payroll.tax + payroll.absentDeduction;
+      const totalEarnings = payroll.basic + payroll.hra + totalAllowances;
+      
+      payroll.totalEarnings = totalEarnings;
+      payroll.totalDeductions = totalDeductions;
+      payroll.netPay = totalEarnings - totalDeductions;
+
+      payroll.status = "approved";
+      payroll.approvedBy = req.user._id;
+      payroll.approvedAt = new Date();
+      payroll.rejectionReason = undefined;
+
+      // ✅ SAVE UPDATED PAYROLL
+      await payroll.save();
+
+      // ✅ GENERATE PAYSLIP (tumhara existing code yahan rahega)
+      // ... [REST OF YOUR EXISTING PAYSLIP CODE] ...
+
+    } else if (action === "reject") {
+      // ... [YOUR EXISTING REJECTION CODE] ...
+    }
+
+    const populatedPayroll = await Payroll.findById(payroll._id)
+      .populate('employeeProfile', 'firstName lastName employeeId department designation')
+      .populate('generatedByUser', 'email')
+      .populate('approvedByUser', 'email');
+
+    res.status(200).json({
+      message: `Payroll ${action}ed successfully`,
+      data: populatedPayroll
+    });
+
+  } catch (error) {
+    console.error("Approve payroll error:", error);
+    res.status(500).json({
+      message: "Error processing payroll",
       error: process.env.NODE_ENV === "development" ? error.message : undefined
     });
   }

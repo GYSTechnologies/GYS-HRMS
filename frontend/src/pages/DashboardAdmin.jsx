@@ -1,25 +1,3 @@
-// import Sidebar from "../components/Sidebar";
-// import Navbar from "../components/Navbar";
-// import { Outlet } from "react-router-dom";
-
-// const DashboardAdmin = () => {
-//   return (
-//     <div className="flex">
-//       <Sidebar />
-//       <div className="flex-1">
-//         <Navbar />
-//         {/*  Nested content will be injected here */}
-//         <div className="p-6 min-h-[90vh] bg-gray-50 ">
-//           <Outlet />
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default DashboardAdmin;
-
-
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import { Outlet } from "react-router-dom";

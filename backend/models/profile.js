@@ -70,12 +70,22 @@ const ProfileSchema = new mongoose.Schema(
       default: "work-from-home",
     },
 
+    leaveBalance: {
+      casual: { type: Number, default: 0 },
+      sick: { type: Number, default: 0 },
+      paid: { type: Number, default: 0 },
+    },
     roleMeta: {
       reportsTo: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Profile",
       },
       permissions: [String],
+    },
+    //new filed
+    basicSalary: {
+      type: Number,
+      default: 0,
     },
   },
   {

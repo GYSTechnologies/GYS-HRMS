@@ -46,37 +46,406 @@ const EmployeePayroll = () => {
     }
   };
 
-  const downloadPayslip = async (payrollId) => {
-    try {
-      const response = await axiosInstance.get(
-        `/payslip/download/${payrollId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          responseType: "blob"
-        }
-      );
+//   const downloadPayslip = async (payrollId) => {
+//   try {
+//     // ✅ Direct download try karo
+//     const response = await axiosInstance.get(
+//       `/payroll/payslip/download/${payrollId}`,
+//       {
+//         headers: { Authorization: `Bearer ${token}` },
+//         responseType: "blob"
+//       }
+//     );
+
+//     // ✅ Create download link
+//     const blob = new Blob([response.data], { type: "application/pdf" });
+//     const url = window.URL.createObjectURL(blob);
+//     const link = document.createElement("a");
+//     link.href = url;
+//     link.download = `payslip-${payrollId}.pdf`;
+//     document.body.appendChild(link);
+//     link.click();
+//     document.body.removeChild(link);
+//     window.URL.revokeObjectURL(url);
+    
+//     addNotification("Payslip downloaded successfully", "success");
+//   } catch (error) {
+//     console.error("Error downloading payslip:", error);
+    
+//     // ✅ Agar payslip not generated error aaye toh generate karne ka try karo
+//     if (error.response?.status === 404 && 
+//         error.response?.data?.message === "Payslip not generated yet") {
       
-      // Create blob and download
-      const blob = new Blob([response.data], { type: "application/pdf" });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `payslip-${payrollId}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+//       addNotification("Generating payslip...", "info");
       
-      addNotification("Payslip downloaded successfully", "success");
-    } catch (error) {
-      console.error("Error downloading payslip:", error);
+//       try {
+//         // Generate payslip
+//         await axiosInstance.post(
+//           `/payroll/${payrollId}/generate-payslip`,
+//           {},
+//           { headers: { Authorization: `Bearer ${token}` } }
+//         );
+        
+//         addNotification("Payslip generated, downloading...", "success");
+        
+//         // Phir se download try karo
+//         await downloadPayslip(payrollId);
+        
+//       } catch (generateError) {
+//         console.error("Generate error:", generateError);
+//         addNotification("Failed to generate payslip", "error");
+//       }
+//     } else {
+//       addNotification(
+//         error.response?.data?.message || "Error downloading payslip",
+//         "error"
+//       );
+//     }
+//   }
+// };
+
+  // const downloadPayslip = async (payrollId) => {
+  //   try {
+  //     const response = await axiosInstance.get(
+  //       `/payroll/payslip/download/${payrollId}`,
+  //       {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //         responseType: "blob"
+  //       }
+  //     );
+      
+  //     // Create blob and download
+  //     const blob = new Blob([response.data], { type: "application/pdf" });
+  //     const url = window.URL.createObjectURL(blob);
+  //     const link = document.createElement("a");
+  //     link.href = url;
+  //     link.download = `payslip-${payrollId}.pdf`;
+  //     document.body.appendChild(link);
+  //     link.click();
+  //     document.body.removeChild(link);
+      
+  //     addNotification("Payslip downloaded successfully", "success");
+  //   } catch (error) {
+  //     console.error("Error downloading payslip:", error);
+  //     addNotification(
+  //       error.response?.data?.message || "Error downloading payslip",
+  //       "error"
+  //     );
+  //   }
+  // };
+
+//   const downloadPayslip = async (payrollId) => {
+//   try {
+//     // Pehle check karo if payslip exists
+//     const checkResponse = await axiosInstance.get(
+//       `/payroll/${payrollId}`,
+//       { headers: { Authorization: `Bearer ${token}` } }
+//     );
+    
+//     const payroll = checkResponse.data.data;
+    
+//     if (!payroll.payslipPath) {
+//       // Agar payslip nahi hai toh generate karo
+//       const generateResponse = await axiosInstance.post(
+//         `/payroll/${payrollId}/generate-payslip`,
+//         {},
+//         { headers: { Authorization: `Bearer ${token}` } }
+//       );
+      
+//       addNotification("Payslip generated successfully", "success");
+//     }
+
+//     // Ab download karo
+//     const response = await axiosInstance.get(
+//       `/payroll/payslip/download/${payrollId}`,
+//       {
+//         headers: { Authorization: `Bearer ${token}` },
+//         responseType: "blob"
+//       }
+//     );
+    
+//     const blob = new Blob([response.data], { type: "application/pdf" });
+//     const url = window.URL.createObjectURL(blob);
+//     const link = document.createElement("a");
+//     link.href = url;
+//     link.download = `payslip-${payrollId}.pdf`;
+//     document.body.appendChild(link);
+//     link.click();
+//     document.body.removeChild(link);
+    
+//     addNotification("Payslip downloaded successfully", "success");
+    
+//   } catch (error) {
+//     console.error("Error downloading payslip:", error);
+    
+//     if (error.response?.status === 404) {
+//       addNotification("Payslip not available yet", "error");
+//     } else {
+//       addNotification(
+//         error.response?.data?.message || "Error downloading payslip",
+//         "error"
+//       );
+//     }
+//   }
+// };
+
+
+// const downloadPayslip = async (payrollId) => {
+//   try {
+//     const response = await axiosInstance.get(
+//       `/payroll/payslip/download/${payrollId}`,
+//       {
+//         headers: { Authorization: `Bearer ${token}` },
+//         responseType: "blob"
+//       }
+//     );
+
+//     const blob = new Blob([response.data], { type: "application/pdf" });
+//     const url = window.URL.createObjectURL(blob);
+//     const link = document.createElement("a");
+//     link.href = url;
+//     link.download = `payslip-${payrollId}.pdf`;
+//     document.body.appendChild(link);
+//     link.click();
+//     document.body.removeChild(link);
+
+//     addNotification("Payslip downloaded successfully", "success");
+//   } catch (error) {
+//     console.error("Error downloading payslip:", error);
+
+//     if (error.response?.status === 404) {
+//       addNotification("Payslip not available yet", "error");
+//     } else if (error.response?.status === 400 && error.response.data.message === "Payslip already generated") {
+//       // Payslip exists, try download anyway
+//       addNotification("Payslip already exists, downloading...", "info");
+//       downloadPayslip(payrollId);
+//     } else {
+//       addNotification(error.response?.data?.message || "Error downloading payslip", "error");
+//     }
+//   }
+// };
+
+// const downloadPayslip = async (payrollId) => {
+//   try {
+//     // First, fetch payroll to check if payslip exists
+//     const checkResponse = await axiosInstance.get(
+//       `/payroll/${payrollId}`,
+//       { headers: { Authorization: `Bearer ${token}` } }
+//     );
+
+//     const payroll = checkResponse.data.data;
+
+//     if (!payroll.payslipPath) {
+//       // If payslip not generated, call backend to generate it
+//       await axiosInstance.post(
+//         `/payroll/${payrollId}/generate-payslip`,
+//         {},
+//         { headers: { Authorization: `Bearer ${token}` } }
+//       );
+
+//       addNotification("Payslip generated successfully", "success");
+
+//       // Refetch payroll after generation
+//       const updatedPayroll = await axiosInstance.get(
+//         `/payroll/${payrollId}`,
+//         { headers: { Authorization: `Bearer ${token}` } }
+//       );
+//       payroll.payslipPath = updatedPayroll.data.data.payslipPath;
+//     }
+
+//     // Now download payslip
+//     const response = await axiosInstance.get(
+//       payroll.payslipPath,
+//       { headers: { Authorization: `Bearer ${token}` }, responseType: "blob" }
+//     );
+
+//     const blob = new Blob([response.data], { type: "application/pdf" });
+//     const url = window.URL.createObjectURL(blob);
+//     const link = document.createElement("a");
+//     link.href = url;
+//     link.download = `payslip-${payrollId}.pdf`;
+//     document.body.appendChild(link);
+//     link.click();
+//     document.body.removeChild(link);
+
+//     addNotification("Payslip downloaded successfully", "success");
+//   } catch (error) {
+//     console.error("Error downloading payslip:", error);
+
+//     if (error.response?.status === 404) {
+//       addNotification("Payslip not available yet", "error");
+//     } else {
+//       addNotification(error.response?.data?.message || "Error downloading payslip", "error");
+//     }
+//   }
+// };
+
+
+// const downloadPayslip = async (payrollId) => {
+//   try {
+//     // ✅ Direct download API call
+//     const response = await axiosInstance.get(
+//       `/payroll/payslip/download/${payrollId}`,
+//       {
+//         headers: { Authorization: `Bearer ${token}` },
+//         responseType: "blob"
+//       }
+//     );
+
+//     // ✅ Create download link
+//     const blob = new Blob([response.data], { type: "application/pdf" });
+//     const url = window.URL.createObjectURL(blob);
+//     const link = document.createElement("a");
+//     link.href = url;
+//     link.download = `payslip-${payrollId}.pdf`;
+//     document.body.appendChild(link);
+//     link.click();
+//     document.body.removeChild(link);
+//     window.URL.revokeObjectURL(url);
+    
+//     addNotification("Payslip downloaded successfully", "success");
+//   } catch (error) {
+//     console.error("Error downloading payslip:", error);
+    
+//     // ✅ Agar 'already generated' error aaye toh bhi download try karo
+//     if (error.response?.data?.message === "Payslip already generated") {
+//       addNotification("Downloading payslip...", "info");
+      
+//       // Dobara direct download try karo
+//       await downloadPayslip(payrollId);
+//     } else {
+//       addNotification(
+//         error.response?.data?.message || "Error downloading payslip",
+//         "error"
+//       );
+//     }
+//   }
+// };
+
+// const downloadPayslip = async (payrollId) => {
+//   try {
+//     // Pehle generate API call karo
+//     try {
+//       await axiosInstance.post(
+//         `/payroll/${payrollId}/generate-payslip`,
+//         {},
+//         { headers: { Authorization: `Bearer ${token}` } }
+//       );
+//       addNotification("Payslip generated successfully", "success");
+//     } catch (generateError) {
+//       if (generateError.response?.status !== 400 || 
+//           generateError.response?.data?.message !== "Payslip already generated") {
+//         throw generateError;
+//       }
+//       // Agar already generated hai toh chalta hai
+//     }
+
+//     // Phir download karo
+//     const response = await axiosInstance.get(
+//       `/payroll/payslip/download/${payrollId}`,
+//       {
+//         headers: { Authorization: `Bearer ${token}` },
+//         responseType: "blob"
+//       }
+//     );
+
+//     const blob = new Blob([response.data], { type: "application/pdf" });
+//     const url = window.URL.createObjectURL(blob);
+//     const link = document.createElement("a");
+//     link.href = url;
+//     link.download = `payslip-${payrollId}.pdf`;
+//     document.body.appendChild(link);
+//     link.click();
+//     document.body.removeChild(link);
+//     window.URL.revokeObjectURL(url);
+    
+//     addNotification("Payslip downloaded successfully", "success");
+//   } catch (error) {
+//     console.error("Error downloading payslip:", error);
+//     addNotification(
+//       error.response?.data?.message || "Error downloading payslip",
+//       "error"
+//     );
+//   }
+// };
+  
+// const downloadPayslip = async (payrollId) => {
+//   try {
+//     // ✅ Direct download - no generate call needed
+//     const response = await axiosInstance.get(
+//       `/payroll/payslip/${payrollId}`,
+//       {
+//         headers: { Authorization: `Bearer ${token}` },
+//         responseType: "blob"
+//       }
+//     );
+
+//     // Create download link
+//     const blob = new Blob([response.data], { type: "application/pdf" });
+//     const url = window.URL.createObjectURL(blob);
+//     const link = document.createElement("a");
+//     link.href = url;
+//     link.download = `payslip-${payrollId}.pdf`;
+//     document.body.appendChild(link);
+//     link.click();
+//     document.body.removeChild(link);
+//     window.URL.revokeObjectURL(url);
+    
+//     addNotification("Payslip downloaded successfully", "success");
+//   } catch (error) {
+//     console.error("Error downloading payslip:", error);
+//     addNotification(
+//       error.response?.data?.message || "Error downloading payslip",
+//       "error"
+//     );
+//   }
+// };
+
+const downloadPayslip = async (payrollId) => {
+  try {
+    // ✅ Direct download API call
+    const response = await axiosInstance.get(
+      `/payroll/payslip/${payrollId}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: "blob"
+      }
+    );
+
+    // ✅ Create download link
+    const blob = new Blob([response.data], { type: "application/pdf" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `payslip-${payrollId}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    
+    addNotification("Payslip downloaded successfully", "success");
+  } catch (error) {
+    console.error("Error downloading payslip:", error);
+    
+    // ✅ Specific error handling
+    if (error.response?.status === 404) {
+      if (error.response?.data?.message === "Payslip not generated yet") {
+        addNotification("Payslip not ready yet. Please try again later.", "error");
+      } else {
+        addNotification("Payslip file missing. Contact HR.", "error");
+      }
+    } else {
       addNotification(
         error.response?.data?.message || "Error downloading payslip",
         "error"
       );
     }
-  };
+  }
+};
 
-  const formatCurrency = (amount) => {
+
+const formatCurrency = (amount) => {
+
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
       currency: "INR",
@@ -224,7 +593,7 @@ const EmployeePayroll = () => {
                     Salary - {months[parseInt(payroll.month.split('-')[1]) - 1]} {payroll.year}
                   </h3>
                   <p className="text-sm text-gray-600">
-                    Generated on: {formatDate(payroll.generatedAt)}
+                    Generated on: {formatDate(payroll.approvedAt)}
                   </p>
                 </div>
 
@@ -266,14 +635,14 @@ const EmployeePayroll = () => {
                 </div>
               </div>
 
-              {payroll.absentDays > 0 && (
+              {/* {payroll.absentDays > 0 && (
                 <div className="mt-4 bg-yellow-50 p-3 rounded-lg">
                   <p className="text-sm text-yellow-800">
                     <span className="font-semibold">{payroll.absentDays} day(s)</span> absent - 
                     <span className="font-semibold"> {formatCurrency(payroll.absentDeduction)}</span> deducted
                   </p>
                 </div>
-              )}
+              )} */}
 
               <div className="mt-6 flex flex-wrap gap-3">
                 <button
@@ -324,8 +693,8 @@ const EmployeePayroll = () => {
 // Payroll Details Modal Component
 const PayrollDetailsModal = ({ payroll, onClose, formatCurrency }) => {
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 backdrop-blur-xs bg-opacity-40 flex items-center justify-center p-4 z-50">
+<div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-200 shadow-2xl">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-gray-800">
             Salary Details - {payroll.month}

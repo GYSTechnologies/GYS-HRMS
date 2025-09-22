@@ -1,56 +1,3 @@
-// import { useState } from "react";
-// import { useAuth } from "../context/AppContext";
-// import { useNavigate } from "react-router-dom";
-
-// const Login = () => {
-//   const [email, setEmail] = useState("");
-//   const [password, setPassword] = useState("");
-//   const { login } = useAuth();
-//   const navigate = useNavigate();
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     try {
-//       await login(email, password);
-
-//       // role-based redirect
-//       const role = JSON.parse(localStorage.getItem("user"))?.role;
-//       if (role === "admin") navigate("/admin");
-//       else if (role === "hr") navigate("/hr");
-//       else navigate("/employee");
-//     } catch (err) {
-//       alert("Invalid credentials");
-//     }
-//   };
-
-//   return (
-//     <div className="flex justify-center items-center h-screen">
-//       <form onSubmit={handleSubmit} className="p-6 border rounded-lg shadow-md">
-//         <h2 className="text-xl mb-4">Login</h2>
-//         <input
-//           type="email"
-//           placeholder="Email"
-//           className="border p-2 mb-3 w-full"
-//           value={email}
-//           onChange={(e) => setEmail(e.target.value)}
-//         />
-//         <input
-//           type="password"
-//           placeholder="Password"
-//           className="border p-2 mb-3 w-full"
-//           value={password}
-//           onChange={(e) => setPassword(e.target.value)}
-//         />
-//         <button className="bg-blue-500 text-white px-4 py-2 rounded">
-//           Login
-//         </button>
-//       </form>
-//     </div>
-//   );
-// };
-
-// export default Login;
-
 import { useState } from "react";
 import { useAuth } from "../context/AppContext";
 import { useNavigate } from "react-router-dom";
@@ -191,6 +138,7 @@ const Login = () => {
             {/* Forgot Password Link */}
             <div className="flex items-center justify-end">
               <button
+              onClick={()=>navigate('/forgot-password')}
                 type="button"
                 className="text-sm text-[#104774] hover:text-[#0d385d] font-medium transition-colors duration-200"
               >

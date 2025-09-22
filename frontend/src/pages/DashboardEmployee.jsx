@@ -1,23 +1,3 @@
-// import Sidebar from "../components/Sidebar";
-// import Navbar from "../components/Navbar";
-// import { Outlet } from "react-router-dom";
-
-// const DashboardEmployee = () => {
-//   return (
-//     <div className="flex">
-//       <Sidebar />
-//       <div className="flex-1">
-//         <Navbar />
-//         <div className="p-6 min-h-[90vh] bg-gray-50 ">
-//           <Outlet />
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default DashboardEmployee;
-
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import { Outlet } from "react-router-dom";

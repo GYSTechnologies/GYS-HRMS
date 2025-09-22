@@ -1,52 +1,3 @@
-// import React from 'react';
-// import { AppProvider, useAppContext } from './context/AppContext.jsx';
-// import Sidebar from './components/Sidebar.jsx';
-// import Header from './components/Header.jsx';
-// import DashboardView from './components/views/DashboardView.jsx';
-// import AttendanceView from './components/views/AttendanceView.jsx';
-// import LeavesView from './components/views/LeavesView.jsx';
-// import PayrollView from './components/views/PayrollView.jsx';
-// import CalendarView from './components/views/CalendarView.jsx';
-// import ProfileView from './components/views/ProfileView.jsx';
-// import TaskModal from './components/modals/TaskModal.jsx';
-// import LeaveModal from './components/modals/LeaveModal.jsx';
-
-// const AppContent = () => {
-//   const { currentView, showTaskModal, showLeaveModal } = useAppContext();
-
-//   return (
-//     <div className="flex h-screen bg-gray-50">
-//       <Sidebar />
-
-//       <div className="flex-1 flex flex-col">
-//         <Header />
-
-//         <div className="flex-1 overflow-auto">
-//           {currentView === 'dashboard' && <DashboardView />}
-//           {currentView === 'attendance' && <AttendanceView />}
-//           {currentView === 'leaves' && <LeavesView />}
-//           {currentView === 'payroll' && <PayrollView />}
-//           {currentView === 'calendar' && <CalendarView />}
-//           {currentView === 'profile' && <ProfileView />}
-//         </div>
-//       </div>
-
-//       {showTaskModal && <TaskModal />}
-//       {showLeaveModal && <LeaveModal />}
-//     </div>
-//   );
-// };
-
-// function App() {
-//   return (
-//     <AppProvider>
-//       <AppContent />
-//     </AppProvider>
-//   );
-// }
-
-// export default App;
-
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./context/AppContext";
 import Login from "./pages/Login";
@@ -68,16 +19,20 @@ import EmployeeAttendanceManagement from "./components/EmployeeAttendanceManagem
 import EmployeePayroll from "./components/Payroll/EmployeePayroll.jsx";
 import HRPayrollManagement from "./components/Payroll/HRPayrollManagement.jsx";
 import AdminPayrollApproval from "./components/Payroll/AdminPayrollApproval.jsx";
+import EmployeeDashboard from "./pages/EmployeeDashboard.jsx";
+import HRDashboard from "./pages/HRDashboard.jsx";
+import AdminDashboard from "./pages/AdminDashboard.jsx";
+import ForgotPassword from "./pages/ForgotPassword.jsx";
 
 function App() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
 
   return (
     <BrowserRouter>
       <Routes>
         {/* Login Route */}
         <Route path="/login" element={<Login />} />
-
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         {/* Admin Dashboard + nested routes */}
         <Route
           path="/admin"
@@ -92,8 +47,7 @@ function App() {
             index
             element={
               <>
-                <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-                <p className="mt-2">Manage HR and Employees here.</p>
+                <AdminDashboard />
               </>
             }
           />
@@ -105,7 +59,6 @@ function App() {
           <Route path="leaves" element={<AdminLeaves />} />
           <Route path="attendance" element={<EmployeeAttendanceManagement />} />
           <Route path="payroll-approval" element={<AdminPayrollApproval />} />
-
         </Route>
 
         {/* HR Dashboard + nested routes */}
@@ -122,8 +75,7 @@ function App() {
             index
             element={
               <>
-                <h1 className="text-2xl font-bold">HR Dashboard</h1>
-                <p className="mt-2">Manage Employees here.</p>
+                <HRDashboard />
               </>
             }
           />
@@ -134,7 +86,7 @@ function App() {
           <Route path="calendar" element={<CompanyCalendar />} />
           <Route path="leaves" element={<HRLeaves />} />
           <Route path="attendance" element={<AttendanceManagement />} />
-          <Route path="payroll" element={<HRPayrollManagement/>} />
+          <Route path="payroll" element={<HRPayrollManagement />} />
         </Route>
 
         {/* Employee Dashboard + nested routes */}
@@ -151,8 +103,7 @@ function App() {
             index
             element={
               <>
-                <h1 className="text-2xl font-bold">Employee Dashboard</h1>
-                <p className="mt-2">Welcome to your dashboard.</p>
+                <EmployeeDashboard />
               </>
             }
           />
@@ -161,25 +112,29 @@ function App() {
           <Route path="profile" element={<EmployeeProfile />} />
           <Route path="calendar" element={<CompanyCalendar />} />
           <Route path="leaves" element={<EmployeeLeaves />} />
-          <Route path="leaves" element={<EmployeeLeaves />} />
           <Route path="attendance" element={<EmployeeAttendance />} />
           <Route path="payslip" element={<EmployeePayroll />} />
         </Route>
 
         {/* Default Route "/" -> role-based redirect */}
+
         <Route
           path="/"
           element={
-            user ? (
+            user === null && loading ? (
+              <div className="flex justify-center items-center h-screen">
+                Loading...
+              </div>
+            ) : user ? (
               user.role === "admin" ? (
-                <Navigate to="/admin" />
+                <Navigate to="/admin" replace />
               ) : user.role === "hr" ? (
-                <Navigate to="/hr" />
+                <Navigate to="/hr" replace />
               ) : (
-                <Navigate to="/employee" />
+                <Navigate to="/employee" replace />
               )
             ) : (
-              <Navigate to="/login" />
+              <Navigate to="/login" replace />
             )
           }
         />

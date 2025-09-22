@@ -1,577 +1,3 @@
-// import React, { useEffect, useState } from "react";
-// import axiosInstance from "../utils/axiosInstance";
-// import { useAuth } from "../context/AppContext";
-
-// const PRIMARY = "#104774";
-// const PRIMARY_HOVER = "#0d3a61";
-
-// const AttendanceManagement = () => {
-//   const { token } = useAuth();
-//   const [pendingAttendances, setPendingAttendances] = useState([]);
-//   const [allAttendances, setAllAttendances] = useState([]);
-//   const [selectedAttendance, setSelectedAttendance] = useState(null);
-//   const [showRejectModal, setShowRejectModal] = useState(false);
-//   const [rejectRemarks, setRejectRemarks] = useState("");
-//   const [activeTab, setActiveTab] = useState("pending");
-//   const [stats, setStats] = useState({
-//     totalEmployees: 0,
-//     present: 0,
-//     absent: 0,
-//     pending: 0,
-//   });
-
-//   const [notifications, setNotifications] = useState([]); // simple toasts
-
-//   useEffect(() => {
-//     if (token) {
-//       fetchPendingAttendances();
-//       fetchAllAttendances();
-//       fetchStats();
-//     }
-//   }, [token]);
-
-//   const addNotification = (message, type = "info", ttl = 3500) => {
-//     const id = Date.now() + Math.random();
-//     setNotifications((n) => [...n, { id, message, type }]);
-//     setTimeout(() => {
-//       setNotifications((n) => n.filter((x) => x.id !== id));
-//     }, ttl);
-//   };
-
-//   const fetchPendingAttendances = async () => {
-//     try {
-//       const response = await axiosInstance.get("/attendance/pending", {
-//         headers: { Authorization: `Bearer ${token}` },
-//       });
-//       setPendingAttendances(response.data || []);
-//     } catch (error) {
-//       console.error("Error fetching pending attendances:", error);
-//       addNotification(
-//         error.response?.data?.message || "Could not load pending",
-//         "error"
-//       );
-//     }
-//   };
-
-//   const fetchAllAttendances = async () => {
-//     try {
-//       const response = await axiosInstance.get("/attendance/all", {
-//         headers: { Authorization: `Bearer ${token}` },
-//       });
-//       setAllAttendances(response.data || []);
-//     } catch (error) {
-//       console.error("Error fetching all attendances:", error);
-//       addNotification(
-//         error.response?.data?.message || "Could not load records",
-//         "error"
-//       );
-//     }
-//   };
-
-//   const fetchStats = async () => {
-//     try {
-//       const response = await axiosInstance.get("/attendance/stats", {
-//         headers: { Authorization: `Bearer ${token}` },
-//       });
-//       setStats(response.data || {});
-//     } catch (error) {
-//       console.error("Error fetching stats:", error);
-//     }
-//   };
-
-//   // helper => update attendance in lists using returned updatedAttendance (or fallback)
-//   const upsertAttendanceInLists = (updatedAttendance) => {
-//     if (!updatedAttendance || !updatedAttendance._id) return;
-
-//     setAllAttendances((prev) => {
-//       const idx = prev.findIndex((a) => a._id === updatedAttendance._id);
-//       if (idx === -1) return [updatedAttendance, ...prev];
-//       const copy = [...prev];
-//       copy[idx] = { ...copy[idx], ...updatedAttendance };
-//       return copy;
-//     });
-
-//     setPendingAttendances((prev) =>
-//       prev.filter((a) => a._id !== updatedAttendance._id)
-//     );
-//   };
-
-//   const handleApprove = async (id) => {
-//     try {
-//       const res = await axiosInstance.patch(
-//         `/attendance/${id}/approve`,
-//         {},
-//         {
-//           headers: { Authorization: `Bearer ${token}` },
-//         }
-//       );
-
-//       // if API returns updated attendance, use it to update UI immediately
-//       const updated = res.data?.attendance || res.data;
-//       if (updated && updated._id) {
-//         upsertAttendanceInLists(updated);
-//       } else {
-//         // optimistic removal from pending
-//         setPendingAttendances((prev) => prev.filter((p) => p._id !== id));
-//         // also try fetchAllAttendances to sync canonical state
-//         fetchAllAttendances();
-//       }
-
-//       // refresh stats (either returned or fetch)
-//       if (res.data?.stats) setStats(res.data.stats);
-//       else fetchStats();
-
-//       addNotification(res.data?.message || "Attendance approved", "success");
-//     } catch (error) {
-//       console.error("Error approving attendance:", error);
-//       addNotification(
-//         error.response?.data?.message || "Error approving attendance",
-//         "error"
-//       );
-//     }
-//   };
-
-//   const handleReject = async () => {
-//     if (!selectedAttendance) return;
-//     try {
-//       const res = await axiosInstance.patch(
-//         `/attendance/${selectedAttendance}/reject`,
-//         { remarks: rejectRemarks },
-//         { headers: { Authorization: `Bearer ${token}` } }
-//       );
-
-//       const updated = res.data?.attendance || res.data;
-//       if (updated && updated._id) {
-//         upsertAttendanceInLists(updated);
-//       } else {
-//         setPendingAttendances((prev) =>
-//           prev.filter((p) => p._id !== selectedAttendance)
-//         );
-//         fetchAllAttendances();
-//       }
-
-//       if (res.data?.stats) setStats(res.data.stats);
-//       else fetchStats();
-
-//       addNotification(res.data?.message || "Attendance rejected", "success");
-
-//       setShowRejectModal(false);
-//       setRejectRemarks("");
-//       setSelectedAttendance(null);
-//     } catch (error) {
-//       console.error("Error rejecting attendance:", error);
-//       addNotification(
-//         error.response?.data?.message || "Error rejecting attendance",
-//         "error"
-//       );
-//     }
-//   };
-
-//   const openRejectModal = (id) => {
-//     setSelectedAttendance(id);
-//     setShowRejectModal(true);
-//   };
-
-//   const formatTime = (timeString) => {
-//     if (!timeString) return "-";
-//     try {
-//       return new Date(timeString).toLocaleTimeString([], {
-//         hour: "2-digit",
-//         minute: "2-digit",
-//       });
-//     } catch {
-//       return "-";
-//     }
-//   };
-
-//   const formatDate = (dateString) => {
-//     if (!dateString) return "-";
-//     try {
-//       return new Date(dateString).toLocaleDateString();
-//     } catch {
-//       return "-";
-//     }
-//   };
-
-//   const getStatusBadge = (status) => {
-//     const statusClasses = {
-//       pending: "bg-yellow-100 text-yellow-800",
-//       accepted: "bg-green-100 text-green-800",
-//       rejected: "bg-red-100 text-red-800",
-//     };
-//     return (
-//       <span
-//         className={`px-2 py-1 rounded-full text-xs ${
-//           statusClasses[status] || "bg-gray-100 text-gray-800"
-//         }`}
-//       >
-//         {status}
-//       </span>
-//     );
-//   };
-
-//   return (
-//     <div className="min-h-[80vh] p-4 sm:p-6">
-//       {/* inline style block to handle hover color for primary buttons */}
-//       <style>{`
-//         .primary-btn:hover { background: ${PRIMARY_HOVER} !important }
-//         .primary-border-active { border-bottom-color: ${PRIMARY} !important; color: ${PRIMARY} !important }
-//       `}</style>
-
-//       {/* Notifications */}
-//       <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
-//         {notifications.map((n) => (
-//           <div
-//             key={n.id}
-//             className={`max-w-sm w-full px-4 py-2 rounded shadow text-sm ${
-//               n.type === "success"
-//                 ? "bg-green-50 text-green-800 border border-green-100"
-//                 : n.type === "error"
-//                 ? "bg-red-50 text-red-800 border border-red-100"
-//                 : "bg-white text-gray-800 border"
-//             }`}
-//           >
-//             {n.message}
-//           </div>
-//         ))}
-//       </div>
-
-//       {/* Header */}
-//       <header className="mb-6">
-//         <h1 className="text-2xl font-bold text-gray-800">
-//           Employee Attendance Management
-//         </h1>
-//       </header>
-
-//       {/* Stats */}
-//       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-//         <div className="bg-white p-4 rounded-lg shadow">
-//           <h3 className="text-sm text-gray-500">Total Employees</h3>
-//           <p className="text-2xl font-bold">{stats.totalEmployees ?? 0}</p>
-//         </div>
-//         <div className="bg-white p-4 rounded-lg shadow">
-//           <h3 className="text-sm text-gray-500">Present Today</h3>
-//           <p className="text-2xl font-bold text-green-600">
-//             {stats.present ?? 0}
-//           </p>
-//         </div>
-//         <div className="bg-white p-4 rounded-lg shadow">
-//           <h3 className="text-sm text-gray-500">Absent Today</h3>
-//           <p className="text-2xl font-bold text-red-600">{stats.absent ?? 0}</p>
-//         </div>
-//         <div className="bg-white p-4 rounded-lg shadow">
-//           <h3 className="text-sm text-gray-500">Pending Approval</h3>
-//           <p className="text-2xl font-bold text-yellow-600">
-//             {stats.pending ?? 0}
-//           </p>
-//         </div>
-//       </div>
-
-//       {/* Tabs */}
-//       <div className="bg-white shadow rounded-lg mb-6">
-//         <div className="border-b border-gray-200">
-//           <nav className="flex -mb-px overflow-auto">
-//             <button
-//               onClick={() => setActiveTab("pending")}
-//               className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${
-//                 activeTab === "pending"
-//                   ? "primary-border-active"
-//                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-//               }`}
-//               style={
-//                 activeTab === "pending"
-//                   ? { borderBottomColor: PRIMARY, color: PRIMARY }
-//                   : {}
-//               }
-//             >
-//               Pending Approvals
-//             </button>
-//             <button
-//               onClick={() => setActiveTab("all")}
-//               className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${
-//                 activeTab === "all"
-//                   ? "primary-border-active"
-//                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-//               }`}
-//               style={
-//                 activeTab === "all"
-//                   ? { borderBottomColor: PRIMARY, color: PRIMARY }
-//                   : {}
-//               }
-//             >
-//               All Records
-//             </button>
-//           </nav>
-//         </div>
-
-//         <div className="p-6">
-//           {/* Pending */}
-//           {activeTab === "pending" && (
-//             <div>
-//               <h2 className="text-xl font-semibold mb-4">
-//                 Pending Attendance Approvals
-//               </h2>
-
-//               {pendingAttendances.length === 0 ? (
-//                 <p className="text-gray-500">No pending approvals</p>
-//               ) : (
-//                 <div className="overflow-x-auto">
-//                   <table className="min-w-full divide-y divide-gray-200">
-//                     <thead className="bg-[#104774] text-white">
-//                       <tr>
-//                         <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-//                           Employee
-//                         </th>
-//                         <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-//                           Date
-//                         </th>
-//                         <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-//                           Login Time
-//                         </th>
-//                         <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-//                           Task Description
-//                         </th>
-//                         <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-//                           Work Progress
-//                         </th>
-//                         <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-//                           Actions
-//                         </th>
-//                       </tr>
-//                     </thead>
-//                     <tbody className="bg-white divide-y divide-gray-200">
-//                       {pendingAttendances.map((attendance) => (
-//                         <tr key={attendance._id}>
-//                           <td className="px-6 py-4 whitespace-nowrap">
-//                             <div className="font-medium">
-//                               {attendance.employee?.profileRef?.firstName}{" "}
-//                               {attendance.employee?.profileRef?.lastName}
-//                             </div>
-//                             <div
-//                               className="text-sm text-gray-200/90"
-//                               style={{ color: "#ffffffa0" }}
-//                             >
-//                               {attendance.employee?.email}
-//                             </div>
-//                             <div
-//                               className="text-xs text-gray-300 mt-1"
-//                               style={{ color: "#ffffffb3" }}
-//                             >
-//                               {attendance.employee?.profileRef?.employeeId}
-//                             </div>
-//                           </td>
-
-//                           <td className="px-6 py-4 whitespace-nowrap">
-//                             {formatDate(attendance.date)}
-//                           </td>
-//                           <td className="px-6 py-4 whitespace-nowrap">
-//                             {formatTime(attendance.checkIn)}
-//                           </td>
-
-//                           <td className="px-6 py-4">
-//                             <div className="max-w-xs truncate">
-//                               {attendance.taskDescription || "-"}
-//                             </div>
-//                           </td>
-
-//                           <td className="px-6 py-4 whitespace-nowrap">
-//                             {attendance.workProgress || "-"}
-//                           </td>
-
-//                           <td className="px-6 py-4 whitespace-nowrap">
-//                             <div className="flex flex-wrap gap-2">
-//                               <button
-//                                 onClick={() => handleApprove(attendance._id)}
-//                                 className="px-3 py-1 rounded text-white primary-btn"
-//                                 style={{ backgroundColor: PRIMARY }}
-//                               >
-//                                 Approve
-//                               </button>
-
-//                               <button
-//                                 onClick={() => openRejectModal(attendance._id)}
-//                                 className="px-3 py-1 rounded text-white"
-//                                 style={{
-//                                   backgroundColor: "#dc2626" /* red-600 */,
-//                                 }}
-//                               >
-//                                 Reject
-//                               </button>
-//                             </div>
-//                           </td>
-//                         </tr>
-//                       ))}
-//                     </tbody>
-//                   </table>
-//                 </div>
-//               )}
-//             </div>
-//           )}
-
-//           {/* All Records */}
-//           {activeTab === "all" && (
-//             <div>
-//               <h2 className="text-xl font-semibold mb-4">
-//                 All Attendance Records
-//               </h2>
-
-//               <div className="overflow-x-auto">
-//                 <table className="min-w-full divide-y divide-gray-200">
-//                   <thead className="bg-[#104774] text-white">
-//                     <tr>
-//                       <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-//                         Employee
-//                       </th>
-//                       <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-//                         Date
-//                       </th>
-//                       <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-//                         Login Time
-//                       </th>
-//                       <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-//                         Logout Time
-//                       </th>
-//                       <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-//                         Status
-//                       </th>
-//                       <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-//                         Work Progress
-//                       </th>
-//                       <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-//                         Task
-//                       </th>
-//                       <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-//                         Logout Note
-//                       </th>
-//                     </tr>
-//                   </thead>
-
-//                   <tbody className="bg-white divide-y divide-gray-200">
-//                     {allAttendances.map((attendance) => (
-//                       <tr key={attendance._id}>
-//                         <td className="px-6 py-4 whitespace-nowrap">
-//                           <div className="font-medium">
-//                             {attendance.employee?.profileRef?.firstName}{" "}
-//                             {attendance.employee?.profileRef?.lastName}
-//                           </div>
-//                           <div className="text-sm text-gray-500">
-//                             {attendance.employee?.email}
-//                           </div>
-//                           <div className="text-xs text-gray-400 mt-1">
-//                             {attendance.employee?.profileRef?.employeeId}
-//                           </div>
-//                         </td>
-
-//                         <td className="px-6 py-4 whitespace-nowrap">
-//                           {formatDate(attendance.date)}
-//                         </td>
-//                         <td className="px-6 py-4 whitespace-nowrap">
-//                           {formatTime(attendance.checkIn)}
-//                         </td>
-//                         <td className="px-6 py-4 whitespace-nowrap">
-//                           {formatTime(attendance.checkOut) || "-"}
-//                         </td>
-
-//                         <td className="px-6 py-4 whitespace-nowrap">
-//                           {getStatusBadge(attendance.status)}
-//                         </td>
-
-//                         <td className="px-6 py-4 whitespace-nowrap">
-//                           {attendance.workProgress || "-"}
-//                         </td>
-
-//                         <td className="px-6 py-4 whitespace-nowrap">
-//                           <div className="max-w-xs truncate">
-//                             {attendance.taskDescription || "-"}
-//                           </div>
-//                         </td>
-
-//                         <td className="px-6 py-4 whitespace-nowrap">
-//                           <div className="text-sm">
-//                             {attendance.logoutDescription ? (
-//                               <>
-//                                 <div className="font-medium">
-//                                   {attendance.logoutDescription}
-//                                 </div>
-//                                 {attendance.earlyLogoutReason && (
-//                                   <div className="text-xs text-red-600">
-//                                     Early reason: {attendance.earlyLogoutReason}
-//                                   </div>
-//                                 )}
-//                               </>
-//                             ) : (
-//                               "-"
-//                             )}
-//                           </div>
-//                         </td>
-//                       </tr>
-//                     ))}
-//                     {allAttendances.length === 0 && (
-//                       <tr>
-//                         <td
-//                           colSpan={8}
-//                           className="px-6 py-6 text-center text-sm text-gray-500"
-//                         >
-//                           No records found
-//                         </td>
-//                       </tr>
-//                     )}
-//                   </tbody>
-//                 </table>
-//               </div>
-//             </div>
-//           )}
-//         </div>
-//       </div>
-
-//       {/* Reject Modal */}
-//       {showRejectModal && (
-//         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center p-4 z-50">
-//           <div className="bg-white rounded-lg p-6 w-full max-w-md">
-//             <h2 className="text-xl font-semibold mb-4">Reject Attendance</h2>
-
-//             <div className="mb-4">
-//               <label className="block text-sm font-medium text-gray-700 mb-1">
-//                 Remarks
-//               </label>
-//               <textarea
-//                 value={rejectRemarks}
-//                 onChange={(e) => setRejectRemarks(e.target.value)}
-//                 className="w-full p-2 border border-gray-300 rounded-md"
-//                 rows="3"
-//                 placeholder="Enter reason for rejection"
-//                 required
-//               />
-//             </div>
-
-//             <div className="flex justify-end space-x-2">
-//               <button
-//                 onClick={() => {
-//                   setShowRejectModal(false);
-//                   setRejectRemarks("");
-//                 }}
-//                 className="px-4 py-2 border border-gray-300 rounded-md"
-//               >
-//                 Cancel
-//               </button>
-
-//               <button
-//                 onClick={handleReject}
-//                 className="px-4 py-2 rounded-md text-white"
-//                 style={{ backgroundColor: "#dc2626" }} /* red-600 */
-//               >
-//                 Confirm Reject
-//               </button>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default AttendanceManagement;
-
 import React, { useEffect, useState } from "react";
 import axiosInstance from "../utils/axiosInstance";
 import { useAuth } from "../context/AppContext";
@@ -598,9 +24,12 @@ const AttendanceManagement = () => {
   });
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  const today = new Date().toISOString().split("T")[0]; // "YYYY-MM-DD"
+
   const [filters, setFilters] = useState({
     employee: "",
-    date: "",
+    date: today,
     status: "",
   });
 
@@ -841,7 +270,7 @@ const AttendanceManagement = () => {
   });
 
   return (
-    <div className="min-h-[80vh] p-4 sm:p-6">
+    <div className="min-h-[70vh] p-4 sm:p-6">
       <style>{`
         .primary-btn:hover { background: ${PRIMARY_HOVER} !important }
         .primary-border-active { border-bottom-color: ${PRIMARY} !important; color: ${PRIMARY} !important }
@@ -859,28 +288,33 @@ const AttendanceManagement = () => {
       </header>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white p-4 rounded-lg shadow">
-          <h3 className="text-sm text-gray-500">Total Employees</h3>
-          <p className="text-2xl font-bold">{stats.totalEmployees ?? 0}</p>
-        </div>
-        <div className="bg-white p-4 rounded-lg shadow">
-          <h3 className="text-sm text-gray-500">Present Today</h3>
-          <p className="text-2xl font-bold text-green-600">
-            {stats.present ?? 0}
-          </p>
-        </div>
-        <div className="bg-white p-4 rounded-lg shadow">
-          <h3 className="text-sm text-gray-500">Absent Today</h3>
-          <p className="text-2xl font-bold text-red-600">{stats.absent ?? 0}</p>
-        </div>
-        <div className="bg-white p-4 rounded-lg shadow">
-          <h3 className="text-sm text-gray-500">Pending Approval</h3>
-          <p className="text-2xl font-bold text-yellow-600">
-            {stats.pending ?? 0}
-          </p>
-        </div>
-      </div>
+
+<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-6">
+  {/* Total Employees */}
+  <div className="bg-gradient-to-r from-blue-100 via-blue-100 to-blue-200 rounded-2xl p-6 shadow-md hover:shadow-lg transition-shadow cursor-pointer text-center">
+    <h3 className="text-sm text-blue-700 font-semibold mb-2">Total Employees</h3>
+    <p className="text-2xl font-bold text-blue-900">{stats.totalEmployees ?? 0}</p>
+  </div>
+
+  {/* Present Today */}
+  <div className="bg-gradient-to-r from-green-100 via-green-100 to-green-200 rounded-2xl p-6 shadow-md hover:shadow-lg transition-shadow cursor-pointer text-center">
+    <h3 className="text-sm text-green-700 font-semibold mb-2">Present Today</h3>
+    <p className="text-2xl font-bold text-green-900">{stats.present ?? 0}</p>
+  </div>
+
+  {/* Absent Today */}
+  <div className="bg-gradient-to-r from-red-100 via-red-100 to-red-200 rounded-2xl p-6 shadow-md hover:shadow-lg transition-shadow cursor-pointer text-center">
+    <h3 className="text-sm text-red-700 font-semibold mb-2">Absent Today</h3>
+    <p className="text-2xl font-bold text-red-900">{Math.max(0, stats?.absent ?? 0)}</p>
+  </div>
+
+  {/* Pending Approval */}
+  <div className="bg-gradient-to-r from-yellow-100 via-yellow-100 to-yellow-200 rounded-2xl p-6 shadow-md hover:shadow-lg transition-shadow cursor-pointer text-center">
+    <h3 className="text-sm text-yellow-700 font-semibold mb-2">Pending Approval</h3>
+    <p className="text-2xl font-bold text-yellow-900">{stats.pending ?? 0}</p>
+  </div>
+</div>
+
 
       {/* Tabs */}
       <div className="bg-white shadow rounded-lg mb-6">
@@ -1049,82 +483,154 @@ const AttendanceManagement = () => {
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-[#104774] text-white">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                          Employee
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                          Date
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                          Login Time
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                          Task Description
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                          Work Progress
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {filteredPendingAttendances.map((attendance) => (
-                        <tr key={attendance._id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="font-medium">
-                              {attendance.employee?.profileRef?.firstName}{" "}
-                              {attendance.employee?.profileRef?.lastName}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              {attendance.employee?.email}
-                            </div>
-                            <div className="text-xs text-gray-400 mt-1">
-                              {attendance.employee?.profileRef?.employeeId}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {formatDate(attendance.date)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {formatTime(attendance.checkIn)}
-                          </td>
-                          <td className="px-6 py-4">
-                            <div
-                              className="max-w-xs truncate"
-                              title={attendance.taskDescription}
-                            >
-                              {attendance.taskDescription || "-"}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {attendance.workProgress || "-"}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex flex-wrap gap-2">
-                              <button
-                                onClick={() => handleApprove(attendance._id)}
-                                className="px-3 py-1 rounded text-white primary-btn"
-                                style={{ backgroundColor: PRIMARY }}
-                              >
-                                Approve
-                              </button>
-                              <button
-                                onClick={() => openRejectModal(attendance._id)}
-                                className="px-3 py-1 rounded text-white bg-red-600 hover:bg-red-700"
-                              >
-                                Reject
-                              </button>
-                            </div>
-                          </td>
+                  <div className="max-h-[290px] overflow-y-auto border border-gray-200 rounded-xl shadow-sm">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-[#104774] text-white sticky top-0 z-10">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                            Employee
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                            Date
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                            Login Time
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                            Task Description
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                            Work Progress
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                            Actions
+                          </th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {filteredPendingAttendances.map((attendance, index) => (
+                          <tr
+                            key={attendance._id}
+                            className={`${
+                              index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                            } hover:bg-gray-100 transition`}
+                          >
+                            {/* Employee */}
+                            <td className="px-6 py-4">
+                              <div className="font-medium text-gray-800">
+                                {attendance.employee?.profileRef?.firstName}{" "}
+                                {attendance.employee?.profileRef?.lastName}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {attendance.employee?.email}
+                              </div>
+                              <div className="text-xs text-gray-400">
+                                {attendance.employee?.profileRef?.employeeId}
+                              </div>
+                            </td>
+
+                            {/* Date */}
+                            <td className="px-6 py-4 text-sm text-gray-700">
+                              {formatDate(attendance.date)}
+                            </td>
+
+                            {/* Login Time */}
+                            <td className="px-6 py-4 text-sm text-gray-700">
+                              {attendance.checkIn
+                                ? formatTime(attendance.checkIn)
+                                : "-"}
+                            </td>
+
+                            {/* Task Description with tooltip */}
+                            <td className="px-6 py-4 text-sm text-gray-700">
+                              <div className="space-y-2">
+                                {/* Task Description */}
+                                <div className="relative group">
+                                  <div className="font-medium text-gray-800 mb-1">
+                                    Task:
+                                  </div>
+                                  <div className="max-w-xs truncate cursor-pointer">
+                                    {attendance.taskDescription || "-"}
+                                  </div>
+                                  {attendance.taskDescription && (
+                                    <div className="absolute hidden group-hover:block bg-gray-800 text-white text-xs rounded-md px-3 py-2 w-60 z-20 -top-1 left-1/2 -translate-x-1/2 shadow-lg">
+                                      {attendance.taskDescription}
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Early Login Reason */}
+                                {attendance.earlyLoginReason && (
+                                  <div className="relative group mt-2 pt-2 border-t border-gray-100">
+                                    <div className="font-medium text-orange-600 mb-1">
+                                      Early Login Reason:
+                                    </div>
+                                    <div className="max-w-xs truncate cursor-pointer">
+                                      {attendance.earlyLoginReason}
+                                    </div>
+                                    <div className="absolute hidden group-hover:block bg-gray-800 text-white text-xs rounded-md px-3 py-2 w-60 z-20 -top-1 left-1/2 -translate-x-1/2 shadow-lg">
+                                      {attendance.earlyLoginReason}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Late Login Reason */}
+                                {attendance.lateLoginReason && (
+                                  <div className="relative group mt-2 pt-2 border-t border-gray-100">
+                                    <div className="font-medium text-red-600 mb-1">
+                                      Late Login Reason:
+                                    </div>
+                                    <div className="max-w-xs truncate cursor-pointer">
+                                      {attendance.lateLoginReason}
+                                    </div>
+                                    <div className="absolute hidden group-hover:block bg-gray-800 text-white text-xs rounded-md px-3 py-2 w-60 z-20 -top-1 left-1/2 -translate-x-1/2 shadow-lg">
+                                      {attendance.lateLoginReason}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+
+                            {/* Work Progress */}
+                            <td className="px-6 py-4 text-sm text-gray-700">
+                              {attendance.workProgress || "-"}
+                            </td>
+
+                            {/* Actions */}
+                            <td className="px-6 py-4">
+                              <div className="flex flex-wrap gap-2">
+                                <button
+                                  onClick={() => handleApprove(attendance._id)}
+                                  className="px-3 py-1.5 rounded-md text-white bg-[#104774] hover:bg-[#0d3a61] text-sm font-medium shadow-sm transition"
+                                >
+                                  Approve
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    openRejectModal(attendance._id)
+                                  }
+                                  className="px-3 py-1.5 rounded-md text-white bg-red-600 hover:bg-red-700 text-sm font-medium shadow-sm transition"
+                                >
+                                  Reject
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+
+                        {filteredPendingAttendances.length === 0 && (
+                          <tr>
+                            <td
+                              colSpan={6}
+                              className="px-6 py-10 text-center text-sm text-gray-500"
+                            >
+                              No pending attendances found
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </div>
@@ -1188,75 +694,131 @@ const AttendanceManagement = () => {
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-[#104774] text-white">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                          Employee
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                          Date
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                          Login Time
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                          Logout Time
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                          Status
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                          Work Progress
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                          Task
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                          Logout Note
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {filteredAttendances.map((attendance) => (
-                        <tr key={attendance._id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="font-medium">
-                              {attendance.employee?.profileRef?.firstName}{" "}
-                              {attendance.employee?.profileRef?.lastName}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              {attendance.employee?.email}
-                            </div>
-                            <div className="text-xs text-gray-400 mt-1">
-                              {attendance.employee?.profileRef?.employeeId}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {formatDate(attendance.date)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {formatTime(attendance.checkIn)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {formatTime(attendance.checkOut) || "-"}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {getStatusBadge(attendance.status)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {attendance.workProgress || "-"}
-                          </td>
-                          <td className="px-6 py-4">
-                            <div
-                              className="max-w-xs truncate"
-                              title={attendance.taskDescription}
-                            >
-                              {attendance.taskDescription || "-"}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="text-sm">
+                  <div className="max-h-[250px] overflow-y-auto border border-gray-200 rounded-xl shadow-sm">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-[#104774] text-white sticky top-0 z-10 rounded-t-lg">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                            Employee
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                            Date
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                            Login Time
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                            Logout Time
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                            Status
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                            Work Progress
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                            Task
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                            Logout Note
+                          </th>
+                        </tr>
+                      </thead>
+
+                      <tbody>
+                        {filteredAttendances.map((attendance, index) => (
+                          <tr
+                            key={attendance._id}
+                            className={`${
+                              index % 2 === 0 ? "bg-white" : "bg-gray-100"
+                            } transition`}
+                          >
+                            {/* Employee */}
+                            <td className="px-6 py-3 whitespace-nowrap">
+                              <div className="font-medium text-gray-800">
+                                {attendance.employee?.profileRef?.firstName}{" "}
+                                {attendance.employee?.profileRef?.lastName}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {attendance.employee?.email}
+                              </div>
+                              <div className="text-xs text-gray-400 mt-1">
+                                {attendance.employee?.profileRef?.employeeId}
+                              </div>
+                            </td>
+
+                            {/* Date */}
+                            <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-700">
+                              {formatDate(attendance.date)}
+                            </td>
+
+                            {/* Login Time */}
+                            <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-700">
+                              {formatTime(attendance.checkIn)}
+                            </td>
+
+                            {/* Logout Time */}
+                            <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-700">
+                              {formatTime(attendance.checkOut) || "-"}
+                            </td>
+
+                            {/* Status */}
+                            <td className="px-6 py-3 whitespace-nowrap">
+                              {getStatusBadge(attendance.status)}
+                            </td>
+
+                            {/* Work Progress */}
+                            <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-700">
+                              {attendance.workProgress || "-"}
+                            </td>
+
+                            {/* Task with tooltip and login reasons */}
+                            <td className="px-6 py-3 text-sm text-gray-700 max-w-xs">
+                              <div className="space-y-1">
+                                {/* Task Description */}
+                                {attendance.taskDescription ? (
+                                  <div className="relative group">
+                                    {/* Truncated text */}
+                                    <div className="truncate cursor-pointer font-medium hover:text-blue-600">
+                                      {attendance.taskDescription}
+                                    </div>
+
+                                    {/* Tooltip */}
+                                    <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-64 bg-gray-900 text-white text-xs rounded-lg p-2 shadow-lg z-50 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-200 break-words">
+                                      {attendance.taskDescription}
+                                      <div className="absolute top-0 left-1/2 -translate-x-1/2 -mt-1 w-2 h-2 bg-gray-900 rotate-45"></div>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <span className="text-gray-400 italic">
+                                    -
+                                  </span>
+                                )}
+
+                                {/* Early Login Reason */}
+                                {attendance.earlyLoginReason && (
+                                  <div className="text-xs text-orange-600 mt-1">
+                                    <span className="font-medium">
+                                      Early Login:
+                                    </span>{" "}
+                                    {attendance.earlyLoginReason}
+                                  </div>
+                                )}
+
+                                {/* Late Login Reason */}
+                                {attendance.lateLoginReason && (
+                                  <div className="text-xs text-red-600 mt-1">
+                                    <span className="font-medium">
+                                      Late Login:
+                                    </span>{" "}
+                                    {attendance.lateLoginReason}
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+
+                            {/* Logout Note */}
+                            <td className="px-6 py-3 text-sm">
                               {attendance.logoutDescription ? (
                                 <>
                                   <div className="font-medium">
@@ -1264,7 +826,9 @@ const AttendanceManagement = () => {
                                   </div>
                                   {attendance.earlyLogoutReason && (
                                     <div className="text-xs text-red-600 mt-1">
-                                      Early reason:{" "}
+                                      <span className="font-medium">
+                                        Early Logout:
+                                      </span>{" "}
                                       {attendance.earlyLogoutReason}
                                     </div>
                                   )}
@@ -1272,12 +836,12 @@ const AttendanceManagement = () => {
                               ) : (
                                 "-"
                               )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </div>

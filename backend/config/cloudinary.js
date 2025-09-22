@@ -1,49 +1,73 @@
-// file: backend/config/cloudinary.js
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 dotenv.config();
 
-import { v2 as cloudinary } from 'cloudinary';
-import { CloudinaryStorage } from 'multer-storage-cloudinary';
-import multer from 'multer';
+import path from "path";
+import { v2 as cloudinary } from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+import multer from "multer";
 
-// Configure Cloudinary
+// configure cloudinary from env (ensure env vars are set)
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Configure storage
+// storage configuration (resource_type: 'auto' helps with docs/images)
 const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
+  cloudinary,
   params: {
-    folder: 'gys-hrms',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'txt'],
-    transformation: [{ width: 1000, height: 1000, crop: 'limit' }],
+    folder: "gys-hrms",
+    resource_type: "auto",
+    allowed_formats: ["jpg", "jpeg", "png", "gif", "pdf", "doc", "docx", "txt"],
+    public_id: (req, file) =>
+      `${Date.now()}-${file.originalname.replace(/\.[^/.]+$/, "")}`,
   },
 });
 
-// File filter function
-const fileFilter = (req, file, cb) => {
-  // Allow images, PDFs, and common document types
-  const allowedTypes = /jpeg|jpg|png|gif|pdf|doc|docx|txt/;
-  const extname = allowedTypes.test(file.originalname.toLowerCase());
-  const mimetype = allowedTypes.test(file.mimetype);
+// safe fileFilter (do not throw plain Error)
+const allowedExts = [".jpg", ".jpeg", ".png", ".gif", ".pdf", ".doc", ".docx", ".txt"];
+// const fileFilter = (req, file, cb) => {
+//   const ext = path.extname(file.originalname).toLowerCase();
+//   const mimetypeOk = /jpeg|jpg|png|gif|pdf|msword|vnd.openxmlformats-officedocument.wordprocessingml.document|plain/.test(
+//     file.mimetype
+//   );
 
-  if (mimetype && extname) {
-    return cb(null, true);
+//   if (mimetypeOk && allowedExts.includes(ext)) {
+//     cb(null, true);
+//   } else {
+//     // signal validation error without throwing; store message on req
+//     req.fileValidationError = "File type not supported. Allowed: JPG, PNG, PDF, DOC, DOCX, TXT.";
+//     cb(null, false);
+//   }
+// };
+
+// backend/config/cloudinary.js - Update fileFilter
+const fileFilter = (req, file, cb) => {
+  const ext = path.extname(file.originalname).toLowerCase();
+  const allowedMimeTypes = [
+    'image/jpeg', 
+    'image/jpg', 
+    'image/png', 
+    'image/gif',
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'text/plain'
+  ];
+
+  if (allowedMimeTypes.includes(file.mimetype) && allowedExts.includes(ext)) {
+    cb(null, true);
   } else {
-    cb(new Error('Error: File type not supported!'));
+    req.fileValidationError = "File type not supported. Allowed: JPG, PNG, PDF, DOC, DOCX, TXT.";
+    cb(null, false);
   }
 };
 
-// Initialize multer
 const upload = multer({
-  storage: storage,
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
-  },
-  fileFilter: fileFilter,
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter,
 });
 
 export { cloudinary, upload };
