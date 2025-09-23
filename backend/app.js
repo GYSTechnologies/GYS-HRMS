@@ -24,10 +24,10 @@ connectDB();
 const app = express();
 
 
-app.use(cors({
-  origin: '*',
-  credentials: true
-}));
+// app.use(cors({
+//   origin: '*',
+//   credentials: true
+// }));
 
 
 // app.use(
@@ -38,6 +38,17 @@ app.use(cors({
 // );
 
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://gys-hrms.vercel.app"
+];
+
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  })
+);
 
 
 
