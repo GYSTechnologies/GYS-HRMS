@@ -21,6 +21,8 @@ import { useAuth } from "../context/AppContext";
 import LoginModal from "../components/attendance/LoginModal";
 import LogoutModal from "../components/attendance/LogoutModal";
 import LeaveApplicationModal from "../components/modals/LeaveApplicationModal";
+import NotificationToast from "../components/common/NotificationToast.jsx";
+
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns"; // npm install date-fns
 
@@ -38,8 +40,19 @@ const EmployeeDashboard = () => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [leaveTypes, setLeaveTypes] = useState([]);
+  const [notifications, setNotifications] = useState([]);
 
   const navigate = useNavigate();
+
+  const addNotification = (message, type = "info", ttl = 4000) => {
+    const id = Date.now() + Math.random();
+    setNotifications((n) => [...n, { id, message, type }]);
+    setTimeout(
+      () => setNotifications((n) => n.filter((x) => x.id !== id)),
+      ttl
+    );
+  };
+
   // Fetch all dashboard data using your existing APIs
   const fetchDashboardData = async () => {
     try {
@@ -176,6 +189,8 @@ const EmployeeDashboard = () => {
   return (
     <div className="min-h-[80vh] p-6 bg-gray-50">
       {/* Header */}
+      <NotificationToast notifications={notifications} />
+
       <div className="mb-6 flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">
@@ -200,197 +215,210 @@ const EmployeeDashboard = () => {
       {/* Top 4 Cards */}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-  {/* Today's Attendance Card */}
-  <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-slate-200 flex flex-col h-[280px]">
-    <div className="flex items-center mb-4">
-      <h3 className="font-semibold text-slate-800 text-lg">Today's Attendance</h3>
-    </div>
+        {/* Today's Attendance Card */}
+        <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-slate-200 flex flex-col h-[280px]">
+          <div className="flex items-center mb-4">
+            <h3 className="font-semibold text-slate-800 text-lg">
+              Today's Attendance
+            </h3>
+          </div>
 
-    <div className="mb-4">
-      <span
-        className={`px-3 py-1.5 rounded-full text-sm font-medium ${
-          dashboardData.attendance.status === "accepted"
-            ? "bg-green-100 text-green-700"
-            : dashboardData.attendance.status === "rejected"
-            ? "bg-red-100 text-red-700"
-            : "bg-yellow-100 text-yellow-700"
-        }`}
-      >
-        {dashboardData.attendance.status
-          ? dashboardData.attendance.status.charAt(0).toUpperCase() +
-            dashboardData.attendance.status.slice(1)
-          : "Not marked"}
-      </span>
-    </div>
-
-    <div className="space-y-2 mb-6 flex-grow overflow-y-auto pr-1 scrollbar-hide">
-      <div className="text-sm text-slate-600 flex items-center">
-        Log In:{" "}
-        <span className="font-medium text-slate-900 ml-1">
-          {dashboardData.attendance.checkIn
-            ? new Date(dashboardData.attendance.checkIn).toLocaleTimeString()
-            : "Not logged in"}
-        </span>
-      </div>
-      <div className="text-sm text-slate-600 flex items-center">
-        Log Out:{" "}
-        <span className="font-medium text-slate-900 ml-1">
-          {dashboardData.attendance.checkOut
-            ? new Date(dashboardData.attendance.checkOut).toLocaleTimeString()
-            : "Pending"}
-        </span>
-      </div>
-    </div>
-
-    {dashboardData.attendance.checkOut ? (
-      <div className="w-full text-center py-3 px-4 bg-gray-100 text-gray-700 rounded-xl font-medium">
-        Today's Session Ended
-      </div>
-    ) : !dashboardData.attendance.checkIn ? (
-      <button
-        onClick={() => setShowLoginModal(true)}
-        className="w-full bg-[#104774] hover:bg-[#0d3a61] text-white py-3 px-4 rounded-xl font-medium transition-all duration-300 transform hover:scale-[1.02] shadow-md hover:shadow-lg mt-auto"
-      >
-        Mark Attendance
-      </button>
-    ) : (
-      <button
-        onClick={() => setShowLogoutModal(true)}
-        className="w-full bg-[#104774] hover:bg-[#0d3a61] text-white py-3 px-4 rounded-xl font-medium transition-all duration-300 transform hover:scale-[1.02] shadow-md hover:shadow-lg mt-auto"
-      >
-        Log Out
-      </button>
-    )}
-  </div>
-
-  {/* Leaves Summary Card */}
-  <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-slate-200 flex flex-col h-[280px]">
-    <div className="flex items-center mb-4">
-      <h3 className="font-semibold text-slate-800 text-lg">Leaves Summary</h3>
-    </div>
-
-    <div className="space-y-2 mb-6 flex-grow overflow-y-auto pr-1 scrollbar-hide">
-      <div className="text-sm text-slate-600">
-        Total Leaves:{" "}
-        <span className="font-medium text-slate-900">
-          {(dashboardData.leaveBalance.sick || 0) +
-            (dashboardData.leaveBalance.casual || 0) +
-            (dashboardData.leaveBalance.paid || 0)}
-        </span>
-      </div>
-      <div className="text-sm text-slate-600">
-        Sick:{" "}
-        <span className="font-medium text-red-500 ml-1">
-          {dashboardData.leaveBalance.sick || 0}
-        </span>
-      </div>
-      <div className="text-sm text-slate-600">
-        Casual:{" "}
-        <span className="font-medium text-blue-500 ml-1">
-          {dashboardData.leaveBalance.casual || 0}
-        </span>
-      </div>
-      <div className="text-sm text-slate-600">
-        Paid:{" "}
-        <span className="font-medium text-green-500 ml-1">
-          {dashboardData.leaveBalance.paid || 0}
-        </span>
-      </div>
-    </div>
-
-    <button
-      onClick={() => setShowLeaveModal(true)}
-      className="w-full bg-[#104774] hover:bg-[#0d3a61] text-white py-3 px-4 rounded-xl font-medium transition-all duration-300 transform hover:scale-[1.02] shadow-md hover:shadow-lg mt-auto"
-    >
-      Apply for Leave
-    </button>
-  </div>
-
-  {/* Recent Leaves Card */}
-  <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-slate-200 flex flex-col h-[280px]">
-    <div className="flex items-center mb-4">
-      <h3 className="font-semibold text-slate-800 text-lg">Recent Leaves</h3>
-    </div>
-
-    <div className="space-y-3 mb-6 flex-grow max-h-[200px] overflow-y-auto pr-1 scrollbar-hide">
-      {dashboardData.leaveApplications.slice(0, 5).map((leave, index) => (
-        <div key={index} className="text-sm pb-2 last:border-0">
-          <div className="flex justify-between">
-            <span className="font-medium text-slate-800">
-              {formatLeaveTypeName(leave.leaveType)}
-            </span>
+          <div className="mb-4">
             <span
-              className={`px-2 py-1 rounded-full text-xs ${
-                leave.status === "approved"
+              className={`px-3 py-1.5 rounded-full text-sm font-medium ${
+                dashboardData.attendance.status === "accepted"
                   ? "bg-green-100 text-green-700"
-                  : leave.status === "rejected"
+                  : dashboardData.attendance.status === "rejected"
                   ? "bg-red-100 text-red-700"
                   : "bg-yellow-100 text-yellow-700"
               }`}
             >
-              {leave.status}
+              {dashboardData.attendance.status
+                ? dashboardData.attendance.status.charAt(0).toUpperCase() +
+                  dashboardData.attendance.status.slice(1)
+                : "Not marked"}
             </span>
           </div>
-          <div className="text-slate-600">
-            {formatDate(leave.fromDate)} - {formatDate(leave.toDate)}
+
+          <div className="space-y-2 mb-6 flex-grow overflow-y-auto pr-1 scrollbar-hide">
+            <div className="text-sm text-slate-600 flex items-center">
+              Log In:{" "}
+              <span className="font-medium text-slate-900 ml-1">
+                {dashboardData.attendance.checkIn
+                  ? new Date(
+                      dashboardData.attendance.checkIn
+                    ).toLocaleTimeString()
+                  : "Not logged in"}
+              </span>
+            </div>
+            <div className="text-sm text-slate-600 flex items-center">
+              Log Out:{" "}
+              <span className="font-medium text-slate-900 ml-1">
+                {dashboardData.attendance.checkOut
+                  ? new Date(
+                      dashboardData.attendance.checkOut
+                    ).toLocaleTimeString()
+                  : "Pending"}
+              </span>
+            </div>
           </div>
+
+          {dashboardData.attendance.checkOut ? (
+            <div className="w-full text-center py-3 px-4 bg-gray-100 text-gray-700 rounded-xl font-medium">
+              Today's Session Ended
+            </div>
+          ) : !dashboardData.attendance.checkIn ? (
+            <button
+              onClick={() => setShowLoginModal(true)}
+              className="w-full bg-[#104774] hover:bg-[#0d3a61] text-white py-3 px-4 rounded-xl font-medium transition-all duration-300 transform hover:scale-[1.02] shadow-md hover:shadow-lg mt-auto"
+            >
+              Mark Attendance
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowLogoutModal(true)}
+              className="w-full bg-[#104774] hover:bg-[#0d3a61] text-white py-3 px-4 rounded-xl font-medium transition-all duration-300 transform hover:scale-[1.02] shadow-md hover:shadow-lg mt-auto"
+            >
+              Log Out
+            </button>
+          )}
         </div>
-      ))}
-      {dashboardData.leaveApplications.length === 0 && (
-        <div className="text-sm text-slate-500 text-center py-4 mt-9">
-          No leave applications yet
+
+        {/* Leaves Summary Card */}
+        <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-slate-200 flex flex-col h-[280px]">
+          <div className="flex items-center mb-4">
+            <h3 className="font-semibold text-slate-800 text-lg">
+              Leaves Summary
+            </h3>
+          </div>
+
+          <div className="space-y-2 mb-6 flex-grow overflow-y-auto pr-1 scrollbar-hide">
+            <div className="text-sm text-slate-600">
+              Total Leaves:{" "}
+              <span className="font-medium text-slate-900">
+                {(dashboardData.leaveBalance.sick || 0) +
+                  (dashboardData.leaveBalance.casual || 0) +
+                  (dashboardData.leaveBalance.paid || 0)}
+              </span>
+            </div>
+            <div className="text-sm text-slate-600">
+              Sick:{" "}
+              <span className="font-medium text-red-500 ml-1">
+                {dashboardData.leaveBalance.sick || 0}
+              </span>
+            </div>
+            <div className="text-sm text-slate-600">
+              Casual:{" "}
+              <span className="font-medium text-blue-500 ml-1">
+                {dashboardData.leaveBalance.casual || 0}
+              </span>
+            </div>
+            <div className="text-sm text-slate-600">
+              Paid:{" "}
+              <span className="font-medium text-green-500 ml-1">
+                {dashboardData.leaveBalance.paid || 0}
+              </span>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setShowLeaveModal(true)}
+            className="w-full bg-[#104774] hover:bg-[#0d3a61] text-white py-3 px-4 rounded-xl font-medium transition-all duration-300 transform hover:scale-[1.02] shadow-md hover:shadow-lg mt-auto"
+          >
+            Apply for Leave
+          </button>
         </div>
-      )}
-    </div>
 
-    <button
-      onClick={() => navigate("/employee/leaves")}
-      className="w-full bg-[#104774] hover:bg-[#0d3a61] text-white py-3 px-4 rounded-xl font-medium transition-all duration-300 transform hover:scale-[1.02] shadow-md hover:shadow-lg mt-auto"
-    >
-      View All Leaves
-    </button>
-  </div>
+        {/* Recent Leaves Card */}
+        <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-slate-200 flex flex-col h-[280px]">
+          <div className="flex items-center mb-4">
+            <h3 className="font-semibold text-slate-800 text-lg">
+              Recent Leaves
+            </h3>
+          </div>
 
-  {/* Performance Card */}
-  <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-slate-200 flex flex-col h-[280px]">
-    <div className="flex items-center mb-4">
-      <h3 className="font-semibold text-slate-800 text-lg">Performance</h3>
-    </div>
+          <div className="space-y-3 mb-6 flex-grow max-h-[200px] overflow-y-auto pr-1 scrollbar-hide">
+            {dashboardData.leaveApplications.slice(0, 5).map((leave, index) => (
+              <div key={index} className="text-sm pb-2 last:border-0">
+                <div className="flex justify-between">
+                  <span className="font-medium text-slate-800">
+                    {formatLeaveTypeName(leave.leaveType)}
+                  </span>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs ${
+                      leave.status === "approved"
+                        ? "bg-green-100 text-green-700"
+                        : leave.status === "rejected"
+                        ? "bg-red-100 text-red-700"
+                        : "bg-yellow-100 text-yellow-700"
+                    }`}
+                  >
+                    {leave.status}
+                  </span>
+                </div>
+                <div className="text-slate-600">
+                  {formatDate(leave.fromDate)} - {formatDate(leave.toDate)}
+                </div>
+              </div>
+            ))}
+            {dashboardData.leaveApplications.length === 0 && (
+              <div className="text-sm text-slate-500 text-center py-4 mt-9">
+                No leave applications yet
+              </div>
+            )}
+          </div>
 
-    <div className="space-y-2 mb-6 flex-grow overflow-y-auto pr-1 scrollbar-hide">
-      <div className="text-sm text-slate-600">
-        Attendance Rate:{" "}
-        <span className="font-medium text-slate-900">{attendancePercentage}%</span>
+          <button
+            onClick={() => navigate("/employee/leaves")}
+            className="w-full bg-[#104774] hover:bg-[#0d3a61] text-white py-3 px-4 rounded-xl font-medium transition-all duration-300 transform hover:scale-[1.02] shadow-md hover:shadow-lg mt-auto"
+          >
+            View All Leaves
+          </button>
+        </div>
+
+        {/* Performance Card */}
+        <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-slate-200 flex flex-col h-[280px]">
+          <div className="flex items-center mb-4">
+            <h3 className="font-semibold text-slate-800 text-lg">
+              Performance
+            </h3>
+          </div>
+
+          <div className="space-y-2 mb-6 flex-grow overflow-y-auto pr-1 scrollbar-hide">
+            <div className="text-sm text-slate-600">
+              Attendance Rate:{" "}
+              <span className="font-medium text-slate-900">
+                {attendancePercentage}%
+              </span>
+            </div>
+            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-green-500 rounded-full"
+                style={{ width: `${attendancePercentage}%` }}
+              ></div>
+            </div>
+            <div className="text-sm text-slate-600">
+              Present Days:{" "}
+              <span className="font-medium text-slate-900">
+                {dashboardData.attendanceSummary.present || 0}
+              </span>
+            </div>
+            <div className="text-sm text-slate-600">
+              Leaves Taken:{" "}
+              <span className="font-medium text-slate-900">
+                {dashboardData.attendanceSummary.leave || 0}
+              </span>
+            </div>
+          </div>
+
+          <button
+            onClick={() => navigate("/employee/attendance")}
+            className="w-full bg-[#104774] hover:bg-[#0d3a61] text-white py-3 px-4 rounded-xl font-medium transition-all duration-300 transform hover:scale-[1.02] shadow-md hover:shadow-lg mt-auto"
+          >
+            View Attendance
+          </button>
+        </div>
       </div>
-      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-        <div
-          className="h-full bg-green-500 rounded-full"
-          style={{ width: `${attendancePercentage}%` }}
-        ></div>
-      </div>
-      <div className="text-sm text-slate-600">
-        Present Days:{" "}
-        <span className="font-medium text-slate-900">
-          {dashboardData.attendanceSummary.present || 0}
-        </span>
-      </div>
-      <div className="text-sm text-slate-600">
-        Leaves Taken:{" "}
-        <span className="font-medium text-slate-900">
-          {dashboardData.attendanceSummary.leave || 0}
-        </span>
-      </div>
-    </div>
-
-    <button
-      onClick={() => navigate("/employee/attendance")}
-      className="w-full bg-[#104774] hover:bg-[#0d3a61] text-white py-3 px-4 rounded-xl font-medium transition-all duration-300 transform hover:scale-[1.02] shadow-md hover:shadow-lg mt-auto"
-    >
-      View Attendance
-    </button>
-  </div>
-</div>
-
 
       {/* Bottom 2 Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -424,7 +452,7 @@ const EmployeeDashboard = () => {
             <div className="text-center p-3 bg-yellow-50 rounded-lg border border-yellow-100">
               <div className="text-2xl font-bold text-yellow-600 mb-1">25</div>
               <div className="text-xs text-slate-600 font-medium">
-               Working days
+                Working days
               </div>
             </div>
             <div className="text-center p-3 bg-purple-50 rounded-lg border border-purple-100">
@@ -500,6 +528,7 @@ const EmployeeDashboard = () => {
         onClose={() => setShowLoginModal(false)}
         onSuccess={handleCheckInSuccess}
         token={token}
+        addNotification={addNotification}
       />
 
       <LogoutModal
@@ -508,6 +537,7 @@ const EmployeeDashboard = () => {
         onSuccess={handleCheckOutSuccess}
         attendanceData={dashboardData.attendance}
         token={token}
+        addNotification={addNotification}
       />
 
       <LeaveApplicationModal
@@ -517,6 +547,7 @@ const EmployeeDashboard = () => {
         token={token}
         leaveBalance={dashboardData.leaveBalance}
         leaveTypes={leaveTypes}
+        addNotification={addNotification}
       />
     </div>
   );

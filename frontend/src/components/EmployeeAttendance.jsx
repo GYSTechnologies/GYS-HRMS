@@ -182,7 +182,7 @@ const EmployeeAttendance = () => {
       </header>
 
       {/* Today's Attendance Section */}
-<div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-slate-200 flex flex-col h-[250px] w-[350px] mb-5">
+<div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-slate-200 flex flex-col h-[275px] w-[350px] mb-5">
   {/* Header */}
   <div className="flex items-center justify-between mb-4">
     <h3 className="font-semibold text-slate-800 text-lg">

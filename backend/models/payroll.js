@@ -41,12 +41,11 @@ const PayrollSchema = new mongoose.Schema(
     approvedAt: { type: Date },
     rejectionReason: { type: String },
 
-    // PayrollSchema mein ye fields add karo:
     presentDays: { type: Number, default: 0 }, // Actual days present
     leaveDays: { type: Number, default: 0 }, // Total approved leaves
     workingDays: { type: Number }, // Total working days in month
 
-    // ✅ PAYSLIP FIELD - CRITICAL
+    //  PAYSLIP FIELD - CRITICAL
     payslipPath: { type: String }, // Stores the path to generated PDF
   },
   { timestamps: true }

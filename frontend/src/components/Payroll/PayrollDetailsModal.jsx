@@ -132,12 +132,12 @@ const PayrollDetailsModal = ({
           >
             Summary
           </button>
-          <button
+          {/* <button
             className={`py-2 px-4 font-medium ${activeTab === "breakdown" ? "border-b-2 border-blue-500 text-blue-600" : "text-gray-500"}`}
             onClick={() => setActiveTab("breakdown")}
           >
             Detailed Breakdown
-          </button>
+          </button> */}
           {/* <button
             className={`py-2 px-4 font-medium ${activeTab === "history" ? "border-b-2 border-blue-500 text-blue-600" : "text-gray-500"}`}
             onClick={() => setActiveTab("history")}

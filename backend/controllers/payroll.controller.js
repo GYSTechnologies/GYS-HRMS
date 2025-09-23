@@ -12,6 +12,40 @@ import path from "path";
 import PDFDocument from "pdfkit";
 
 
+// place at top of file near other helpers
+const normalizeDayStart = (d) => {
+  const dt = new Date(d);
+  dt.setHours(0,0,0,0);
+  return dt;
+};
+
+const formatKey = (d) => normalizeDayStart(d).toISOString().slice(0,10); // YYYY-MM-DD
+
+// expand a holiday/event into all covered date keys (YYYY-MM-DD)
+const expandEventDates = (event, cycleStart, cycleEnd) => {
+  const start = normalizeDayStart(event.startDate) < normalizeDayStart(cycleStart) ? normalizeDayStart(cycleStart) : normalizeDayStart(event.startDate);
+  const end = normalizeDayStart(event.endDate || event.startDate) > normalizeDayStart(cycleEnd) ? normalizeDayStart(cycleEnd) : normalizeDayStart(event.endDate || event.startDate);
+  const dates = [];
+  let cur = new Date(start);
+  while (cur <= end) {
+    dates.push(formatKey(cur));
+    cur.setDate(cur.getDate() + 1);
+  }
+  return dates;
+};
+
+const getDatesBetweenKeys = (startDate, endDate) => {
+  const keys = [];
+  let cur = normalizeDayStart(startDate);
+  const e = normalizeDayStart(endDate);
+  while (cur <= e) {
+    keys.push(formatKey(cur));
+    cur.setDate(cur.getDate() + 1);
+  }
+  return keys;
+};
+
+
 // Utility to get all dates between two dates
 const getDatesBetween = (startDate, endDate) => {
   const dates = [];
@@ -23,7 +57,7 @@ const getDatesBetween = (startDate, endDate) => {
   return dates;
 };
 
-// Controller
+
 export const createMonthlyPayroll = async (req, res) => {
   try {
     const {
@@ -31,7 +65,7 @@ export const createMonthlyPayroll = async (req, res) => {
       month, // numeric 1–12
       year,
       basic,
-      hra,
+      hra = 0,
       allowances = [],
       deductions = [],
       taxPercentage = 0,
@@ -44,101 +78,149 @@ export const createMonthlyPayroll = async (req, res) => {
     const employee = await Profile.findById(employeeId);
     if (!employee) return res.status(404).json({ message: "Employee not found" });
 
-    // Define payroll cycle: 8th current month -> 7th next month
-    let cycleStart = new Date(year, month - 1, 8);
-    let cycleEnd = new Date(year, month, 7);
+    // Payroll cycle: 8th current month -> 7th next month
+    let cycleStart = normalizeDayStart(new Date(year, month - 1, 8));
+    let cycleEnd = normalizeDayStart(new Date(year, month, 7));
 
-    // Handle first joining month (prorated)
-    if (employee.dateOfJoining > cycleStart) {
-      cycleStart = new Date(employee.dateOfJoining);
+    // If employee joined after cycle end -> no payroll for this cycle
+    if (employee.dateOfJoining && normalizeDayStart(employee.dateOfJoining) > cycleEnd) {
+      return res.status(200).json({ message: "Employee not in this payroll cycle (joined after cycle end)", data: null });
     }
 
-    const allDates = getDatesBetween(cycleStart, cycleEnd);
+    // Effective start/end for this employee (handles join/resign)
+    const effectiveStart = normalizeDayStart(employee.dateOfJoining && normalizeDayStart(employee.dateOfJoining) > cycleStart ? employee.dateOfJoining : cycleStart);
+    const effectiveEnd = employee.resignDate && normalizeDayStart(employee.resignDate) < cycleEnd ? normalizeDayStart(employee.resignDate) : cycleEnd;
 
-    // Fetch holidays
+    if (effectiveStart > effectiveEnd) {
+      return res.status(200).json({ message: "No payable days for this employee in the cycle", data: null });
+    }
+
+    // All calendar date keys in the employee effective window
+    const allDateKeys = getDatesBetweenKeys(effectiveStart, effectiveEnd); // array of YYYY-MM-DD
+    const daysInCycle = getDatesBetweenKeys(cycleStart, cycleEnd).length; // denominator for per-day salary (8th->7th)
+    if (daysInCycle <= 0) return res.status(500).json({ message: "Invalid cycle days" });
+
+    // Fetch holidays/events in range & expand them to date keys
     const holidays = await Event.find({
       startDate: { $lte: cycleEnd },
       endDate: { $gte: cycleStart },
       isHoliday: true,
     });
 
-    const holidayDates = holidays.map(h => h.startDate.toDateString());
+    const holidaySet = new Set();
+    holidays.forEach(h => {
+      expandEventDates(h, cycleStart, cycleEnd).forEach(k => holidaySet.add(k));
+    });
 
-    // Fetch leaves
+    // Fetch approved leaves that intersect employee effective window
     const leaveRequests = await LeaveRequest.find({
       employee: employeeId,
       status: "approved",
       $or: [
-        { fromDate: { $lte: cycleEnd, $gte: cycleStart } },
-        { toDate: { $lte: cycleEnd, $gte: cycleStart } },
-        { fromDate: { $lte: cycleStart }, toDate: { $gte: cycleEnd } }
+        { fromDate: { $lte: effectiveEnd, $gte: effectiveStart } },
+        { toDate: { $lte: effectiveEnd, $gte: effectiveStart } },
+        { fromDate: { $lte: effectiveStart }, toDate: { $gte: effectiveEnd } }
       ]
     });
 
-    let leaveDates = [];
+    const leaveSet = new Set();
     leaveRequests.forEach(leave => {
-      const dates = getDatesBetween(
-        leave.fromDate > cycleStart ? leave.fromDate : cycleStart,
-        leave.toDate < cycleEnd ? leave.toDate : cycleEnd
-      );
-      leaveDates.push(...dates.map(d => d.toDateString()));
+      const start = normalizeDayStart(leave.fromDate) < effectiveStart ? effectiveStart : normalizeDayStart(leave.fromDate);
+      const end = normalizeDayStart(leave.toDate) > effectiveEnd ? effectiveEnd : normalizeDayStart(leave.toDate);
+      let cur = new Date(start);
+      while (cur <= end) {
+        leaveSet.add(formatKey(cur));
+        cur.setDate(cur.getDate() + 1);
+      }
     });
 
-    // Fetch attendance
+    // Fetch attendance in effective window. We'll interpret a record as PRESENT only if:
+    // - attendance.status === "accepted" OR checkIn exists (your policy). Adjust below as needed.
     const attendances = await Attendance.find({
       employee: employeeId,
-      date: { $gte: cycleStart, $lte: cycleEnd }
+      date: { $gte: effectiveStart, $lte: effectiveEnd }
     });
 
-    const absentDates = allDates
-      .filter(d => {
-        const day = d.getDay();
-        const isSunday = day === 0;
-        const isHoliday = holidayDates.includes(d.toDateString());
-        const isLeave = leaveDates.includes(d.toDateString());
-        const att = attendances.find(a => a.date.toDateString() === d.toDateString());
-        const isAbsent = !att && !isSunday && !isHoliday && !isLeave;
-        return isAbsent;
-      })
-      .map(d => d.toDateString());
+    // Build a map of attendance by date key (only accepted/present)
+    const attendanceMap = new Map();
+    attendances.forEach(a => {
+      const key = formatKey(a.date);
+      // decide presence: require status === 'accepted' OR checkIn exists
+      const isPresent = (a.status && a.status === "accepted") || (!!a.checkIn);
+      if (isPresent) attendanceMap.set(key, a);
+    });
 
-    const workingDays = allDates.filter(d => {
-      const day = d.getDay();
-      const isSunday = day === 0;
-      const isHoliday = holidayDates.includes(d.toDateString());
-      return !isSunday && !isHoliday;
-    }).length;
+    // Iterate each date in the employee effective window and compute counters
+    let paidDays = 0;
+    let presentDays = 0;
+    let leaveDays = 0;
+    let absentDays = 0;
+    let workingDaysCount = 0; // number of working days (non-sunday, non-holiday) *inside effective window*
 
-    const presentDays = workingDays - absentDates.length - leaveDates.length;
-    const leaveDays = leaveDates.length;
-    const absentDays = absentDates.length;
+    for (const key of allDateKeys) {
+      const d = new Date(key + "T00:00:00"); // local midnight
+      const isSunday = d.getDay() === 0;
+      const isHoliday = holidaySet.has(key);
 
-    // Basic salary prorated
-    const monthDays = 31; // assuming 31 days for simplicity; could adjust with actual month days
-    const perDaySalary = basic / monthDays;
+      // If date is outside cycle working zone but inside effective window (shouldn't happen) - skip
+      // Evaluate working day
+      const isWorkingDay = !isSunday && !isHoliday;
+      if (isWorkingDay) workingDaysCount++;
+
+      if (isHoliday || isSunday) {
+        // Paid automatically
+        paidDays++;
+        continue;
+      }
+
+      // Not holiday/sunday => working day
+      // Check attendance
+      if (attendanceMap.has(key)) {
+        presentDays++;
+        paidDays++;
+        continue;
+      }
+
+      // Check approved leave
+      if (leaveSet.has(key)) {
+        leaveDays++;
+        paidDays++;
+        continue;
+      }
+
+      // Otherwise unpaid/absent
+      absentDays++;
+    }
+
+    // Per-day salary uses full cycle days (8th->7th)
+    const perDaySalary = Number(basic) / daysInCycle;
     const absentDeduction = perDaySalary * absentDays;
-    const totalEarnings = basic + hra + allowances.reduce((acc, a) => acc + a.amount, 0);
-    const totalDeductions =
-      absentDeduction + deductions.reduce((acc, d) => acc + d.amount, 0) + (basic * (taxPercentage / 100));
-    const netPay = totalEarnings - totalDeductions;
+
+    const totalAllowances = Array.isArray(allowances) ? allowances.reduce((acc, a) => acc + Number(a.amount || 0), 0) : 0;
+    const totalDeductionsFromInput = Array.isArray(deductions) ? deductions.reduce((acc, d) => acc + Number(d.amount || 0), 0) : 0;
+    const taxValue = Math.round(Number(basic) * (Number(taxPercentage || 0) / 100));
+
+    const totalEarnings = Number(basic) + Number(hra || 0) + totalAllowances;
+    const totalDeductions = Math.round(absentDeduction + totalDeductionsFromInput + taxValue);
+    const netPay = Math.round(totalEarnings - totalDeductions);
 
     const payroll = await Payroll.create({
       employee: employeeId,
-      basic,
-      hra,
-      allowances,
-      deductions,
-      tax: Math.round(basic * (taxPercentage / 100)),
+      basic: Number(basic),
+      hra: Number(hra || 0),
+      allowances: allowances || [],
+      deductions: deductions || [],
+      tax: taxValue,
       month: `${year}-${String(month).padStart(2, "0")}`,
       year,
       absentDays,
       absentDeduction: Math.round(absentDeduction),
       presentDays,
       leaveDays,
-      workingDays,
+      workingDays: workingDaysCount,
       totalEarnings: Math.round(totalEarnings),
       totalDeductions: Math.round(totalDeductions),
-      netPay: Math.round(netPay),
+      netPay,
       generatedBy: req.user._id,
       status: "draft"
     });
@@ -147,6 +229,7 @@ export const createMonthlyPayroll = async (req, res) => {
       message: "Payroll created successfully",
       data: payroll
     });
+
   } catch (error) {
     console.error("Payroll creation error:", error);
     return res.status(500).json({
@@ -155,6 +238,7 @@ export const createMonthlyPayroll = async (req, res) => {
     });
   }
 };
+
 
 
 export const getLatestPayrollForEmployee = async (req, res) => {
@@ -179,13 +263,18 @@ export const checkPayrollExists = async (req, res) => {
     const { month, year } = req.query;
     if (!month || !year) return res.status(400).json({ message: "Month and year required" });
 
-    const exists = await Payroll.exists({ employee: employeeId, month: Number(month), year: Number(year) });
+    const monthKey = `${year}-${String(month).padStart(2, '0')}`;
+const exists = await Payroll.exists({ employee: employeeId, month: monthKey });
+
+
+    // const exists = await Payroll.exists({ employee: employeeId, month: Number(month), year: Number(year) });
     res.status(200).json({ exists: !!exists });
   } catch (error) {
     console.error("Check payroll error:", error);
     res.status(500).json({ message: "Error checking payroll", error: process.env.NODE_ENV === "development" ? error.message : undefined });
   }
 };
+
 
 export const getPayrollPreview = async (req, res) => {
   try {
@@ -194,7 +283,7 @@ export const getPayrollPreview = async (req, res) => {
       month,
       year,
       basic = 30000,
-      hra = 12000,
+      hra = 0,
       allowances = '[]',
       deductions = '[]',
       taxPercentage = 0
@@ -215,24 +304,30 @@ export const getPayrollPreview = async (req, res) => {
     const employee = await Profile.findById(employeeId);
     if (!employee) return res.status(404).json({ message: "Employee not found" });
 
-    let cycleStart = new Date(year, month - 1, 8);
-    let cycleEnd = new Date(year, month, 7);
+    let cycleStart = normalizeDayStart(new Date(year, month - 1, 8));
+    let cycleEnd = normalizeDayStart(new Date(year, month, 7));
 
-    if (employee.dateOfJoining > cycleStart) {
-      cycleStart = new Date(employee.dateOfJoining);
+    if (employee.dateOfJoining && normalizeDayStart(employee.dateOfJoining) > cycleStart) {
+      cycleStart = normalizeDayStart(employee.dateOfJoining);
     }
 
-    const allDates = getDatesBetween(cycleStart, cycleEnd);
+    if (employee.dateOfJoining && normalizeDayStart(employee.dateOfJoining) > cycleEnd) {
+      return res.status(200).json({ message: "Employee not in this payroll cycle", data: null });
+    }
 
-    // Fetch holidays
+    const allDatesKeys = getDatesBetweenKeys(cycleStart, cycleEnd);
+    const daysInCycle = allDatesKeys.length;
+
+    // Expand holidays
     const holidays = await Event.find({
       startDate: { $lte: cycleEnd },
       endDate: { $gte: cycleStart },
       isHoliday: true,
     });
-    const holidayDates = holidays.map(h => h.startDate.toDateString());
+    const holidaySet = new Set();
+    holidays.forEach(h => expandEventDates(h, cycleStart, cycleEnd).forEach(k => holidaySet.add(k)));
 
-    // Fetch approved leaves
+    // Leaves
     const leaveRequests = await LeaveRequest.find({
       employee: employeeId,
       status: "approved",
@@ -242,70 +337,85 @@ export const getPayrollPreview = async (req, res) => {
         { fromDate: { $lte: cycleStart }, toDate: { $gte: cycleEnd } }
       ]
     });
-
-    let leaveDates = [];
+    const leaveSet = new Set();
     leaveRequests.forEach(leave => {
-      const dates = getDatesBetween(
-        leave.fromDate > cycleStart ? leave.fromDate : cycleStart,
-        leave.toDate < cycleEnd ? leave.toDate : cycleEnd
-      );
-      leaveDates.push(...dates.map(d => d.toDateString()));
+      const start = normalizeDayStart(leave.fromDate) < cycleStart ? cycleStart : normalizeDayStart(leave.fromDate);
+      const end = normalizeDayStart(leave.toDate) > cycleEnd ? cycleEnd : normalizeDayStart(leave.toDate);
+      let cur = new Date(start);
+      while (cur <= end) {
+        leaveSet.add(formatKey(cur));
+        cur.setDate(cur.getDate() + 1);
+      }
     });
 
-    // Fetch attendance
+    // Attendance
     const attendances = await Attendance.find({
       employee: employeeId,
       date: { $gte: cycleStart, $lte: cycleEnd }
     });
+    const attendanceMap = new Set();
+    attendances.forEach(a => {
+      const key = formatKey(a.date);
+      const isPresent = (a.status && a.status === "accepted") || (!!a.checkIn);
+      if (isPresent) attendanceMap.add(key);
+    });
 
-    const absentDates = allDates
-      .filter(d => {
-        const day = d.getDay();
-        const isSunday = day === 0;
-        const isHoliday = holidayDates.includes(d.toDateString());
-        const isLeave = leaveDates.includes(d.toDateString());
-        const att = attendances.find(a => a.date.toDateString() === d.toDateString());
-        return !att && !isSunday && !isHoliday && !isLeave;
-      })
-      .map(d => d.toDateString());
+    // Now iterate and compute preview numbers
+    let paidDays = 0;
+    let presentDays = 0;
+    let leaveDays = 0;
+    let absentDays = 0;
+    let workingDays = 0;
 
-    const workingDays = allDates.filter(d => {
-      const day = d.getDay();
-      const isSunday = day === 0;
-      const isHoliday = holidayDates.includes(d.toDateString());
-      return !isSunday && !isHoliday;
-    }).length;
+    for (const key of allDatesKeys) {
+      const d = new Date(key + "T00:00:00");
+      const isSunday = d.getDay() === 0;
+      const isHoliday = holidaySet.has(key);
+      const isWorkingDay = !isSunday && !isHoliday;
+      if (isWorkingDay) workingDays++;
 
-    const leaveDays = leaveDates.length;
-    const absentDays = absentDates.length;
+      if (isHoliday || isSunday) {
+        paidDays++;
+        continue;
+      }
 
-    const monthDays = 31; // simple assumption
-    const perDaySalary = Number(basic) / monthDays;
+      if (attendanceMap.has(key)) {
+        presentDays++;
+        paidDays++;
+        continue;
+      }
+
+      if (leaveSet.has(key)) {
+        leaveDays++;
+        paidDays++;
+        continue;
+      }
+
+      absentDays++;
+    }
+
+    const perDaySalary = Number(basic) / daysInCycle;
     const absentDeduction = perDaySalary * absentDays;
-
-    const totalEarnings =
-      Number(basic) +
-      Number(hra) +
-      allowances.reduce((acc, a) => acc + Number(a.amount || 0), 0);
-
-    const totalDeductions =
-      absentDeduction +
-      deductions.reduce((acc, d) => acc + Number(d.amount || 0), 0) +
-      Number(basic) * (Number(taxPercentage) / 100);
-
-    const netPay = totalEarnings - totalDeductions;
+    const totalAllowances = Array.isArray(allowances) ? allowances.reduce((acc, a) => acc + Number(a.amount || 0), 0) : 0;
+    const totalDeductionsFromInput = Array.isArray(deductions) ? deductions.reduce((acc, d) => acc + Number(d.amount || 0), 0) : 0;
+    const taxValue = Math.round(Number(basic) * (Number(taxPercentage || 0) / 100));
+    const totalEarnings = Number(basic) + Number(hra || 0) + totalAllowances;
+    const totalDeductions = Math.round(absentDeduction + totalDeductionsFromInput + taxValue);
+    const netPay = Math.round(totalEarnings - totalDeductions);
 
     res.status(200).json({
-      cycleDays: allDates.length,
-      sundaysHolidays: allDates.length - workingDays,
+      cycleDays: daysInCycle,
+      sundaysHolidays: daysInCycle - workingDays,
       workingDays,
       approvedLeaves: leaveDays,
+      presentDays,
       absent: absentDays,
       absentDeduction: Math.round(absentDeduction),
       totalEarnings: Math.round(totalEarnings),
       totalDeductions: Math.round(totalDeductions),
       payableSalary: Math.round(netPay),
     });
+
   } catch (error) {
     console.error("Payroll preview error:", error);
     res.status(500).json({
@@ -315,7 +425,7 @@ export const getPayrollPreview = async (req, res) => {
   }
 };
 
-// HR edit  (only DRAFT status )
+
 export const updatePayroll = async (req, res) => {
   try {
     const { id } = req.params;

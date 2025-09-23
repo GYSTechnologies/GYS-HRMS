@@ -12,6 +12,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { useAuth } from "../context/AppContext";
+import logo from "../assets/gys_logo.png";
 
 const Sidebar = ({ closeSidebar }) => {
   const { user, logout } = useAuth();
@@ -63,16 +64,23 @@ const Sidebar = ({ closeSidebar }) => {
   return (
     <div className="bg-white shadow-lg w-80 min-h-screen flex flex-col relative">
       {/* Header */}
-      <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
+      <div className=" px-5  border-b border-gray-100 flex items-center justify-between">
+        <div className="flex items-center">
+          <img
+            src={logo}
+            alt="GYS Logo"
+            className="h-21 w-auto object-contain " // yaha se size control hoga
+          />
+        </div>
+
+        {/* <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-gradient-to-br from-[#104774] to-[#0d3a61] rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-sm">△</span>
           </div>
           <div className="text-gray-800 text-xl font-bold tracking-wide">
             GYS
           </div>
-        </div>
-
+        </div> */}
         {/* Mobile Close Button */}
         <button
           onClick={closeSidebar}
