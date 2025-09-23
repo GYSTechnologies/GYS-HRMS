@@ -24,13 +24,6 @@ connectDB();
 const app = express();
 
 
-// app.use(
-//   cors({
-//     origin: "*",
-//     credentials: true,
-//   })
-// );
-
 app.use(cors({
   origin: '*',
   credentials: true
@@ -83,8 +76,8 @@ app.get("/", (req, res) => {
 });
 
 // Port
-const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server is running on PORT ${PORT}`);
-});
+// const PORT = process.env.PORT || 4000;
+// app.listen(PORT, () => {
+//   console.log(`🚀 Server is running on PORT ${PORT}`);
+// });
 
