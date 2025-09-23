@@ -24,10 +24,10 @@ connectDB();
 const app = express();
 
 
-app.use(cors({
-  origin: '*',
-  // credentials: true
-}));
+// app.use(cors({
+//   origin: '*',
+//   // credentials: true
+// }));
 
 
 // app.use(
@@ -36,6 +36,29 @@ app.use(cors({
 //     credentials: true,
 //   })
 // );
+
+
+import cors from 'cors';
+
+const allowedOrigins = [
+  "https://gys-hrms.vercel.app",
+  "http://localhost:5173"
+];
+
+app.use(cors({
+  origin: function(origin, callback){
+    if(!origin) return callback(null, true); // for curl or mobile apps
+    if(allowedOrigins.indexOf(origin) === -1){
+      return callback(new Error("CORS not allowed from this origin"), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true,
+}));
+
+// ✅ Preflight request handle
+app.options("*", cors());
+
 
 
 app.use(express.json());
