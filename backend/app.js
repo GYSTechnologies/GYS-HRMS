@@ -38,21 +38,24 @@ const app = express();
 // );
 
 
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://gys-hrms.vercel.app"
-];
+// const allowedOrigins = [
+//   "http://localhost:5173",
+//   "https://gys-hrms.vercel.app"
+// ];
 
-app.use(
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-  })
-);
-
-
+// app.use(
+//   cors({
+//     origin: allowedOrigins,
+//     credentials: true,
+//   })
+// );
 
 
+
+app.use(cors({
+  origin: '*',
+  credentials: true
+}));
 
 
 app.use(express.json());
@@ -74,17 +77,26 @@ app.use("/api/upload-files", uploadRoutes);
 
 
 
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = path.dirname(__filename);
+
+// // serve frontend build in production
+// if (process.env.NODE_ENV === "production") {
+//   app.use(express.static(path.join(__dirname, "../frontend/build")));
+
+//   app.get("*", (req, res) =>
+//     res.sendFile(path.resolve(__dirname, "../frontend/build", "index.html"))
+//   );
+// }
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const frontendDistPath = path.join(__dirname, '..', 'frontend', 'dist');
+app.use(express.static(frontendDistPath));
 
-// serve frontend build in production
-if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../frontend/build")));
-
-  app.get("*", (req, res) =>
-    res.sendFile(path.resolve(__dirname, "../frontend/build", "index.html"))
-  );
-}
+app.all('*', (req, res) => {
+  res.sendFile(path.join(frontendDistPath, 'index.html'));
+});
 
 
 // Simple route
