@@ -24,12 +24,20 @@ connectDB();
 const app = express();
 
 
+// app.use(
+//   cors({
+//     origin: "*",
+//     credentials: true,
+//   })
+// );
+
 app.use(
   cors({
-    origin: "*",
+    origin: ["https://gys-hrms.vercel.app"],
     credentials: true,
   })
 );
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
