@@ -1518,7 +1518,7 @@ const HRLeaves = () => {
 
       {/* Action Modal for Employee Leaves */}
       {showActionModal && selectedRequest && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 backdrop-blur-xs bg-opacity-40 flex items-center justify-center z-50 p-4 shadow-2xl" >
           <div className="bg-white p-4 md:p-6 rounded-xl w-full max-w-md">
             <h3 className="text-lg font-semibold mb-4">
               {actionType === "approve" ? "Approve" : "Reject"} Leave Request
