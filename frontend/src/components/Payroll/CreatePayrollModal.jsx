@@ -716,7 +716,7 @@
 //           </div>
 
 //           {/* Payroll Summary Box */}
-//           {/* {preview && (
+//           {preview && (
 //             <div className="bg-blue-50 border border-blue-200 rounded-lg p-5">
 //               <h3 className="text-lg font-semibold text-blue-800 mb-4 text-center">
 //                 Payroll Summary
@@ -775,7 +775,7 @@
 //                 </div>
 //               </div>
 //             </div>
-//           )} */}
+//           )}
 
 //           {/* Summary (Earnings / Deductions / Net) */}
 //           {/* <div className="bg-gray-50 p-4 rounded-lg">
@@ -830,9 +830,9 @@
 //                     (preview?.absentDeduction || 0)
 //                   ).toLocaleString()}
 //                 </span>
-//               </div> */}
+//               </div> 
 
-//               {/* <hr className="my-2" />
+//               <hr className="my-2" />
 
 //               <div className="flex justify-between text-lg font-bold pt-2">
 //                 <span>Net Pay:</span>
@@ -841,9 +841,9 @@
 //                 </span>
 //               </div>
 //             </div>
-//           </div>   */}
+//           </div>   
 
-//           <div className="bg-gray-50 p-4 rounded-lg">
+//           {/* <div className="bg-gray-50 p-4 rounded-lg">
 //   <h3 className="text-lg font-semibold mb-3">Salary Breakdown</h3>
 //   <div className="space-y-2">
 //     <div className="flex justify-between">
@@ -908,7 +908,7 @@
 //       </span>
 //     </div>
 //   </div>
-// </div>
+// </div> */}
 
 
 //           {/* Actions */}
