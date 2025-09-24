@@ -4,6 +4,7 @@ import User from "../models/user.js";
 import Event from "../models/companyCalendar.js";
 import moment from "moment";
 import mongoose from "mongoose";
+import LeaveRequest from "../models/leaves.js"
 import { getEmployeeAttendanceSummary } from "../config/payrollCalculator.js";
 
 // Get employee attendance for payroll creation
@@ -685,101 +686,278 @@ export const updateAttendanceForLeave = async (employeeId, fromDate, toDate, lea
 };
 
 //new code
+// export const getMonthlyReport = async (req, res) => {
+//   try {
+//     const { month, year, department } = req.query;
+    
+//     // Calculate date range for the month
+//     const startDate = new Date(year, month - 1, 1);
+//     const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+
+//     // Build match query for attendance
+//     const attendanceMatch = {
+//       date: { $gte: startDate, $lte: endDate }
+//     };
+
+//     // Build match query for employees
+//     let employeeMatch = {};
+//     if (department) {
+//       employeeMatch['employee.profileRef.department'] = department;
+//     }
+
+//     // Aggregate attendance data with proper department filtering
+//     const reportData = await Attendance.aggregate([
+//       {
+//         $lookup: {
+//           from: 'users',
+//           localField: 'employee',
+//           foreignField: '_id',
+//           as: 'employee'
+//         }
+//       },
+//       { $unwind: '$employee' },
+//       {
+//         $lookup: {
+//           from: 'profiles',
+//           localField: 'employee.profileRef',
+//           foreignField: '_id',
+//           as: 'employee.profileRef'
+//         }
+//       },
+//       { $unwind: { path: '$employee.profileRef', preserveNullAndEmptyArrays: true } },
+//       { $match: attendanceMatch },
+//       { $match: employeeMatch }, // ✅ Department filter applied here
+//       {
+//         $group: {
+//           _id: '$employee._id',
+//           employeeId: { $first: '$employee.profileRef.employeeId' },
+//           employeeName: { 
+//             $first: { 
+//               $concat: [
+//                 { $ifNull: ['$employee.profileRef.firstName', ''] },
+//                 ' ',
+//                 { $ifNull: ['$employee.profileRef.lastName', ''] }
+//               ]
+//             }
+//           },
+//           employeeEmail: { $first: '$employee.email' },
+//           department: { $first: '$employee.profileRef.department' },
+//           present: {
+//             $sum: { $cond: [{ $eq: ['$status', 'accepted'] }, 1, 0] }
+//           },
+//           absent: {
+//             $sum: { $cond: [{ $eq: ['$status', 'rejected'] }, 1, 0] }
+//           },
+//           pending: {
+//             $sum: { $cond: [{ $eq: ['$status', 'pending'] }, 1, 0] }
+//           },
+//           totalDays: { $sum: 1 }
+//         }
+//       },
+//       {
+//         $project: {
+//           _id: 0,
+//           employeeId: 1,
+//           employeeName: 1,
+//           employeeEmail: 1,
+//           department: 1,
+//           present: 1,
+//           absent: 1,
+//           pending: 1,
+//           rejected: '$absent',
+//           totalDays: 1,
+//           attendancePercentage: {
+//             $multiply: [
+//               { $divide: ['$present', '$totalDays'] },
+//               100
+//             ]
+//           }
+//         }
+//       },
+//       { $sort: { employeeName: 1 } }
+//     ]);
+
+//     res.status(200).json(reportData);
+//   } catch (err) {
+//     console.error("Error generating monthly report:", err);
+//     res.status(500).json({ message: "Error generating monthly report", error: err.message });
+//   }
+// };
+
 export const getMonthlyReport = async (req, res) => {
   try {
     const { month, year, department } = req.query;
     
-    // Calculate date range for the month
-    const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 0, 23, 59, 59, 999);
-
-    // Build match query for attendance
-    const attendanceMatch = {
-      date: { $gte: startDate, $lte: endDate }
-    };
-
-    // Build match query for employees
-    let employeeMatch = {};
-    if (department) {
-      employeeMatch['employee.profileRef.department'] = department;
+    if (!month || !year) {
+      return res.status(400).json({ message: "Month and year are required" });
     }
 
-    // Aggregate attendance data with proper department filtering
-    const reportData = await Attendance.aggregate([
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'employee',
-          foreignField: '_id',
-          as: 'employee'
-        }
-      },
-      { $unwind: '$employee' },
-      {
-        $lookup: {
-          from: 'profiles',
-          localField: 'employee.profileRef',
-          foreignField: '_id',
-          as: 'employee.profileRef'
-        }
-      },
-      { $unwind: { path: '$employee.profileRef', preserveNullAndEmptyArrays: true } },
-      { $match: attendanceMatch },
-      { $match: employeeMatch }, // ✅ Department filter applied here
-      {
-        $group: {
-          _id: '$employee._id',
-          employeeId: { $first: '$employee.profileRef.employeeId' },
-          employeeName: { 
-            $first: { 
-              $concat: [
-                { $ifNull: ['$employee.profileRef.firstName', ''] },
-                ' ',
-                { $ifNull: ['$employee.profileRef.lastName', ''] }
-              ]
+    // Calculate payroll cycle: 8th current month -> 7th next month
+    const cycleStart = new Date(year, month - 1, 8);
+    const cycleEnd = new Date(year, month, 7);
+    
+    // If current month, set end to today
+    const today = new Date();
+    const effectiveEnd = cycleEnd > today ? today : cycleEnd;
+
+    // Build match query for employees with department filter
+    let employeeMatch = {};
+    if (department) {
+      employeeMatch['department'] = department;
+    }
+
+    // Get all employees with department filter
+    const employees = await Profile.find(employeeMatch)
+      .populate('user', 'email')
+      .select('firstName lastName employeeId department user');
+
+    if (employees.length === 0) {
+      return res.status(200).json([]);
+    }
+
+    // Get holidays for the cycle
+    const holidays = await Event.find({
+      startDate: { $lte: effectiveEnd },
+      endDate: { $gte: cycleStart },
+      isHoliday: true,
+    });
+
+    const holidaySet = new Set();
+    holidays.forEach(h => {
+      const start = h.startDate < cycleStart ? cycleStart : h.startDate;
+      const end = h.endDate > effectiveEnd ? effectiveEnd : h.endDate;
+      let cur = new Date(start);
+      while (cur <= end) {
+        holidaySet.add(cur.toISOString().split('T')[0]);
+        cur.setDate(cur.getDate() + 1);
+      }
+    });
+
+    // Get all attendances for these employees in the cycle
+    const userIds = employees.map(emp => emp.user._id);
+    
+    const attendances = await Attendance.find({
+      employee: { $in: userIds },
+      date: { $gte: cycleStart, $lte: effectiveEnd }
+    });
+
+    // Create attendance map by user and date
+    const attendanceMap = new Map();
+    attendances.forEach(att => {
+      const userKey = att.employee.toString();
+      const dateKey = att.date.toISOString().split('T')[0];
+      
+      if (!attendanceMap.has(userKey)) {
+        attendanceMap.set(userKey, new Map());
+      }
+      
+      const userAttendance = attendanceMap.get(userKey);
+      userAttendance.set(dateKey, {
+        status: att.status,
+        checkIn: att.checkIn,
+        isPresent: (att.status === 'accepted') || !!att.checkIn
+      });
+    });
+
+    // Get approved leaves for the cycle
+    const leaveRequests = await LeaveRequest.find({
+      employee: { $in: userIds },
+      status: "approved",
+      $or: [
+        { fromDate: { $lte: effectiveEnd, $gte: cycleStart } },
+        { toDate: { $lte: effectiveEnd, $gte: cycleStart } }
+      ]
+    });
+
+    const leaveMap = new Map();
+    leaveRequests.forEach(leave => {
+      const userKey = leave.employee.toString();
+      const start = leave.fromDate < cycleStart ? cycleStart : leave.fromDate;
+      const end = leave.toDate > effectiveEnd ? effectiveEnd : leave.toDate;
+      
+      if (!leaveMap.has(userKey)) {
+        leaveMap.set(userKey, new Set());
+      }
+      
+      const userLeaves = leaveMap.get(userKey);
+      let cur = new Date(start);
+      while (cur <= end) {
+        userLeaves.add(cur.toISOString().split('T')[0]);
+        cur.setDate(cur.getDate() + 1);
+      }
+    });
+
+    // Calculate report data for each employee
+    const reportData = [];
+
+    for (const employee of employees) {
+      const userId = employee.user._id.toString();
+      const userAttendance = attendanceMap.get(userId) || new Map();
+      const userLeaves = leaveMap.get(userId) || new Set();
+
+      let presentDays = 0;
+      let absentDays = 0;
+      let leaveDays = 0;
+      let workingDays = 0;
+
+      // Calculate for each day in the cycle
+      let currentDate = new Date(cycleStart);
+      while (currentDate <= effectiveEnd) {
+        const dateKey = currentDate.toISOString().split('T')[0];
+        const isSunday = currentDate.getDay() === 0;
+        const isHoliday = holidaySet.has(dateKey);
+        const isWorkingDay = !isSunday && !isHoliday;
+
+        if (isWorkingDay) {
+          workingDays++;
+
+          if (userLeaves.has(dateKey)) {
+            leaveDays++;
+          } else if (userAttendance.has(dateKey)) {
+            const att = userAttendance.get(dateKey);
+            if (att.isPresent) {
+              presentDays++;
+            } else {
+              absentDays++;
             }
-          },
-          employeeEmail: { $first: '$employee.email' },
-          department: { $first: '$employee.profileRef.department' },
-          present: {
-            $sum: { $cond: [{ $eq: ['$status', 'accepted'] }, 1, 0] }
-          },
-          absent: {
-            $sum: { $cond: [{ $eq: ['$status', 'rejected'] }, 1, 0] }
-          },
-          pending: {
-            $sum: { $cond: [{ $eq: ['$status', 'pending'] }, 1, 0] }
-          },
-          totalDays: { $sum: 1 }
-        }
-      },
-      {
-        $project: {
-          _id: 0,
-          employeeId: 1,
-          employeeName: 1,
-          employeeEmail: 1,
-          department: 1,
-          present: 1,
-          absent: 1,
-          pending: 1,
-          rejected: '$absent',
-          totalDays: 1,
-          attendancePercentage: {
-            $multiply: [
-              { $divide: ['$present', '$totalDays'] },
-              100
-            ]
+          } else {
+            absentDays++;
           }
         }
-      },
-      { $sort: { employeeName: 1 } }
-    ]);
+
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+      const totalDaysInCycle = workingDays + leaveDays;
+      const attendancePercentage = totalDaysInCycle > 0 
+        ? Math.round((presentDays / totalDaysInCycle) * 100) 
+        : 0;
+
+      reportData.push({
+        employeeId: employee.employeeId,
+        employeeName: `${employee.firstName} ${employee.lastName}`.trim(),
+        employeeEmail: employee.user.email,
+        department: employee.department,
+        present: presentDays,
+        absent: absentDays,
+        leaveDays: leaveDays,
+        workingDays: workingDays,
+        totalDays: totalDaysInCycle,
+        attendancePercentage: attendancePercentage
+      });
+    }
+
+    // Sort by employee name
+    reportData.sort((a, b) => a.employeeName.localeCompare(b.employeeName));
 
     res.status(200).json(reportData);
+    
   } catch (err) {
     console.error("Error generating monthly report:", err);
-    res.status(500).json({ message: "Error generating monthly report", error: err.message });
+    res.status(500).json({ 
+      message: "Error generating monthly report", 
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined 
+    });
   }
 };
 
