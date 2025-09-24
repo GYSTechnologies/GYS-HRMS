@@ -12,7 +12,7 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  //handle submit
+ 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
