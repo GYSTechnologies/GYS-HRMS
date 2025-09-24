@@ -1221,7 +1221,7 @@ export const downloadPayslip = async (req, res) => {
     doc.font("Helvetica").fontSize(9).fillColor("#555");
     if (payroll.approvedByUser) {
       doc.text(
-        `Approved By: ${payroll.approvedByUser.name} (${payroll.approvedByUser.email})`,
+        `Approved By: ${payroll.approvedByUser.name || "Gaurav Kakran"} (${payroll.approvedByUser.email})`,
         tableLeft,
         currentY
       );

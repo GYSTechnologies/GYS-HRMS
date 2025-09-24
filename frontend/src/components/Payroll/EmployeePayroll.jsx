@@ -23,7 +23,10 @@ const EmployeePayroll = () => {
   const addNotification = (message, type = "info", ttl = 3500) => {
     const id = Date.now() + Math.random();
     setNotifications((n) => [...n, { id, message, type }]);
-    setTimeout(() => setNotifications((n) => n.filter((x) => x.id !== id)), ttl);
+    setTimeout(
+      () => setNotifications((n) => n.filter((x) => x.id !== id)),
+      ttl
+    );
   };
 
   const fetchEmployeePayrolls = async () => {
@@ -46,406 +49,52 @@ const EmployeePayroll = () => {
     }
   };
 
-//   const downloadPayslip = async (payrollId) => {
-//   try {
-//     // ✅ Direct download try karo
-//     const response = await axiosInstance.get(
-//       `/payroll/payslip/download/${payrollId}`,
-//       {
-//         headers: { Authorization: `Bearer ${token}` },
-//         responseType: "blob"
-//       }
-//     );
-
-//     // ✅ Create download link
-//     const blob = new Blob([response.data], { type: "application/pdf" });
-//     const url = window.URL.createObjectURL(blob);
-//     const link = document.createElement("a");
-//     link.href = url;
-//     link.download = `payslip-${payrollId}.pdf`;
-//     document.body.appendChild(link);
-//     link.click();
-//     document.body.removeChild(link);
-//     window.URL.revokeObjectURL(url);
-    
-//     addNotification("Payslip downloaded successfully", "success");
-//   } catch (error) {
-//     console.error("Error downloading payslip:", error);
-    
-//     // ✅ Agar payslip not generated error aaye toh generate karne ka try karo
-//     if (error.response?.status === 404 && 
-//         error.response?.data?.message === "Payslip not generated yet") {
-      
-//       addNotification("Generating payslip...", "info");
-      
-//       try {
-//         // Generate payslip
-//         await axiosInstance.post(
-//           `/payroll/${payrollId}/generate-payslip`,
-//           {},
-//           { headers: { Authorization: `Bearer ${token}` } }
-//         );
-        
-//         addNotification("Payslip generated, downloading...", "success");
-        
-//         // Phir se download try karo
-//         await downloadPayslip(payrollId);
-        
-//       } catch (generateError) {
-//         console.error("Generate error:", generateError);
-//         addNotification("Failed to generate payslip", "error");
-//       }
-//     } else {
-//       addNotification(
-//         error.response?.data?.message || "Error downloading payslip",
-//         "error"
-//       );
-//     }
-//   }
-// };
-
-  // const downloadPayslip = async (payrollId) => {
-  //   try {
-  //     const response = await axiosInstance.get(
-  //       `/payroll/payslip/download/${payrollId}`,
-  //       {
-  //         headers: { Authorization: `Bearer ${token}` },
-  //         responseType: "blob"
-  //       }
-  //     );
-      
-  //     // Create blob and download
-  //     const blob = new Blob([response.data], { type: "application/pdf" });
-  //     const url = window.URL.createObjectURL(blob);
-  //     const link = document.createElement("a");
-  //     link.href = url;
-  //     link.download = `payslip-${payrollId}.pdf`;
-  //     document.body.appendChild(link);
-  //     link.click();
-  //     document.body.removeChild(link);
-      
-  //     addNotification("Payslip downloaded successfully", "success");
-  //   } catch (error) {
-  //     console.error("Error downloading payslip:", error);
-  //     addNotification(
-  //       error.response?.data?.message || "Error downloading payslip",
-  //       "error"
-  //     );
-  //   }
-  // };
-
-//   const downloadPayslip = async (payrollId) => {
-//   try {
-//     // Pehle check karo if payslip exists
-//     const checkResponse = await axiosInstance.get(
-//       `/payroll/${payrollId}`,
-//       { headers: { Authorization: `Bearer ${token}` } }
-//     );
-    
-//     const payroll = checkResponse.data.data;
-    
-//     if (!payroll.payslipPath) {
-//       // Agar payslip nahi hai toh generate karo
-//       const generateResponse = await axiosInstance.post(
-//         `/payroll/${payrollId}/generate-payslip`,
-//         {},
-//         { headers: { Authorization: `Bearer ${token}` } }
-//       );
-      
-//       addNotification("Payslip generated successfully", "success");
-//     }
-
-//     // Ab download karo
-//     const response = await axiosInstance.get(
-//       `/payroll/payslip/download/${payrollId}`,
-//       {
-//         headers: { Authorization: `Bearer ${token}` },
-//         responseType: "blob"
-//       }
-//     );
-    
-//     const blob = new Blob([response.data], { type: "application/pdf" });
-//     const url = window.URL.createObjectURL(blob);
-//     const link = document.createElement("a");
-//     link.href = url;
-//     link.download = `payslip-${payrollId}.pdf`;
-//     document.body.appendChild(link);
-//     link.click();
-//     document.body.removeChild(link);
-    
-//     addNotification("Payslip downloaded successfully", "success");
-    
-//   } catch (error) {
-//     console.error("Error downloading payslip:", error);
-    
-//     if (error.response?.status === 404) {
-//       addNotification("Payslip not available yet", "error");
-//     } else {
-//       addNotification(
-//         error.response?.data?.message || "Error downloading payslip",
-//         "error"
-//       );
-//     }
-//   }
-// };
-
-
-// const downloadPayslip = async (payrollId) => {
-//   try {
-//     const response = await axiosInstance.get(
-//       `/payroll/payslip/download/${payrollId}`,
-//       {
-//         headers: { Authorization: `Bearer ${token}` },
-//         responseType: "blob"
-//       }
-//     );
-
-//     const blob = new Blob([response.data], { type: "application/pdf" });
-//     const url = window.URL.createObjectURL(blob);
-//     const link = document.createElement("a");
-//     link.href = url;
-//     link.download = `payslip-${payrollId}.pdf`;
-//     document.body.appendChild(link);
-//     link.click();
-//     document.body.removeChild(link);
-
-//     addNotification("Payslip downloaded successfully", "success");
-//   } catch (error) {
-//     console.error("Error downloading payslip:", error);
-
-//     if (error.response?.status === 404) {
-//       addNotification("Payslip not available yet", "error");
-//     } else if (error.response?.status === 400 && error.response.data.message === "Payslip already generated") {
-//       // Payslip exists, try download anyway
-//       addNotification("Payslip already exists, downloading...", "info");
-//       downloadPayslip(payrollId);
-//     } else {
-//       addNotification(error.response?.data?.message || "Error downloading payslip", "error");
-//     }
-//   }
-// };
-
-// const downloadPayslip = async (payrollId) => {
-//   try {
-//     // First, fetch payroll to check if payslip exists
-//     const checkResponse = await axiosInstance.get(
-//       `/payroll/${payrollId}`,
-//       { headers: { Authorization: `Bearer ${token}` } }
-//     );
-
-//     const payroll = checkResponse.data.data;
-
-//     if (!payroll.payslipPath) {
-//       // If payslip not generated, call backend to generate it
-//       await axiosInstance.post(
-//         `/payroll/${payrollId}/generate-payslip`,
-//         {},
-//         { headers: { Authorization: `Bearer ${token}` } }
-//       );
-
-//       addNotification("Payslip generated successfully", "success");
-
-//       // Refetch payroll after generation
-//       const updatedPayroll = await axiosInstance.get(
-//         `/payroll/${payrollId}`,
-//         { headers: { Authorization: `Bearer ${token}` } }
-//       );
-//       payroll.payslipPath = updatedPayroll.data.data.payslipPath;
-//     }
-
-//     // Now download payslip
-//     const response = await axiosInstance.get(
-//       payroll.payslipPath,
-//       { headers: { Authorization: `Bearer ${token}` }, responseType: "blob" }
-//     );
-
-//     const blob = new Blob([response.data], { type: "application/pdf" });
-//     const url = window.URL.createObjectURL(blob);
-//     const link = document.createElement("a");
-//     link.href = url;
-//     link.download = `payslip-${payrollId}.pdf`;
-//     document.body.appendChild(link);
-//     link.click();
-//     document.body.removeChild(link);
-
-//     addNotification("Payslip downloaded successfully", "success");
-//   } catch (error) {
-//     console.error("Error downloading payslip:", error);
-
-//     if (error.response?.status === 404) {
-//       addNotification("Payslip not available yet", "error");
-//     } else {
-//       addNotification(error.response?.data?.message || "Error downloading payslip", "error");
-//     }
-//   }
-// };
-
-
-// const downloadPayslip = async (payrollId) => {
-//   try {
-//     // ✅ Direct download API call
-//     const response = await axiosInstance.get(
-//       `/payroll/payslip/download/${payrollId}`,
-//       {
-//         headers: { Authorization: `Bearer ${token}` },
-//         responseType: "blob"
-//       }
-//     );
-
-//     // ✅ Create download link
-//     const blob = new Blob([response.data], { type: "application/pdf" });
-//     const url = window.URL.createObjectURL(blob);
-//     const link = document.createElement("a");
-//     link.href = url;
-//     link.download = `payslip-${payrollId}.pdf`;
-//     document.body.appendChild(link);
-//     link.click();
-//     document.body.removeChild(link);
-//     window.URL.revokeObjectURL(url);
-    
-//     addNotification("Payslip downloaded successfully", "success");
-//   } catch (error) {
-//     console.error("Error downloading payslip:", error);
-    
-//     // ✅ Agar 'already generated' error aaye toh bhi download try karo
-//     if (error.response?.data?.message === "Payslip already generated") {
-//       addNotification("Downloading payslip...", "info");
-      
-//       // Dobara direct download try karo
-//       await downloadPayslip(payrollId);
-//     } else {
-//       addNotification(
-//         error.response?.data?.message || "Error downloading payslip",
-//         "error"
-//       );
-//     }
-//   }
-// };
-
-// const downloadPayslip = async (payrollId) => {
-//   try {
-//     // Pehle generate API call karo
-//     try {
-//       await axiosInstance.post(
-//         `/payroll/${payrollId}/generate-payslip`,
-//         {},
-//         { headers: { Authorization: `Bearer ${token}` } }
-//       );
-//       addNotification("Payslip generated successfully", "success");
-//     } catch (generateError) {
-//       if (generateError.response?.status !== 400 || 
-//           generateError.response?.data?.message !== "Payslip already generated") {
-//         throw generateError;
-//       }
-//       // Agar already generated hai toh chalta hai
-//     }
-
-//     // Phir download karo
-//     const response = await axiosInstance.get(
-//       `/payroll/payslip/download/${payrollId}`,
-//       {
-//         headers: { Authorization: `Bearer ${token}` },
-//         responseType: "blob"
-//       }
-//     );
-
-//     const blob = new Blob([response.data], { type: "application/pdf" });
-//     const url = window.URL.createObjectURL(blob);
-//     const link = document.createElement("a");
-//     link.href = url;
-//     link.download = `payslip-${payrollId}.pdf`;
-//     document.body.appendChild(link);
-//     link.click();
-//     document.body.removeChild(link);
-//     window.URL.revokeObjectURL(url);
-    
-//     addNotification("Payslip downloaded successfully", "success");
-//   } catch (error) {
-//     console.error("Error downloading payslip:", error);
-//     addNotification(
-//       error.response?.data?.message || "Error downloading payslip",
-//       "error"
-//     );
-//   }
-// };
-  
-// const downloadPayslip = async (payrollId) => {
-//   try {
-//     // ✅ Direct download - no generate call needed
-//     const response = await axiosInstance.get(
-//       `/payroll/payslip/${payrollId}`,
-//       {
-//         headers: { Authorization: `Bearer ${token}` },
-//         responseType: "blob"
-//       }
-//     );
-
-//     // Create download link
-//     const blob = new Blob([response.data], { type: "application/pdf" });
-//     const url = window.URL.createObjectURL(blob);
-//     const link = document.createElement("a");
-//     link.href = url;
-//     link.download = `payslip-${payrollId}.pdf`;
-//     document.body.appendChild(link);
-//     link.click();
-//     document.body.removeChild(link);
-//     window.URL.revokeObjectURL(url);
-    
-//     addNotification("Payslip downloaded successfully", "success");
-//   } catch (error) {
-//     console.error("Error downloading payslip:", error);
-//     addNotification(
-//       error.response?.data?.message || "Error downloading payslip",
-//       "error"
-//     );
-//   }
-// };
-
-const downloadPayslip = async (payrollId) => {
-  try {
-    // ✅ Direct download API call
-    const response = await axiosInstance.get(
-      `/payroll/payslip/${payrollId}`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-        responseType: "blob"
-      }
-    );
-
-    // ✅ Create download link
-    const blob = new Blob([response.data], { type: "application/pdf" });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `payslip-${payrollId}.pdf`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
-    
-    addNotification("Payslip downloaded successfully", "success");
-  } catch (error) {
-    console.error("Error downloading payslip:", error);
-    
-    // ✅ Specific error handling
-    if (error.response?.status === 404) {
-      if (error.response?.data?.message === "Payslip not generated yet") {
-        addNotification("Payslip not ready yet. Please try again later.", "error");
-      } else {
-        addNotification("Payslip file missing. Contact HR.", "error");
-      }
-    } else {
-      addNotification(
-        error.response?.data?.message || "Error downloading payslip",
-        "error"
+  const downloadPayslip = async (payrollId) => {
+    try {
+      // ✅ Direct download API call
+      const response = await axiosInstance.get(
+        `/payroll/payslip/${payrollId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: "blob",
+        }
       );
+
+      // ✅ Create download link
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `payslip-${payrollId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      addNotification("Payslip downloaded successfully", "success");
+    } catch (error) {
+      console.error("Error downloading payslip:", error);
+
+      // ✅ Specific error handling
+      if (error.response?.status === 404) {
+        if (error.response?.data?.message === "Payslip not generated yet") {
+          addNotification(
+            "Payslip not ready yet. Please try again later.",
+            "error"
+          );
+        } else {
+          addNotification("Payslip file missing. Contact HR.", "error");
+        }
+      } else {
+        addNotification(
+          error.response?.data?.message || "Error downloading payslip",
+          "error"
+        );
+      }
     }
-  }
-};
+  };
 
-
-const formatCurrency = (amount) => {
-
+  const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
       currency: "INR",
@@ -481,8 +130,18 @@ const formatCurrency = (amount) => {
   };
 
   const months = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
 
   const currentYear = new Date().getFullYear();
@@ -513,8 +172,7 @@ const formatCurrency = (amount) => {
       `}</style>
 
       <NotificationToast notifications={notifications} />
-
-      {/* Header */}
+      {/* 
       <header className="mb-6">
         <h1 className="text-2xl font-bold text-gray-800">My Payroll & Payslips</h1>
         <p className="text-sm text-gray-600 mt-1">
@@ -522,7 +180,6 @@ const formatCurrency = (amount) => {
         </p>
       </header>
 
-      {/* Filters */}
       <div className="bg-white shadow rounded-lg p-6 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
@@ -561,120 +218,174 @@ const formatCurrency = (amount) => {
           </div>
 
           <div className="flex items-end">
-            <button
-              onClick={fetchEmployeePayrolls}
-              className="px-4 py-3 rounded-md text-white primary-btn"
-              style={{ backgroundColor: PRIMARY }}
+       
+          </div>
+        </div>
+      </div> */}
+      {/* Header + Filters Row */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        {/* Header */}
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">
+            My Payroll & Payslips
+          </h1>
+          <p className="text-sm text-gray-600 mt-1">
+            View and download your salary slips
+          </p>
+        </div>
+
+        {/* Filters */}
+        <div className="mt-4 md:mt-0 flex items-center gap-4 bg-white shadow rounded-lg p-3">
+          {/* Year */}
+          <div className="w-28">
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Year
+            </label>
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
             >
-              Apply Filters
-            </button>
+              {years.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Month */}
+          <div className="w-32">
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Month
+            </label>
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            >
+              <option value="">All</option>
+              {months.map((month, index) => (
+                <option key={index + 1} value={index + 1}>
+                  {month}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </div>
 
-      {/* Payroll Cards */}
-      <div className="grid grid-cols-1 gap-6">
+      {/* Payroll Table */}
+      <div className="bg-white shadow rounded-lg overflow-hidden">
         {payrolls.length === 0 ? (
-          <div className="text-center py-12 bg-white shadow rounded-lg">
-            <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          <div className="text-center py-12">
+            <svg
+              className="w-16 h-16 text-gray-300 mx-auto mb-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
             </svg>
             <p className="text-gray-500">No payroll records found</p>
             <p className="text-sm text-gray-400 mt-1">
-              {selectedMonth ? `Try selecting a different month or year` : 'No records available for your account'}
+              {selectedMonth
+                ? `Try selecting a different month or year`
+                : "No records available for your account"}
             </p>
           </div>
         ) : (
-          payrolls.map((payroll) => (
-            <div key={payroll._id} className="bg-white shadow rounded-lg p-6">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    Salary - {months[parseInt(payroll.month.split('-')[1]) - 1]} {payroll.year}
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    Generated on: {formatDate(payroll.approvedAt)}
-                  </p>
-                </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full border-collapse">
+              <thead className="bg-[#104774] ">
+                <tr>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-white">
+                    Month
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-white">
+                    Generated On
+                  </th>
+                  <th className="px-6 py-3 text-right text-sm font-semibold text-white">
+                    Net Salary
+                  </th>
+                  <th className="px-6 py-3 text-center text-sm font-semibold text-white">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-center text-sm font-semibold text-white">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {payrolls
+                  .sort((a, b) => {
+                    // Sort by year then month (latest first)
+                    const aDate = new Date(`${a.year}-${a.month}-01`);
+                    const bDate = new Date(`${b.year}-${b.month}-01`);
+                    return bDate - aDate;
+                  })
+                  .map((payroll) => (
+                    <tr key={payroll._id} className="hover:bg-gray-50">
+                      {/* Month-Year */}
+                      <td className="px-6 py-4 text-sm text-gray-800 font-medium">
+                        {months[parseInt(payroll.month.split("-")[1]) - 1]}{" "}
+                        {payroll.year}
+                      </td>
 
-                <div className="flex items-center gap-4">
-                  <div className="text-right">
-                    <p className="text-2xl font-bold text-green-600">
-                      {formatCurrency(payroll.netPay)}
-                    </p>
-                    <p className="text-sm text-gray-500">Net Salary</p>
-                  </div>
-                  
-                  {getStatusBadge(payroll.status)}
-                </div>
-              </div>
+                      {/* Generated Date */}
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {formatDate(payroll.approvedAt)}
+                      </td>
 
-              <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-600">Basic Salary</p>
-                  <p className="text-lg font-semibold">{formatCurrency(payroll.basic)}</p>
-                </div>
+                      {/* Net Salary */}
+                      <td className="px-6 py-4 text-right text-sm font-semibold text-green-600">
+                        {formatCurrency(payroll.netPay)}
+                      </td>
 
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-600">HRA</p>
-                  <p className="text-lg font-semibold">{formatCurrency(payroll.hra)}</p>
-                </div>
+                      {/* Status */}
+                      <td className="px-6 py-4 text-center">
+                        {getStatusBadge(payroll.status)}
+                      </td>
 
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-600">Total Earnings</p>
-                  <p className="text-lg font-semibold text-green-600">
-                    {formatCurrency(payroll.totalEarnings)}
-                  </p>
-                </div>
+                      {/* Actions */}
+                      <td className="px-6 py-4 text-center space-x-2">
+                        <button
+                          onClick={() => {
+                            setSelectedPayroll(payroll);
+                            setShowDetailsModal(true);
+                          }}
+                          className="px-3 py-1 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 text-sm"
+                        >
+                          View
+                        </button>
 
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-600">Total Deductions</p>
-                  <p className="text-lg font-semibold text-red-600">
-                    {formatCurrency(payroll.totalDeductions)}
-                  </p>
-                </div>
-              </div>
+                        {payroll.status === "approved" && (
+                          <button
+                            onClick={() => downloadPayslip(payroll._id)}
+                            className="px-3 py-1 rounded-md text-white text-sm primary-btn"
+                            style={{ backgroundColor: PRIMARY }}
+                          >
+                            Download
+                          </button>
+                        )}
 
-              {/* {payroll.absentDays > 0 && (
-                <div className="mt-4 bg-yellow-50 p-3 rounded-lg">
-                  <p className="text-sm text-yellow-800">
-                    <span className="font-semibold">{payroll.absentDays} day(s)</span> absent - 
-                    <span className="font-semibold"> {formatCurrency(payroll.absentDeduction)}</span> deducted
-                  </p>
-                </div>
-              )} */}
-
-              <div className="mt-6 flex flex-wrap gap-3">
-                <button
-                  onClick={() => {
-                    setSelectedPayroll(payroll);
-                    setShowDetailsModal(true);
-                  }}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                >
-                  View Details
-                </button>
-
-                {payroll.status === "approved" && (
-                  <button
-                    onClick={() => downloadPayslip(payroll._id)}
-                    className="px-4 py-2 rounded-md text-white primary-btn"
-                    style={{ backgroundColor: PRIMARY }}
-                  >
-                    Download Payslip
-                  </button>
-                )}
-
-                {payroll.status === "rejected" && payroll.rejectionReason && (
-                  <div className="bg-red-50 p-3 rounded-lg mt-3">
-                    <p className="text-sm text-red-800">
-                      <span className="font-semibold">Rejection Reason:</span> {payroll.rejectionReason}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))
+                        {payroll.status === "rejected" &&
+                          payroll.rejectionReason && (
+                            <p className="mt-2 text-xs text-red-600">
+                              Reason: {payroll.rejectionReason}
+                            </p>
+                          )}
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
@@ -694,7 +405,7 @@ const formatCurrency = (amount) => {
 const PayrollDetailsModal = ({ payroll, onClose, formatCurrency }) => {
   return (
     <div className="fixed inset-0 backdrop-blur-xs bg-opacity-40 flex items-center justify-center p-4 z-50">
-<div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-200 shadow-2xl">
+      <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-200 shadow-2xl">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-gray-800">
             Salary Details - {payroll.month}
@@ -703,8 +414,18 @@ const PayrollDetailsModal = ({ payroll, onClose, formatCurrency }) => {
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -712,26 +433,37 @@ const PayrollDetailsModal = ({ payroll, onClose, formatCurrency }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Earnings Section */}
           <div>
-            <h3 className="text-lg font-semibold text-green-700 mb-4">Earnings</h3>
+            <h3 className="text-lg font-semibold text-green-700 mb-4">
+              Earnings
+            </h3>
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span>Basic Salary:</span>
-                <span className="font-semibold">{formatCurrency(payroll.basic)}</span>
+                <span className="font-semibold">
+                  {formatCurrency(payroll.basic)}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>House Rent Allowance (HRA):</span>
-                <span className="font-semibold">{formatCurrency(payroll.hra)}</span>
+                <span className="font-semibold">
+                  {formatCurrency(payroll.hra)}
+                </span>
               </div>
-              {payroll.allowances && payroll.allowances.map((allowance, index) => (
-                <div key={index} className="flex justify-between">
-                  <span>{allowance.title}:</span>
-                  <span className="font-semibold">{formatCurrency(allowance.amount)}</span>
-                </div>
-              ))}
+              {payroll.allowances &&
+                payroll.allowances.map((allowance, index) => (
+                  <div key={index} className="flex justify-between">
+                    <span>{allowance.title}:</span>
+                    <span className="font-semibold">
+                      {formatCurrency(allowance.amount)}
+                    </span>
+                  </div>
+                ))}
               <div className="border-t pt-2 mt-2">
                 <div className="flex justify-between text-lg font-semibold">
                   <span>Total Earnings:</span>
-                  <span className="text-green-600">{formatCurrency(payroll.totalEarnings)}</span>
+                  <span className="text-green-600">
+                    {formatCurrency(payroll.totalEarnings)}
+                  </span>
                 </div>
               </div>
             </div>
@@ -739,24 +471,29 @@ const PayrollDetailsModal = ({ payroll, onClose, formatCurrency }) => {
 
           {/* Deductions Section */}
           <div>
-            <h3 className="text-lg font-semibold text-red-700 mb-4">Deductions</h3>
+            <h3 className="text-lg font-semibold text-red-700 mb-4">
+              Deductions
+            </h3>
             <div className="space-y-3">
               {payroll.absentDeduction > 0 && (
                 <div className="flex justify-between">
-                  <span>Absent Days Deduction ({payroll.absentDays} days):</span>
+                  <span>
+                    Absent Days Deduction ({payroll.absentDays} days):
+                  </span>
                   <span className="font-semibold text-red-600">
                     -{formatCurrency(payroll.absentDeduction)}
                   </span>
                 </div>
               )}
-              {payroll.deductions && payroll.deductions.map((deduction, index) => (
-                <div key={index} className="flex justify-between">
-                  <span>{deduction.title}:</span>
-                  <span className="font-semibold text-red-600">
-                    -{formatCurrency(deduction.amount)}
-                  </span>
-                </div>
-              ))}
+              {payroll.deductions &&
+                payroll.deductions.map((deduction, index) => (
+                  <div key={index} className="flex justify-between">
+                    <span>{deduction.title}:</span>
+                    <span className="font-semibold text-red-600">
+                      -{formatCurrency(deduction.amount)}
+                    </span>
+                  </div>
+                ))}
               {payroll.tax > 0 && (
                 <div className="flex justify-between">
                   <span>Tax:</span>
@@ -768,7 +505,9 @@ const PayrollDetailsModal = ({ payroll, onClose, formatCurrency }) => {
               <div className="border-t pt-2 mt-2">
                 <div className="flex justify-between text-lg font-semibold">
                   <span>Total Deductions:</span>
-                  <span className="text-red-600">-{formatCurrency(payroll.totalDeductions)}</span>
+                  <span className="text-red-600">
+                    -{formatCurrency(payroll.totalDeductions)}
+                  </span>
                 </div>
               </div>
             </div>
@@ -786,11 +525,15 @@ const PayrollDetailsModal = ({ payroll, onClose, formatCurrency }) => {
             </div>
             <div className="text-right">
               <p className="text-sm text-gray-600">Status</p>
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                payroll.status === "approved" ? "bg-green-100 text-green-800" :
-                payroll.status === "rejected" ? "bg-red-100 text-red-800" :
-                "bg-yellow-100 text-yellow-800"
-              }`}>
+              <span
+                className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  payroll.status === "approved"
+                    ? "bg-green-100 text-green-800"
+                    : payroll.status === "rejected"
+                    ? "bg-red-100 text-red-800"
+                    : "bg-yellow-100 text-yellow-800"
+                }`}
+              >
                 {payroll.status.replace("_", " ").toUpperCase()}
               </span>
             </div>

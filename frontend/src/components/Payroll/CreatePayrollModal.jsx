@@ -830,7 +830,7 @@
 //                     (preview?.absentDeduction || 0)
 //                   ).toLocaleString()}
 //                 </span>
-//               </div> 
+//               </div>
 
 //               <hr className="my-2" />
 
@@ -841,7 +841,7 @@
 //                 </span>
 //               </div>
 //             </div>
-//           </div>   
+//           </div>
 
 //           {/* <div className="bg-gray-50 p-4 rounded-lg">
 //   <h3 className="text-lg font-semibold mb-3">Salary Breakdown</h3>
@@ -909,7 +909,6 @@
 //     </div>
 //   </div>
 // </div> */}
-
 
 //           {/* Actions */}
 //           <div className="flex justify-end gap-3">
@@ -1251,6 +1250,8 @@ const CreatePayrollModal = ({
         },
       });
 
+      window.location.reload();
+
       addNotification(res.data?.message || "Payroll created", "success");
       // reset form
       setFormData({
@@ -1271,10 +1272,10 @@ const CreatePayrollModal = ({
       onClose();
     } catch (err) {
       console.error("Error creating payroll:", err);
-      addNotification(
-        err.response?.data?.message || "Error creating payroll",
-        "error"
-      );
+      // addNotification(
+      //   err.response?.data?.message || "Error creating payroll",
+      //   "error"
+      // );
     } finally {
       setLoading(false);
     }
@@ -1642,7 +1643,8 @@ const CreatePayrollModal = ({
               <div className="flex justify-between text-green-600 font-medium">
                 <span>Total Earnings:</span>
                 <span>
-                  ₹{(
+                  ₹
+                  {(
                     Number(formData.basic || 0) +
                     Number(formData.hra || 0) +
                     totalAllowances
@@ -1668,9 +1670,9 @@ const CreatePayrollModal = ({
               <div className="flex justify-between text-red-600 font-medium">
                 <span>Total Deductions:</span>
                 <span>
-                  -₹{(
-                    sumItems(formData.deductions) +
-                    Number(formData.tax || 0)
+                  -₹
+                  {(
+                    sumItems(formData.deductions) + Number(formData.tax || 0)
                   ).toLocaleString()}
                 </span>
               </div>
@@ -1680,7 +1682,8 @@ const CreatePayrollModal = ({
               <div className="flex justify-between text-lg font-bold pt-2">
                 <span>Net Pay:</span>
                 <span className="text-green-600">
-                  ₹{(
+                  ₹
+                  {(
                     Number(formData.basic || 0) +
                     Number(formData.hra || 0) +
                     totalAllowances -

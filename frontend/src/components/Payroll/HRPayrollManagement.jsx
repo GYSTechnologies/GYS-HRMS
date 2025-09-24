@@ -86,13 +86,16 @@ const HRPayrollManagement = () => {
 
       addNotification("Payroll created successfully", "success");
       setShowCreateModal(false);
+            window.location.reload();
+
       fetchPayrolls();
+
     } catch (error) {
       console.error("Error creating payroll:", error);
-      addNotification(
-        error.response?.data?.message || "Error creating payroll",
-        "error"
-      );
+      // addNotification(
+      //   error.response?.data?.message || "Error creating payroll",
+      //   "error"
+      // );
     }
   };
 
