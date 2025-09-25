@@ -954,6 +954,343 @@ export const generatePayslip = async (req, res) => {
 
 // Admin approves payroll + AUTO-GENERATE PAYSLIP
 
+// export const downloadPayslip = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+
+//     const payroll = await Payroll.findById(id)
+//       .populate(
+//         "employeeProfile",
+//         "firstName lastName employeeId department designation"
+//       )
+//       .populate("generatedByUser", "name email")
+//       .populate("approvedByUser", "name email");
+
+//     if (!payroll) {
+//       return res.status(404).json({ message: "Payroll not found" });
+//     }
+
+//     // ✅ Create PDF
+//     const doc = new PDFDocument({ margin: 50, size: "A4" });
+//     const fileName = `payslip-${payroll.employeeProfile.employeeId}-${payroll.month}.pdf`;
+//     const filePath = path.join(process.cwd(), "uploads", "payslips", fileName);
+
+//     if (!fs.existsSync(path.dirname(filePath))) {
+//       fs.mkdirSync(path.dirname(filePath), { recursive: true });
+//     }
+
+//     const stream = fs.createWriteStream(filePath);
+//     doc.pipe(stream);
+
+//     // ========== HEADER ==========
+//     doc
+//       .fontSize(20)
+//       .font("Helvetica-Bold")
+//       .fillColor("#000")
+//       .text("GYS TECHNOLOGIES PVT. LTD", { align: "center" });
+//     doc
+//       .fontSize(10)
+//       .fillColor("#555")
+//       .text("Innovating Tomorrow, Today", { align: "center" });
+//     doc.moveDown(0.3);
+//     doc
+//       .fontSize(9)
+//       .fillColor("#333")
+//       .text(
+//         "H N C 1 Sayam Enklavya, Haridwar, Dehradun, Uttarakhand, India - 249401",
+//         { align: "center" }
+//       );
+//     doc.text("Phone: +91-8273370028 | Email: info@gystechnologies.com", {
+//       align: "center",
+//     });
+
+//     doc.moveDown(0.5);
+//     doc
+//       .strokeColor("#000")
+//       .lineWidth(1)
+//       .moveTo(50, doc.y)
+//       .lineTo(550, doc.y)
+//       .stroke();
+//     doc.moveDown(1);
+
+//     // ========= TITLE =========
+//     doc
+//       .fontSize(16)
+//       .font("Helvetica-Bold")
+//       .fillColor("#000")
+//       .text("SALARY PAYSLIP", { align: "center" });
+//     doc.moveDown(0.5);
+
+//     const monthNames = [
+//       "January",
+//       "February",
+//       "March",
+//       "April",
+//       "May",
+//       "June",
+//       "July",
+//       "August",
+//       "September",
+//       "October",
+//       "November",
+//       "December",
+//     ];
+//     const [year, month] = payroll.month.split("-");
+//     const monthName = monthNames[parseInt(month) - 1];
+//     doc
+//       .fontSize(10)
+//       .font("Helvetica-Oblique")
+//       .fillColor("#444")
+//       .text(`Payment Period: ${monthName} ${year}`, { align: "center" });
+//     doc.moveDown(1);
+
+//     // ========= EMPLOYEE / COMPANY DETAILS =========
+//     const tableTop = doc.y;
+//     const tableLeft = 50;
+//     const tableWidth = 500;
+
+//     // Table headers
+//     doc.font("Helvetica-Bold").fontSize(10).fillColor("#000");
+//     doc.text("EMPLOYEE DETAILS", tableLeft + 10, tableTop);
+//     doc.text("COMPANY DETAILS", tableLeft + 260, tableTop);
+
+//     doc.font("Helvetica").fontSize(9).fillColor("#000");
+//     doc.text(
+//       `Name: ${payroll.employeeProfile.firstName} ${payroll.employeeProfile.lastName}`,
+//       tableLeft + 10,
+//       tableTop + 20
+//     );
+//     doc.text(
+//       `ID: ${payroll.employeeProfile.employeeId}`,
+//       tableLeft + 10,
+//       tableTop + 35
+//     );
+//     doc.text(
+//       `Dept: ${payroll.employeeProfile.department}`,
+//       tableLeft + 10,
+//       tableTop + 50
+//     );
+//     doc.text(
+//       `Designation: ${payroll.employeeProfile.designation}`,
+//       tableLeft + 10,
+//       tableTop + 65
+//     );
+
+//     doc.text("GYS Technologies Pvt. Ltd.", tableLeft + 260, tableTop + 20);
+//     doc.text("Registered Office:", tableLeft + 260, tableTop + 35);
+//     doc.text("H N C 1 Sayam Enklavya,", tableLeft + 260, tableTop + 50);
+//     doc.text(
+//       "Haridwar, Dehradun, Uttarakhand 249401",
+//       tableLeft + 260,
+//       tableTop + 65
+//     );
+
+//     doc
+//       .moveTo(tableLeft, tableTop + 85)
+//       .lineTo(tableLeft + tableWidth, tableTop + 85)
+//       .strokeColor("#aaa")
+//       .lineWidth(0.5)
+//       .stroke();
+//     doc.moveDown(2);
+
+//     // ========= EARNINGS =========
+//     doc
+//       .font("Helvetica-Bold")
+//       .fontSize(11)
+//       .fillColor("#000")
+//       .text("EARNINGS", tableLeft + 10, doc.y);
+//     doc.text("AMOUNT (₹)", tableLeft + 400, doc.y);
+
+//     let currentY = doc.y + 15;
+//     doc.font("Helvetica").fontSize(10).fillColor("#000");
+
+//     doc.text("Basic Salary", tableLeft + 10, currentY);
+//     doc.text(payroll.basic.toLocaleString("en-IN"), tableLeft + 400, currentY, {
+//       align: "right",
+//     });
+//     currentY += 15;
+
+//     doc.text("House Rent Allowance (HRA)", tableLeft + 10, currentY);
+//     doc.text(payroll.hra.toLocaleString("en-IN"), tableLeft + 400, currentY, {
+//       align: "right",
+//     });
+//     currentY += 15;
+
+//     payroll.allowances.forEach((a) => {
+//       doc.text(a.title, tableLeft + 10, currentY);
+//       doc.text(a.amount.toLocaleString("en-IN"), tableLeft + 400, currentY, {
+//         align: "right",
+//       });
+//       currentY += 15;
+//     });
+
+//     doc
+//       .moveTo(tableLeft, currentY)
+//       .lineTo(tableLeft + tableWidth, currentY)
+//       .strokeColor("#000")
+//       .lineWidth(0.5)
+//       .stroke();
+//     currentY += 10;
+
+//     doc.font("Helvetica-Bold").text("TOTAL EARNINGS", tableLeft + 10, currentY);
+//     doc.text(
+//       payroll.totalEarnings.toLocaleString("en-IN"),
+//       tableLeft + 400,
+//       currentY,
+//       { align: "right" }
+//     );
+//     currentY += 25;
+
+//     // ========= DEDUCTIONS =========
+//     doc
+//       .font("Helvetica-Bold")
+//       .fontSize(11)
+//       .fillColor("#000")
+//       .text("DEDUCTIONS", tableLeft + 10, currentY);
+//     doc.text("AMOUNT (₹)", tableLeft + 400, currentY);
+
+//     currentY += 15;
+//     doc.font("Helvetica").fontSize(10).fillColor("#000");
+
+//     doc.text("Professional Tax", tableLeft + 10, currentY);
+//     doc.text(payroll.tax.toLocaleString("en-IN"), tableLeft + 400, currentY, {
+//       align: "right",
+//     });
+//     currentY += 15;
+
+//     if (payroll.absentDeduction > 0) {
+//       doc.text(
+//         `Absent Deduction (${payroll.absentDays} days)`,
+//         tableLeft + 10,
+//         currentY
+//       );
+//       doc.text(
+//         `-${payroll.absentDeduction.toLocaleString("en-IN")}`,
+//         tableLeft + 400,
+//         currentY,
+//         { align: "right" }
+//       );
+//       currentY += 15;
+//     }
+
+//     payroll.deductions.forEach((d) => {
+//       doc.text(d.title, tableLeft + 10, currentY);
+//       doc.text(
+//         `-${d.amount.toLocaleString("en-IN")}`,
+//         tableLeft + 400,
+//         currentY,
+//         { align: "right" }
+//       );
+//       currentY += 15;
+//     });
+
+//     doc
+//       .moveTo(tableLeft, currentY)
+//       .lineTo(tableLeft + tableWidth, currentY)
+//       .strokeColor("#000")
+//       .lineWidth(0.5)
+//       .stroke();
+//     currentY += 10;
+
+//     doc
+//       .font("Helvetica-Bold")
+//       .text("TOTAL DEDUCTIONS", tableLeft + 10, currentY);
+//     doc.text(
+//       `-${payroll.totalDeductions.toLocaleString("en-IN")}`,
+//       tableLeft + 400,
+//       currentY,
+//       { align: "right" }
+//     );
+//     currentY += 25;
+
+//     // ========= NET PAY =========
+//     doc
+//       .font("Helvetica-Bold")
+//       .fontSize(12)
+//       .fillColor("#000")
+//       .text("NET PAY", tableLeft + 10, currentY);
+//     doc.text(
+//       `₹${payroll.netPay.toLocaleString("en-IN")}`,
+//       tableLeft + 400,
+//       currentY,
+//       { align: "right" }
+//     );
+//     currentY += 30;
+
+//     // ========= APPROVAL =========
+//     doc.font("Helvetica").fontSize(9).fillColor("#555");
+//     if (payroll.approvedByUser) {
+//       doc.text(
+//         `Approved By: ${payroll.approvedByUser.name || "Gaurav Kakran"} (${payroll.approvedByUser.email})`,
+//         tableLeft,
+//         currentY
+//       );
+//       doc.text(
+//         `Approval Date: ${new Date(payroll.approvedAt).toLocaleDateString(
+//           "en-IN"
+//         )}`,
+//         tableLeft,
+//         currentY + 12
+//       );
+//       currentY += 30;
+//     }
+
+//     // ========= FOOTER =========
+//     doc.moveDown(1);
+//     doc
+//       .strokeColor("#aaa")
+//       .lineWidth(0.5)
+//       .moveTo(50, doc.y)
+//       .lineTo(550, doc.y)
+//       .stroke();
+//     doc.moveDown(0.5);
+
+//     doc
+//       .font("Helvetica")
+//       .fontSize(8)
+//       .fillColor("#777")
+//       .text(
+//         "This is a computer generated payslip and does not require signature.",
+//         { align: "center" }
+//       );
+//     doc.text(
+//       `Generated on: ${new Date().toLocaleDateString("en-IN", {
+//         day: "2-digit",
+//         month: "long",
+//         year: "numeric",
+//       })}`,
+//       { align: "center" }
+//     );
+//     doc.text(`Status: ${payroll.status.toUpperCase()}`, { align: "center" });
+
+//     doc.moveDown(0.5);
+//     doc
+//       .fontSize(7)
+//       .fillColor("#aaa")
+//       .text(
+//         `Payroll ID: ${payroll._id} • Employee ID: ${payroll.employeeProfile.employeeId}`,
+//         { align: "center" }
+//       );
+
+//     doc.end();
+
+//     await new Promise((resolve, reject) => {
+//       stream.on("finish", resolve);
+//       stream.on("error", reject);
+//     });
+
+//     payroll.payslipPath = `/uploads/payslips/${fileName}`;
+//     await payroll.save();
+
+//     res.setHeader("Content-Type", "application/pdf");
+//     res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+//     fs.createReadStream(filePath).pipe(res);
+//   } catch (error) {
+//     console.error("Download payslip error:", error);
+//     res.status(500).json({ message: "Error generating payslip" });
+//   }
+// };
+
 export const downloadPayslip = async (req, res) => {
   try {
     const { id } = req.params;
@@ -970,17 +1307,14 @@ export const downloadPayslip = async (req, res) => {
       return res.status(404).json({ message: "Payroll not found" });
     }
 
-    // ✅ Create PDF
+    // ✅ Create PDF in memory and pipe to response
     const doc = new PDFDocument({ margin: 50, size: "A4" });
     const fileName = `payslip-${payroll.employeeProfile.employeeId}-${payroll.month}.pdf`;
-    const filePath = path.join(process.cwd(), "uploads", "payslips", fileName);
 
-    if (!fs.existsSync(path.dirname(filePath))) {
-      fs.mkdirSync(path.dirname(filePath), { recursive: true });
-    }
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
 
-    const stream = fs.createWriteStream(filePath);
-    doc.pipe(stream);
+    doc.pipe(res);
 
     // ========== HEADER ==========
     doc
@@ -1022,18 +1356,8 @@ export const downloadPayslip = async (req, res) => {
     doc.moveDown(0.5);
 
     const monthNames = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
     ];
     const [year, month] = payroll.month.split("-");
     const monthName = monthNames[parseInt(month) - 1];
@@ -1049,7 +1373,6 @@ export const downloadPayslip = async (req, res) => {
     const tableLeft = 50;
     const tableWidth = 500;
 
-    // Table headers
     doc.font("Helvetica-Bold").fontSize(10).fillColor("#000");
     doc.text("EMPLOYEE DETAILS", tableLeft + 10, tableTop);
     doc.text("COMPANY DETAILS", tableLeft + 260, tableTop);
@@ -1099,7 +1422,7 @@ export const downloadPayslip = async (req, res) => {
       .fontSize(11)
       .fillColor("#000")
       .text("EARNINGS", tableLeft + 10, doc.y);
-    doc.text("AMOUNT (₹)", tableLeft + 400, doc.y);
+    // doc.text("AMOUNT (₹)", tableLeft + 400, doc.y);
 
     let currentY = doc.y + 15;
     doc.font("Helvetica").fontSize(10).fillColor("#000");
@@ -1147,7 +1470,7 @@ export const downloadPayslip = async (req, res) => {
       .fontSize(11)
       .fillColor("#000")
       .text("DEDUCTIONS", tableLeft + 10, currentY);
-    doc.text("AMOUNT (₹)", tableLeft + 400, currentY);
+    // doc.text("AMOUNT (₹)", tableLeft + 400, currentY);
 
     currentY += 15;
     doc.font("Helvetica").fontSize(10).fillColor("#000");
@@ -1273,23 +1596,12 @@ export const downloadPayslip = async (req, res) => {
       );
 
     doc.end();
-
-    await new Promise((resolve, reject) => {
-      stream.on("finish", resolve);
-      stream.on("error", reject);
-    });
-
-    payroll.payslipPath = `/uploads/payslips/${fileName}`;
-    await payroll.save();
-
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
-    fs.createReadStream(filePath).pipe(res);
   } catch (error) {
     console.error("Download payslip error:", error);
     res.status(500).json({ message: "Error generating payslip" });
   }
 };
+
 
 export const approvePayroll = async (req, res) => {
   try {

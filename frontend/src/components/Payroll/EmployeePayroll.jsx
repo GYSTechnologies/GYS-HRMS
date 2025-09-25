@@ -166,85 +166,34 @@ const EmployeePayroll = () => {
   }
 
   return (
-    <div className="min-h-[80vh] p-4">
+    <div className="min-h-[80vh] p-4 sm:p-6 max-w-[1200px] mx-auto">
       <style>{`
-        .primary-btn:hover { background: ${PRIMARY_HOVER} !important }
-      `}</style>
+      .primary-btn:hover { background: ${PRIMARY_HOVER} !important }
+    `}</style>
 
       <NotificationToast notifications={notifications} />
-      {/* 
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">My Payroll & Payslips</h1>
-        <p className="text-sm text-gray-600 mt-1">
-          View and download your salary slips
-        </p>
-      </header>
 
-      <div className="bg-white shadow rounded-lg p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Year
-            </label>
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              {years.map((year) => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Month
-            </label>
-            <select
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="">All Months</option>
-              {months.map((month, index) => (
-                <option key={index + 1} value={index + 1}>
-                  {month}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-end">
-       
-          </div>
-        </div>
-      </div> */}
-      {/* Header + Filters Row */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-        {/* Header */}
+      {/* Header + Filters */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 md:mb-6 gap-3 md:gap-0">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800">
             My Payroll & Payslips
           </h1>
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="text-xs sm:text-sm text-gray-600 mt-1">
             View and download your salary slips
           </p>
         </div>
 
         {/* Filters */}
-        <div className="mt-4 md:mt-0 flex items-center gap-4 bg-white shadow rounded-lg p-3">
-          {/* Year */}
-          <div className="w-28">
+        <div className="mt-2 md:mt-0 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 bg-white shadow rounded-lg p-2 sm:p-3">
+          <div className="w-full sm:w-24">
             <label className="block text-xs font-medium text-gray-700 mb-1">
               Year
             </label>
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              className="w-full p-1 border border-gray-300 rounded-md text-xs sm:text-sm focus:ring-1 focus:ring-blue-500 focus:border-transparent"
             >
               {years.map((year) => (
                 <option key={year} value={year}>
@@ -254,15 +203,14 @@ const EmployeePayroll = () => {
             </select>
           </div>
 
-          {/* Month */}
-          <div className="w-32">
+          <div className="w-full sm:w-28">
             <label className="block text-xs font-medium text-gray-700 mb-1">
               Month
             </label>
             <select
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              className="w-full p-1 border border-gray-300 rounded-md text-xs sm:text-sm focus:ring-1 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="">All</option>
               {months.map((month, index) => (
@@ -276,115 +224,131 @@ const EmployeePayroll = () => {
       </div>
 
       {/* Payroll Table */}
-      <div className="bg-white shadow rounded-lg overflow-hidden">
+      <div className="bg-white shadow rounded-lg">
         {payrolls.length === 0 ? (
-          <div className="text-center py-12">
-            <svg
-              className="w-16 h-16 text-gray-300 mx-auto mb-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-            <p className="text-gray-500">No payroll records found</p>
-            <p className="text-sm text-gray-400 mt-1">
-              {selectedMonth
-                ? `Try selecting a different month or year`
-                : "No records available for your account"}
-            </p>
+          <div className="text-center py-8">
+            <p className="text-gray-500 text-sm">No payroll records found</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full border-collapse">
-              <thead className="bg-[#104774] ">
+          <div className="overflow-x-auto sm:overflow-x-hidden">
+            <table className="min-w-full border-collapse text-xs sm:text-sm md:text-base hidden sm:table">
+              <thead className="bg-[#104774]">
                 <tr>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-white">
+                  <th className="px-3 py-2 text-left text-white font-semibold">
                     Month
                   </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-white">
+                  <th className="px-3 py-2 text-left text-white font-semibold">
                     Generated On
                   </th>
-                  <th className="px-6 py-3 text-right text-sm font-semibold text-white">
+                  <th className="px-3 py-2 text-right text-white font-semibold">
                     Net Salary
                   </th>
-                  <th className="px-6 py-3 text-center text-sm font-semibold text-white">
+                  <th className="px-3 py-2 text-center text-white font-semibold">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-center text-sm font-semibold text-white">
+                  <th className="px-3 py-2 text-center text-white font-semibold">
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {payrolls
-                  .sort((a, b) => {
-                    // Sort by year then month (latest first)
-                    const aDate = new Date(`${a.year}-${a.month}-01`);
-                    const bDate = new Date(`${b.year}-${b.month}-01`);
-                    return bDate - aDate;
-                  })
+                  .sort(
+                    (a, b) =>
+                      new Date(b.year + "-" + b.month) -
+                      new Date(a.year + "-" + a.month)
+                  )
                   .map((payroll) => (
                     <tr key={payroll._id} className="hover:bg-gray-50">
-                      {/* Month-Year */}
-                      <td className="px-6 py-4 text-sm text-gray-800 font-medium">
+                      <td className="px-3 py-2">
                         {months[parseInt(payroll.month.split("-")[1]) - 1]}{" "}
                         {payroll.year}
                       </td>
-
-                      {/* Generated Date */}
-                      <td className="px-6 py-4 text-sm text-gray-600">
+                      <td className="px-3 py-2">
                         {formatDate(payroll.approvedAt)}
                       </td>
-
-                      {/* Net Salary */}
-                      <td className="px-6 py-4 text-right text-sm font-semibold text-green-600">
+                      <td className="px-3 py-2 text-right text-green-600 font-semibold">
                         {formatCurrency(payroll.netPay)}
                       </td>
-
-                      {/* Status */}
-                      <td className="px-6 py-4 text-center">
+                      <td className="px-3 py-2 text-center">
                         {getStatusBadge(payroll.status)}
                       </td>
-
-                      {/* Actions */}
-                      <td className="px-6 py-4 text-center space-x-2">
+                      <td className="px-3 py-2 text-center space-x-1 flex justify-center">
                         <button
                           onClick={() => {
                             setSelectedPayroll(payroll);
                             setShowDetailsModal(true);
                           }}
-                          className="px-3 py-1 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 text-sm"
+                          className="px-2 py-1 border border-gray-300 rounded-md text-gray-700 text-xs sm:text-sm hover:bg-gray-50"
                         >
                           View
                         </button>
-
                         {payroll.status === "approved" && (
                           <button
                             onClick={() => downloadPayslip(payroll._id)}
-                            className="px-3 py-1 rounded-md text-white text-sm primary-btn"
+                            className="px-2 py-1 rounded-md text-white text-xs sm:text-sm primary-btn"
                             style={{ backgroundColor: PRIMARY }}
                           >
                             Download
                           </button>
                         )}
-
-                        {payroll.status === "rejected" &&
-                          payroll.rejectionReason && (
-                            <p className="mt-2 text-xs text-red-600">
-                              Reason: {payroll.rejectionReason}
-                            </p>
-                          )}
                       </td>
                     </tr>
                   ))}
               </tbody>
             </table>
+
+            {/* Mobile Card View */}
+            <div className="sm:hidden space-y-3">
+              {payrolls
+                .sort(
+                  (a, b) =>
+                    new Date(b.year + "-" + b.month) -
+                    new Date(a.year + "-" + a.month)
+                )
+                .map((payroll) => (
+                  <div
+                    key={payroll._id}
+                    className="bg-gray-50 p-3 rounded-lg shadow-sm"
+                  >
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="font-medium">
+                        {months[parseInt(payroll.month.split("-")[1]) - 1]}{" "}
+                        {payroll.year}
+                      </span>
+                      <span className="text-green-600 font-semibold">
+                        {formatCurrency(payroll.netPay)}
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-500 mb-1">
+                      Generated: {formatDate(payroll.approvedAt)}
+                    </div>
+                    <div className="text-xs text-gray-500 mb-2">
+                      Status: {getStatusBadge(payroll.status)}
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setSelectedPayroll(payroll);
+                          setShowDetailsModal(true);
+                        }}
+                        className="flex-1 px-2 py-1 border border-gray-300 rounded-md text-gray-700 text-xs hover:bg-gray-50"
+                      >
+                        View
+                      </button>
+                      {payroll.status === "approved" && (
+                        <button
+                          onClick={() => downloadPayslip(payroll._id)}
+                          className="flex-1 px-2 py-1 rounded-md text-white text-xs primary-btn"
+                          style={{ backgroundColor: PRIMARY }}
+                        >
+                          Download
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+            </div>
           </div>
         )}
       </div>

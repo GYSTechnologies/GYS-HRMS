@@ -270,114 +270,116 @@ const AttendanceManagement = () => {
   });
 
   return (
-    <div className="min-h-[70vh] p-4 sm:p-6">
+    <div className="max-h-80vh bg-gray-50 ">
       <style>{`
-        .primary-btn:hover { background: ${PRIMARY_HOVER} !important }
-        .primary-border-active { border-bottom-color: ${PRIMARY} !important; color: ${PRIMARY} !important }
-      `}</style>
+      .primary-btn:hover { background: ${PRIMARY_HOVER} !important }
+      .primary-border-active { border-bottom-color: ${PRIMARY} !important; color: ${PRIMARY} !important }
+    `}</style>
 
       <NotificationToast notifications={notifications} />
 
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">
+      {/* Header */}
+      <header className="mb-3 sm:mb-4">
+        <h1 className="text-lg sm:text-xl font-semibold text-gray-800">
           Attendance Management
         </h1>
-        <p className="text-sm text-gray-600 mt-1">
+        <p className="text-xs text-gray-600 mt-1">
           Manage employee attendance approvals and records
         </p>
       </header>
 
-      {/* Stats */}
+      {/* Stats Cards - Compact */}
 
-<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-6">
-  {/* Total Employees */}
-  <div className="bg-gradient-to-r from-blue-100 via-blue-100 to-blue-200 rounded-2xl p-6 shadow-md hover:shadow-lg transition-shadow cursor-pointer text-center">
-    <h3 className="text-sm text-blue-700 font-semibold mb-2">Total Employees</h3>
-    <p className="text-2xl font-bold text-blue-900">{stats.totalEmployees ?? 0}</p>
-  </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4 sm:mb-5">
+        {/* Total Employees */}
+        <div className="bg-gradient-to-r from-blue-100 via-blue-100 to-blue-200 rounded-2xl p-3 shadow-md hover:shadow-lg transition-shadow cursor-pointer text-center">
+          <h3 className="text-xs text-blue-700 font-medium mb-1">
+            Total Employees
+          </h3>
+          <p className="text-base sm:text-lg font-bold text-blue-900">
+            {stats.totalEmployees ?? 0}
+          </p>
+        </div>
 
-  {/* Present Today */}
-  <div className="bg-gradient-to-r from-green-100 via-green-100 to-green-200 rounded-2xl p-6 shadow-md hover:shadow-lg transition-shadow cursor-pointer text-center">
-    <h3 className="text-sm text-green-700 font-semibold mb-2">Present Today</h3>
-    <p className="text-2xl font-bold text-green-900">{stats.present ?? 0}</p>
-  </div>
+        {/* Present Today */}
+        <div className="bg-gradient-to-r from-green-100 via-green-100 to-green-200 rounded-2xl p-3 shadow-md hover:shadow-lg transition-shadow cursor-pointer text-center">
+          <h3 className="text-xs text-green-700 font-medium mb-1">
+            Present Today
+          </h3>
+          <p className="text-base sm:text-lg font-bold text-green-900">
+            {stats.present ?? 0}
+          </p>
+        </div>
 
-  {/* Absent Today */}
-  <div className="bg-gradient-to-r from-red-100 via-red-100 to-red-200 rounded-2xl p-6 shadow-md hover:shadow-lg transition-shadow cursor-pointer text-center">
-    <h3 className="text-sm text-red-700 font-semibold mb-2">Absent Today</h3>
-    <p className="text-2xl font-bold text-red-900">{Math.max(0, stats?.absent ?? 0)}</p>
-  </div>
+        {/* Absent Today */}
+        <div className="bg-gradient-to-r from-red-100 via-red-100 to-red-200 rounded-2xl p-3 shadow-md hover:shadow-lg transition-shadow cursor-pointer text-center">
+          <h3 className="text-xs text-red-700 font-medium mb-1">
+            Absent Today
+          </h3>
+          <p className="text-base sm:text-lg font-bold text-red-900">
+            {Math.max(0, stats?.absent ?? 0)}
+          </p>
+        </div>
 
-  {/* Pending Approval */}
-  <div className="bg-gradient-to-r from-yellow-100 via-yellow-100 to-yellow-200 rounded-2xl p-6 shadow-md hover:shadow-lg transition-shadow cursor-pointer text-center">
-    <h3 className="text-sm text-yellow-700 font-semibold mb-2">Pending Approval</h3>
-    <p className="text-2xl font-bold text-yellow-900">{stats.pending ?? 0}</p>
-  </div>
-</div>
+        {/* Pending Approval */}
+        <div className="bg-gradient-to-r from-yellow-100 via-yellow-100 to-yellow-200 rounded-2xl p-3 shadow-md hover:shadow-lg transition-shadow cursor-pointer text-center">
+          <h3 className="text-xs text-yellow-700 font-medium mb-1">
+            Pending Approval
+          </h3>
+          <p className="text-base sm:text-lg font-bold text-yellow-900">
+            {stats.pending ?? 0}
+          </p>
+        </div>
+      </div>
 
-
-      {/* Tabs */}
-      <div className="bg-white shadow rounded-lg mb-6">
+      {/* Main Content */}
+      <div className="bg-white shadow-sm rounded-lg border border-gray-200">
+        {/* Tabs - Compact */}
         <div className="border-b border-gray-200">
-          <nav className="flex -mb-px overflow-auto">
+          <nav className="flex overflow-x-auto scrollbar-hide">
             <button
               onClick={() => setActiveTab("pending")}
-              className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${
+              className={`flex-shrink-0 py-2 px-3 sm:py-3 sm:px-4 text-center border-b-2 font-medium text-xs ${
                 activeTab === "pending"
                   ? "primary-border-active"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
-              style={
-                activeTab === "pending"
-                  ? { borderBottomColor: PRIMARY, color: PRIMARY }
-                  : {}
-              }
             >
               Pending Approvals
               {pendingAttendances.length > 0 && (
-                <span className="ml-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                <span className="ml-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
                   {pendingAttendances.length}
                 </span>
               )}
             </button>
             <button
               onClick={() => setActiveTab("all")}
-              className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${
+              className={`flex-shrink-0 py-2 px-3 sm:py-3 sm:px-4 text-center border-b-2 font-medium text-xs ${
                 activeTab === "all"
                   ? "primary-border-active"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
-              style={
-                activeTab === "all"
-                  ? { borderBottomColor: PRIMARY, color: PRIMARY }
-                  : {}
-              }
             >
               All Records
             </button>
             <button
               onClick={() => setActiveTab("hr")}
-              className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${
+              className={`flex-shrink-0 py-2 px-3 sm:py-3 sm:px-4 text-center border-b-2 font-medium text-xs ${
                 activeTab === "hr"
                   ? "primary-border-active"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
-              style={
-                activeTab === "hr"
-                  ? { borderBottomColor: PRIMARY, color: PRIMARY }
-                  : {}
-              }
             >
               My Attendance
             </button>
           </nav>
         </div>
 
-        <div className="p-6">
-          {/* Filters */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="p-3 sm:p-4">
+          {/* Filters - Compact */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 mb-3 sm:mb-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-medium text-gray-700 mb-1">
                 Search Employee
               </label>
               <input
@@ -386,11 +388,11 @@ const AttendanceManagement = () => {
                 value={filters.employee}
                 onChange={handleFilterChange}
                 placeholder="Name or email"
-                className="w-full p-2 border border-gray-300 rounded-md"
+                className="w-full p-2 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-medium text-gray-700 mb-1">
                 Date
               </label>
               <input
@@ -398,19 +400,19 @@ const AttendanceManagement = () => {
                 name="date"
                 value={filters.date}
                 onChange={handleFilterChange}
-                className="w-full p-2 border border-gray-300 rounded-md"
+                className="w-full p-2 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
             {activeTab === "all" && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-medium text-gray-700 mb-1">
                   Status
                 </label>
                 <select
                   name="status"
                   value={filters.status}
                   onChange={handleFilterChange}
-                  className="w-full p-2 border border-gray-300 rounded-md"
+                  className="w-full p-2 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
                   <option value="">All Status</option>
                   <option value="pending">Pending</option>
@@ -422,27 +424,27 @@ const AttendanceManagement = () => {
             <div className="flex items-end">
               <button
                 onClick={clearFilters}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                className="w-full px-3 py-2 text-xs bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 border border-gray-300"
               >
                 Clear Filters
               </button>
             </div>
           </div>
 
-          {/* Pending Tab */}
+          {/* Pending Tab Content */}
           {activeTab === "pending" && (
             <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold">
-                  Pending Attendance Approvals
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                <h2 className="text-sm font-semibold text-gray-800">
+                  Pending Approvals
                 </h2>
                 <button
                   onClick={fetchPendingAttendances}
-                  className="p-2 text-gray-500 hover:text-gray-700"
+                  className="p-1.5 text-gray-500 hover:text-gray-700 self-end sm:self-auto"
                   title="Refresh"
                 >
                   <svg
-                    className="w-5 h-5"
+                    className="w-3 h-3"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -458,16 +460,16 @@ const AttendanceManagement = () => {
               </div>
 
               {loading ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                  <p className="text-gray-500 mt-2">
+                <div className="text-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto"></div>
+                  <p className="text-xs text-gray-500 mt-1">
                     Loading pending requests...
                   </p>
                 </div>
               ) : filteredPendingAttendances.length === 0 ? (
-                <div className="text-center py-12 bg-gray-50 rounded-lg">
+                <div className="text-center py-6 bg-gray-50 rounded-lg">
                   <svg
-                    className="w-16 h-16 text-gray-300 mx-auto mb-4"
+                    className="w-8 h-8 text-gray-300 mx-auto mb-2"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -479,182 +481,234 @@ const AttendanceManagement = () => {
                       d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                     />
                   </svg>
-                  <p className="text-gray-500">No pending approvals</p>
+                  <p className="text-xs text-gray-500">No pending approvals</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <div className="max-h-[290px] overflow-y-auto border border-gray-200 rounded-xl shadow-sm">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-[#104774] text-white sticky top-0 z-10">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-                            Employee
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-                            Date
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-                            Login Time
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-                            Task Description
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-                            Work Progress
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-200">
-                        {filteredPendingAttendances.map((attendance, index) => (
-                          <tr
-                            key={attendance._id}
-                            className={`${
-                              index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                            } hover:bg-gray-100 transition`}
-                          >
-                            {/* Employee */}
-                            <td className="px-6 py-4">
-                              <div className="font-medium text-gray-800">
-                                {attendance.employee?.profileRef?.firstName}{" "}
-                                {attendance.employee?.profileRef?.lastName}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                {attendance.employee?.email}
-                              </div>
-                              <div className="text-xs text-gray-400">
-                                {attendance.employee?.profileRef?.employeeId}
-                              </div>
-                            </td>
-
-                            {/* Date */}
-                            <td className="px-6 py-4 text-sm text-gray-700">
-                              {formatDate(attendance.date)}
-                            </td>
-
-                            {/* Login Time */}
-                            <td className="px-6 py-4 text-sm text-gray-700">
-                              {attendance.checkIn
-                                ? formatTime(attendance.checkIn)
-                                : "-"}
-                            </td>
-
-                            {/* Task Description with tooltip */}
-                            <td className="px-6 py-4 text-sm text-gray-700">
-                              <div className="space-y-2">
-                                {/* Task Description */}
-                                <div className="relative group">
-                                  <div className="font-medium text-gray-800 mb-1">
-                                    Task:
-                                  </div>
-                                  <div className="max-w-xs truncate cursor-pointer">
-                                    {attendance.taskDescription || "-"}
-                                  </div>
+                <div>
+                  {/* Desktop Table */}
+                  <div className="hidden sm:block overflow-x-auto">
+                    <div className="min-w-[800px]">
+                      <table className="w-full divide-y divide-gray-200 text-xs">
+                        <thead className="bg-[#104774]">
+                          <tr>
+                            <th className="px-2 py-2 text-left font-medium text-white uppercase tracking-wider">
+                              Employee
+                            </th>
+                            <th className="px-2 py-2 text-left font-medium text-white uppercase tracking-wider">
+                              Date
+                            </th>
+                            <th className="px-2 py-2 text-left font-medium text-white uppercase tracking-wider">
+                              Login Time
+                            </th>
+                            <th className="px-2 py-2 text-left font-medium text-white uppercase tracking-wider">
+                              Task
+                            </th>
+                            <th className="px-2 py-2 text-left font-medium text-white uppercase tracking-wider">
+                              Work Progress
+                            </th>
+                            <th className="px-2 py-2 text-left font-medium text-white uppercase tracking-wider">
+                              Actions
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {filteredPendingAttendances.map((attendance) => (
+                            <tr
+                              key={attendance._id}
+                              className="hover:bg-gray-50"
+                            >
+                              <td className="px-2 py-2 whitespace-nowrap">
+                                <div className="font-medium text-gray-900">
+                                  {attendance.employee?.profileRef?.firstName}{" "}
+                                  {attendance.employee?.profileRef?.lastName}
+                                </div>
+                                <div className="text-gray-500 truncate max-w-[100px]">
+                                  {attendance.employee?.email}
+                                </div>
+                              </td>
+                              <td className="px-2 py-2 whitespace-nowrap text-gray-700">
+                                {formatDate(attendance.date)}
+                              </td>
+                              <td className="px-2 py-2 whitespace-nowrap text-gray-700">
+                                {attendance.checkIn
+                                  ? formatTime(attendance.checkIn)
+                                  : "-"}
+                              </td>
+                              <td className="px-2 py-2 max-w-[120px]">
+                                <div className="space-y-1">
                                   {attendance.taskDescription && (
-                                    <div className="absolute hidden group-hover:block bg-gray-800 text-white text-xs rounded-md px-3 py-2 w-60 z-20 -top-1 left-1/2 -translate-x-1/2 shadow-lg">
+                                    <div
+                                      className="truncate"
+                                      title={attendance.taskDescription}
+                                    >
                                       {attendance.taskDescription}
                                     </div>
                                   )}
+                                  {attendance.earlyLoginReason && (
+                                    <div
+                                      className="text-orange-600 truncate text-xs"
+                                      title={attendance.earlyLoginReason}
+                                    >
+                                      Early: {attendance.earlyLoginReason}
+                                    </div>
+                                  )}
+                                  {attendance.lateLoginReason && (
+                                    <div
+                                      className="text-red-600 truncate text-xs"
+                                      title={attendance.lateLoginReason}
+                                    >
+                                      Late: {attendance.lateLoginReason}
+                                    </div>
+                                  )}
                                 </div>
+                              </td>
+                              <td className="px-2 py-2 text-gray-700">
+                                {attendance.workProgress || "-"}
+                              </td>
+                              <td className="px-2 py-2 whitespace-nowrap">
+                                <div className="flex gap-1">
+                                  <button
+                                    onClick={() =>
+                                      handleApprove(attendance._id)
+                                    }
+                                    className="px-2 py-1 rounded text-white bg-blue-600 hover:bg-blue-700 text-xs"
+                                  >
+                                    Approve
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      openRejectModal(attendance._id)
+                                    }
+                                    className="px-2 py-1 rounded text-white bg-red-600 hover:bg-red-700 text-xs"
+                                  >
+                                    Reject
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
 
-                                {/* Early Login Reason */}
-                                {attendance.earlyLoginReason && (
-                                  <div className="relative group mt-2 pt-2 border-t border-gray-100">
-                                    <div className="font-medium text-orange-600 mb-1">
-                                      Early Login Reason:
-                                    </div>
-                                    <div className="max-w-xs truncate cursor-pointer">
-                                      {attendance.earlyLoginReason}
-                                    </div>
-                                    <div className="absolute hidden group-hover:block bg-gray-800 text-white text-xs rounded-md px-3 py-2 w-60 z-20 -top-1 left-1/2 -translate-x-1/2 shadow-lg">
-                                      {attendance.earlyLoginReason}
-                                    </div>
-                                  </div>
-                                )}
+                  {/* Mobile Cards */}
+                  <div className="sm:hidden space-y-3">
+                    {filteredPendingAttendances.map((attendance) => (
+                      <div
+                        key={attendance._id}
+                        className="border border-gray-200 rounded-lg p-3 bg-white shadow-sm"
+                      >
+                        <div className="space-y-2">
+                          {/* Employee Info */}
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="font-medium text-gray-900">
+                                {attendance.employee?.profileRef?.firstName}{" "}
+                                {attendance.employee?.profileRef?.lastName}
+                              </h3>
+                              <p className="text-xs text-gray-500 truncate">
+                                {attendance.employee?.email}
+                              </p>
+                            </div>
+                            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                              {formatDate(attendance.date)}
+                            </span>
+                          </div>
 
-                                {/* Late Login Reason */}
-                                {attendance.lateLoginReason && (
-                                  <div className="relative group mt-2 pt-2 border-t border-gray-100">
-                                    <div className="font-medium text-red-600 mb-1">
-                                      Late Login Reason:
-                                    </div>
-                                    <div className="max-w-xs truncate cursor-pointer">
-                                      {attendance.lateLoginReason}
-                                    </div>
-                                    <div className="absolute hidden group-hover:block bg-gray-800 text-white text-xs rounded-md px-3 py-2 w-60 z-20 -top-1 left-1/2 -translate-x-1/2 shadow-lg">
-                                      {attendance.lateLoginReason}
-                                    </div>
-                                  </div>
-                                )}
+                          {/* Login Time */}
+                          <div className="flex items-center text-xs text-gray-600">
+                            <span className="font-medium mr-1">Login:</span>
+                            {attendance.checkIn
+                              ? formatTime(attendance.checkIn)
+                              : "-"}
+                          </div>
+
+                          {/* Task Description */}
+                          {attendance.taskDescription && (
+                            <div className="text-xs">
+                              <span className="font-medium text-gray-700">
+                                Task:
+                              </span>
+                              <p className="text-gray-600 mt-1 line-clamp-2">
+                                {attendance.taskDescription}
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Work Progress */}
+                          {attendance.workProgress && (
+                            <div className="text-xs">
+                              <span className="font-medium text-gray-700">
+                                Progress:
+                              </span>
+                              <p className="text-gray-600">
+                                {attendance.workProgress}
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Reasons */}
+                          <div className="space-y-1">
+                            {attendance.earlyLoginReason && (
+                              <div className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded">
+                                <span className="font-medium">
+                                  Early Login:
+                                </span>{" "}
+                                {attendance.earlyLoginReason}
                               </div>
-                            </td>
-
-                            {/* Work Progress */}
-                            <td className="px-6 py-4 text-sm text-gray-700">
-                              {attendance.workProgress || "-"}
-                            </td>
-
-                            {/* Actions */}
-                            <td className="px-6 py-4">
-                              <div className="flex flex-wrap gap-2">
-                                <button
-                                  onClick={() => handleApprove(attendance._id)}
-                                  className="px-3 py-1.5 rounded-md text-white bg-[#104774] hover:bg-[#0d3a61] text-sm font-medium shadow-sm transition"
-                                >
-                                  Approve
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    openRejectModal(attendance._id)
-                                  }
-                                  className="px-3 py-1.5 rounded-md text-white bg-red-600 hover:bg-red-700 text-sm font-medium shadow-sm transition"
-                                >
-                                  Reject
-                                </button>
+                            )}
+                            {attendance.lateLoginReason && (
+                              <div className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded">
+                                <span className="font-medium">Late Login:</span>{" "}
+                                {attendance.lateLoginReason}
                               </div>
-                            </td>
-                          </tr>
-                        ))}
+                            )}
+                          </div>
 
-                        {filteredPendingAttendances.length === 0 && (
-                          <tr>
-                            <td
-                              colSpan={6}
-                              className="px-6 py-10 text-center text-sm text-gray-500"
+                          {/* Actions */}
+                          <div className="flex gap-2 pt-2">
+                            <button
+                              onClick={() => handleApprove(attendance._id)}
+                              className="flex-1 px-3 py-2 rounded text-white bg-blue-600 hover:bg-blue-700 text-xs font-medium"
                             >
-                              No pending attendances found
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
+                              Approve
+                            </button>
+                            <button
+                              onClick={() => openRejectModal(attendance._id)}
+                              className="flex-1 px-3 py-2 rounded text-white bg-red-600 hover:bg-red-700 text-xs font-medium"
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
             </div>
           )}
 
-          {/* All Records Tab */}
+          {/* All Records Tab Content */}
           {activeTab === "all" && (
             <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                <h2 className="text-sm font-semibold text-gray-800">
                   All Attendance Records
                 </h2>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-500">
-                    Showing {filteredAttendances.length} of{" "}
-                    {allAttendances.length} records
+                <div className="flex items-center gap-2 self-end sm:self-auto">
+                  <span className="text-xs text-gray-500">
+                    {filteredAttendances.length} of {allAttendances.length}{" "}
+                    records
                   </span>
                   <button
                     onClick={fetchAllAttendances}
-                    className="p-2 text-gray-500 hover:text-gray-700"
+                    className="p-1.5 text-gray-500 hover:text-gray-700"
                     title="Refresh"
                   >
                     <svg
-                      className="w-5 h-5"
+                      className="w-3 h-3"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -671,14 +725,16 @@ const AttendanceManagement = () => {
               </div>
 
               {loading ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                  <p className="text-gray-500 mt-2">Loading records...</p>
+                <div className="text-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto"></div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Loading records...
+                  </p>
                 </div>
               ) : filteredAttendances.length === 0 ? (
-                <div className="text-center py-12 bg-gray-50 rounded-lg">
+                <div className="text-center py-6 bg-gray-50 rounded-lg">
                   <svg
-                    className="w-16 h-16 text-gray-300 mx-auto mb-4"
+                    className="w-8 h-8 text-gray-300 mx-auto mb-2"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -690,157 +746,245 @@ const AttendanceManagement = () => {
                       d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                     />
                   </svg>
-                  <p className="text-gray-500">No records found</p>
+                  <p className="text-xs text-gray-500">No records found</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <div className="max-h-[250px] overflow-y-auto border border-gray-200 rounded-xl shadow-sm">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-[#104774] text-white sticky top-0 z-10 rounded-t-lg">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-                            Employee
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-                            Date
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-                            Login Time
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-                            Logout Time
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-                            Status
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-                            Work Progress
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-                            Task
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-                            Logout Note
-                          </th>
-                        </tr>
-                      </thead>
-
-                      <tbody>
-                        {filteredAttendances.map((attendance, index) => (
-                          <tr
-                            key={attendance._id}
-                            className={`${
-                              index % 2 === 0 ? "bg-white" : "bg-gray-100"
-                            } transition`}
-                          >
-                            {/* Employee */}
-                            <td className="px-6 py-3 whitespace-nowrap">
-                              <div className="font-medium text-gray-800">
-                                {attendance.employee?.profileRef?.firstName}{" "}
-                                {attendance.employee?.profileRef?.lastName}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                {attendance.employee?.email}
-                              </div>
-                              <div className="text-xs text-gray-400 mt-1">
-                                {attendance.employee?.profileRef?.employeeId}
-                              </div>
-                            </td>
-
-                            {/* Date */}
-                            <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-700">
-                              {formatDate(attendance.date)}
-                            </td>
-
-                            {/* Login Time */}
-                            <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-700">
-                              {formatTime(attendance.checkIn)}
-                            </td>
-
-                            {/* Logout Time */}
-                            <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-700">
-                              {formatTime(attendance.checkOut) || "-"}
-                            </td>
-
-                            {/* Status */}
-                            <td className="px-6 py-3 whitespace-nowrap">
-                              {getStatusBadge(attendance.status)}
-                            </td>
-
-                            {/* Work Progress */}
-                            <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-700">
-                              {attendance.workProgress || "-"}
-                            </td>
-
-                            {/* Task with tooltip and login reasons */}
-                            <td className="px-6 py-3 text-sm text-gray-700 max-w-xs">
-                              <div className="space-y-1">
-                                {/* Task Description */}
-                                {attendance.taskDescription ? (
-                                  <div className="relative group">
-                                    {/* Truncated text */}
-                                    <div className="truncate cursor-pointer font-medium hover:text-blue-600">
+                <div>
+                  {/* Desktop Table */}
+                  <div className="hidden sm:block overflow-x-auto">
+                    <div className="max-h-[200px] overflow-y-auto border border-gray-200 rounded-lg">
+                      <table className="w-full divide-y divide-gray-200 text-xs">
+                        <thead className="bg-[#104774] sticky top-0 z-10">
+                          <tr>
+                            <th className="px-2 py-2 text-left font-medium text-white uppercase tracking-wider">
+                              Employee
+                            </th>
+                            <th className="px-2 py-2 text-left font-medium text-white uppercase tracking-wider">
+                              Date
+                            </th>
+                            <th className="px-2 py-2 text-left font-medium text-white uppercase tracking-wider">
+                              Login
+                            </th>
+                            <th className="px-2 py-2 text-left font-medium text-white uppercase tracking-wider">
+                              Logout
+                            </th>
+                            <th className="px-2 py-2 text-left font-medium text-white uppercase tracking-wider">
+                              Status
+                            </th>
+                            <th className="px-2 py-2 text-left font-medium text-white uppercase tracking-wider">
+                              Work Progress
+                            </th>
+                            <th className="px-2 py-2 text-left font-medium text-white uppercase tracking-wider">
+                              Task
+                            </th>
+                            <th className="px-2 py-2 text-left font-medium text-white uppercase tracking-wider">
+                              Logout Note
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {filteredAttendances.map((attendance) => (
+                            <tr
+                              key={attendance._id}
+                              className="hover:bg-gray-50"
+                            >
+                              <td className="px-2 py-2 whitespace-nowrap">
+                                <div className="font-medium text-gray-900">
+                                  {attendance.employee?.profileRef?.firstName}{" "}
+                                  {attendance.employee?.profileRef?.lastName}
+                                </div>
+                                <div className="text-gray-500 truncate max-w-[100px]">
+                                  {attendance.employee?.email}
+                                </div>
+                              </td>
+                              <td className="px-2 py-2 whitespace-nowrap text-gray-700">
+                                {formatDate(attendance.date)}
+                              </td>
+                              <td className="px-2 py-2 whitespace-nowrap text-gray-700">
+                                {formatTime(attendance.checkIn)}
+                              </td>
+                              <td className="px-2 py-2 whitespace-nowrap text-gray-700">
+                                {formatTime(attendance.checkOut) || "-"}
+                              </td>
+                              <td className="px-2 py-2 whitespace-nowrap">
+                                <span
+                                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                    attendance.status === "accepted"
+                                      ? "bg-green-100 text-green-800"
+                                      : attendance.status === "pending"
+                                      ? "bg-yellow-100 text-yellow-800"
+                                      : "bg-red-100 text-red-800"
+                                  }`}
+                                >
+                                  {attendance.status}
+                                </span>
+                              </td>
+                              <td className="px-2 py-2 text-gray-700">
+                                {attendance.workProgress || "-"}
+                              </td>
+                              <td className="px-2 py-2 max-w-[120px]">
+                                <div className="space-y-1">
+                                  {attendance.taskDescription && (
+                                    <div
+                                      className="truncate"
+                                      title={attendance.taskDescription}
+                                    >
                                       {attendance.taskDescription}
-                                    </div>
-
-                                    {/* Tooltip */}
-                                    <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-64 bg-gray-900 text-white text-xs rounded-lg p-2 shadow-lg z-50 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-200 break-words">
-                                      {attendance.taskDescription}
-                                      <div className="absolute top-0 left-1/2 -translate-x-1/2 -mt-1 w-2 h-2 bg-gray-900 rotate-45"></div>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <span className="text-gray-400 italic">
-                                    -
-                                  </span>
-                                )}
-
-                                {/* Early Login Reason */}
-                                {attendance.earlyLoginReason && (
-                                  <div className="text-xs text-orange-600 mt-1">
-                                    <span className="font-medium">
-                                      Early Login:
-                                    </span>{" "}
-                                    {attendance.earlyLoginReason}
-                                  </div>
-                                )}
-
-                                {/* Late Login Reason */}
-                                {attendance.lateLoginReason && (
-                                  <div className="text-xs text-red-600 mt-1">
-                                    <span className="font-medium">
-                                      Late Login:
-                                    </span>{" "}
-                                    {attendance.lateLoginReason}
-                                  </div>
-                                )}
-                              </div>
-                            </td>
-
-                            {/* Logout Note */}
-                            <td className="px-6 py-3 text-sm">
-                              {attendance.logoutDescription ? (
-                                <>
-                                  <div className="font-medium">
-                                    {attendance.logoutDescription}
-                                  </div>
-                                  {attendance.earlyLogoutReason && (
-                                    <div className="text-xs text-red-600 mt-1">
-                                      <span className="font-medium">
-                                        Early Logout:
-                                      </span>{" "}
-                                      {attendance.earlyLogoutReason}
                                     </div>
                                   )}
-                                </>
-                              ) : (
-                                "-"
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                                  {attendance.earlyLoginReason && (
+                                    <div
+                                      className="text-orange-600 truncate text-xs"
+                                      title={attendance.earlyLoginReason}
+                                    >
+                                      Early: {attendance.earlyLoginReason}
+                                    </div>
+                                  )}
+                                  {attendance.lateLoginReason && (
+                                    <div
+                                      className="text-red-600 truncate text-xs"
+                                      title={attendance.lateLoginReason}
+                                    >
+                                      Late: {attendance.lateLoginReason}
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="px-2 py-2 max-w-[120px]">
+                                {attendance.logoutDescription ? (
+                                  <div
+                                    className="truncate"
+                                    title={attendance.logoutDescription}
+                                  >
+                                    {attendance.logoutDescription}
+                                  </div>
+                                ) : (
+                                  "-"
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Mobile Cards */}
+                  <div className="sm:hidden space-y-3">
+                    {filteredAttendances.map((attendance) => (
+                      <div
+                        key={attendance._id}
+                        className="border border-gray-200 rounded-lg p-3 bg-white shadow-sm"
+                      >
+                        <div className="space-y-2">
+                          {/* Header */}
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="font-medium text-gray-900">
+                                {attendance.employee?.profileRef?.firstName}{" "}
+                                {attendance.employee?.profileRef?.lastName}
+                              </h3>
+                              <p className="text-xs text-gray-500">
+                                {attendance.employee?.email}
+                              </p>
+                            </div>
+                            <span
+                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                attendance.status === "accepted"
+                                  ? "bg-green-100 text-green-800"
+                                  : attendance.status === "pending"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : "bg-red-100 text-red-800"
+                              }`}
+                            >
+                              {attendance.status}
+                            </span>
+                          </div>
+
+                          {/* Date and Time */}
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div>
+                              <span className="font-medium text-gray-700">
+                                Date:
+                              </span>
+                              <p className="text-gray-600">
+                                {formatDate(attendance.date)}
+                              </p>
+                            </div>
+                            <div>
+                              <span className="font-medium text-gray-700">
+                                Login:
+                              </span>
+                              <p className="text-gray-600">
+                                {formatTime(attendance.checkIn)}
+                              </p>
+                            </div>
+                            <div>
+                              <span className="font-medium text-gray-700">
+                                Logout:
+                              </span>
+                              <p className="text-gray-600">
+                                {formatTime(attendance.checkOut) || "-"}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Work Progress */}
+                          {attendance.workProgress && (
+                            <div className="text-xs">
+                              <span className="font-medium text-gray-700">
+                                Progress:
+                              </span>
+                              <p className="text-gray-600">
+                                {attendance.workProgress}
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Task Description */}
+                          {attendance.taskDescription && (
+                            <div className="text-xs">
+                              <span className="font-medium text-gray-700">
+                                Task:
+                              </span>
+                              <p className="text-gray-600 mt-1 line-clamp-2">
+                                {attendance.taskDescription}
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Reasons */}
+                          <div className="space-y-1">
+                            {attendance.earlyLoginReason && (
+                              <div className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded">
+                                <span className="font-medium">
+                                  Early Login:
+                                </span>{" "}
+                                {attendance.earlyLoginReason}
+                              </div>
+                            )}
+                            {attendance.lateLoginReason && (
+                              <div className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded">
+                                <span className="font-medium">Late Login:</span>{" "}
+                                {attendance.lateLoginReason}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Logout Note */}
+                          {attendance.logoutDescription && (
+                            <div className="text-xs">
+                              <span className="font-medium text-gray-700">
+                                Logout Note:
+                              </span>
+                              <p className="text-gray-600 mt-1 line-clamp-2">
+                                {attendance.logoutDescription}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}

@@ -938,8 +938,11 @@
 
 import React, { useState, useEffect } from "react";
 import axiosInstance from "../../utils/axiosInstance";
+import NotificationToast from "../../components/common/NotificationToast";
+
 
 const PRIMARY = "#104774";
+const PRIMARY_HOVER = "#0d3a61";
 
 const CreatePayrollModal = ({
   isOpen,
@@ -955,6 +958,9 @@ const CreatePayrollModal = ({
   const [selectedDepartment, setSelectedDepartment] = useState("");
   const [checkingPayrolls, setCheckingPayrolls] = useState(false);
 
+
+    const [notifications, setNotifications] = useState([]);
+  
   const [formData, setFormData] = useState({
     employeeId: "",
     month: new Date().getMonth() + 1,
@@ -1368,461 +1374,353 @@ const CreatePayrollModal = ({
   const currentYear = new Date().getFullYear();
   const years = [currentYear - 1, currentYear, currentYear + 1];
 
+
   return (
-  <div className="min-h-[70vh] p-4 sm:p-6 bg-gray-50">
-    <style>{`
-      .primary-btn:hover { background: ${PRIMARY_HOVER} !important }
-      .primary-border-active { border-bottom-color: ${PRIMARY} !important; color: ${PRIMARY} !important }
-    `}</style>
-
-    <NotificationToast notifications={notifications} />
-
-    <header className="mb-6">
-      <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
-        Attendance Management
-      </h1>
-      <p className="text-xs sm:text-sm text-gray-600 mt-1">
-        Manage employee attendance approvals and records
-      </p>
-    </header>
-
-    {/* Stats Cards - Responsive Grid */}
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-6">
-      {/* Total Employees */}
-      <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-blue-200">
-        <h3 className="text-xs sm:text-sm text-blue-700 font-medium mb-1 sm:mb-2 truncate">Total Employees</h3>
-        <p className="text-lg sm:text-xl md:text-2xl font-bold text-blue-900">{stats.totalEmployees ?? 0}</p>
-      </div>
-
-      {/* Present Today */}
-      <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-green-200">
-        <h3 className="text-xs sm:text-sm text-green-700 font-medium mb-1 sm:mb-2 truncate">Present Today</h3>
-        <p className="text-lg sm:text-xl md:text-2xl font-bold text-green-900">{stats.present ?? 0}</p>
-      </div>
-
-      {/* Absent Today */}
-      <div className="bg-gradient-to-r from-red-50 to-red-100 rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-red-200">
-        <h3 className="text-xs sm:text-sm text-red-700 font-medium mb-1 sm:mb-2 truncate">Absent Today</h3>
-        <p className="text-lg sm:text-xl md:text-2xl font-bold text-red-900">{Math.max(0, stats?.absent ?? 0)}</p>
-      </div>
-
-      {/* Pending Approval */}
-      <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-yellow-200">
-        <h3 className="text-xs sm:text-sm text-yellow-700 font-medium mb-1 sm:mb-2 truncate">Pending Approval</h3>
-        <p className="text-lg sm:text-xl md:text-2xl font-bold text-yellow-900">{stats.pending ?? 0}</p>
-      </div>
-    </div>
-
-    {/* Main Content Card */}
-    <div className="bg-white shadow-sm rounded-lg sm:rounded-xl border border-gray-200 mb-6">
-      {/* Tabs Navigation */}
-      <div className="border-b border-gray-200">
-        <nav className="flex overflow-x-auto scrollbar-hide">
-          <button
-            onClick={() => setActiveTab("pending")}
-            className={`flex items-center py-3 px-4 text-center border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap min-w-max ${
-              activeTab === "pending"
-                ? "primary-border-active"
-                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            }`}
-            style={
-              activeTab === "pending"
-                ? { borderBottomColor: PRIMARY, color: PRIMARY }
-                : {}
-            }
-          >
-            Pending Approvals
-            {pendingAttendances.length > 0 && (
-              <span className="ml-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full min-w-[20px]">
-                {pendingAttendances.length}
-              </span>
-            )}
-          </button>
-          
-          <button
-            onClick={() => setActiveTab("all")}
-            className={`py-3 px-4 text-center border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap min-w-max ${
-              activeTab === "all"
-                ? "primary-border-active"
-                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            }`}
-            style={
-              activeTab === "all"
-                ? { borderBottomColor: PRIMARY, color: PRIMARY }
-                : {}
-            }
-          >
-            All Records
-          </button>
-          
-          <button
-            onClick={() => setActiveTab("hr")}
-            className={`py-3 px-4 text-center border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap min-w-max ${
-              activeTab === "hr"
-                ? "primary-border-active"
-                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            }`}
-            style={
-              activeTab === "hr"
-                ? { borderBottomColor: PRIMARY, color: PRIMARY }
-                : {}
-            }
-          >
-            My Attendance
-          </button>
-        </nav>
-      </div>
-
-      {/* Tab Content */}
-      <div className="p-4 sm:p-6">
-        {/* Filters */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
-          <div>
-            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-              Search Employee
-            </label>
-            <input
-              type="text"
-              name="employee"
-              value={filters.employee}
-              onChange={handleFilterChange}
-              placeholder="Name or email"
-              className="w-full p-2 text-xs sm:text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+    <div className="fixed inset-0 backdrop-blur-sm bg-opacity-40 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-lg p-4 md:p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-xl">
+        <div className="flex items-center justify-between mb-4 md:mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 md:gap-4">
+            <h2 className="text-lg md:text-xl font-semibold text-gray-800">
+              Create New Payroll
+            </h2>
+            <span className="text-sm md:text-base text-gray-600 bg-gray-100 px-3 py-1 rounded-md">
+              {months[formData.month - 1]} {formData.year}
+            </span>
           </div>
-          
-          <div>
-            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-              Date
-            </label>
-            <input
-              type="date"
-              name="date"
-              value={filters.date}
-              onChange={handleFilterChange}
-              className="w-full p-2 text-xs sm:text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-          
-          {activeTab === "all" && (
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-                Status
-              </label>
-              <select
-                name="status"
-                value={filters.status}
-                onChange={handleFilterChange}
-                className="w-full p-2 text-xs sm:text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="accepted">Accepted</option>
-                <option value="rejected">Rejected</option>
-              </select>
-            </div>
-          )}
-          
-          <div className="flex items-end">
-            <button
-              onClick={clearFilters}
-              className="w-full px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-xs sm:text-sm font-medium transition-colors"
-            >
-              Clear Filters
-            </button>
-          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 text-lg md:text-xl"
+          >
+            ✖
+          </button>
         </div>
 
-        {/* Pending Tab Content */}
-        {activeTab === "pending" && (
-          <div>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-800">
-                Pending Attendance Approvals
-              </h2>
-              <button
-                onClick={fetchPendingAttendances}
-                className="flex items-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-xs sm:text-sm transition-colors"
+        <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+          {/* Department & Employee */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1 md:mb-2">
+                Department *
+              </label>
+              <select
+                value={selectedDepartment}
+                onChange={handleDepartmentChange}
+                required
+                className="w-full p-2 md:p-3 border border-gray-300 rounded-md text-sm md:text-base"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                Refresh
-              </button>
+                <option value="">Select Department</option>
+                {departments.map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            {loading ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-                <p className="text-gray-500 mt-2 text-sm">Loading pending requests...</p>
-              </div>
-            ) : filteredPendingAttendances.length === 0 ? (
-              <div className="text-center py-8 bg-gray-50 rounded-lg">
-                <svg className="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <p className="text-gray-500 text-sm">No pending approvals</p>
-              </div>
-            ) : (
-              <div className="overflow-hidden">
-                {/* Mobile Cards View */}
-                <div className="block lg:hidden space-y-3">
-                  {filteredPendingAttendances.map((attendance) => (
-                    <div key={attendance._id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                      <div className="grid grid-cols-2 gap-3 mb-3">
-                        <div>
-                          <p className="text-xs text-gray-500 font-medium">Employee</p>
-                          <p className="text-sm font-medium text-gray-800 truncate">
-                            {attendance.employee?.profileRef?.firstName} {attendance.employee?.profileRef?.lastName}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500 font-medium">Date</p>
-                          <p className="text-sm text-gray-700">{formatDate(attendance.date)}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500 font-medium">Login Time</p>
-                          <p className="text-sm text-gray-700">
-                            {attendance.checkIn ? formatTime(attendance.checkIn) : "-"}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500 font-medium">Status</p>
-                          <span className="inline-block px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">
-                            Pending
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Task Description */}
-                      <div className="mb-3">
-                        <p className="text-xs text-gray-500 font-medium">Task Description</p>
-                        <p className="text-sm text-gray-700 line-clamp-2">{attendance.taskDescription || "-"}</p>
-                      </div>
-
-                      {/* Work Progress */}
-                      <div className="mb-3">
-                        <p className="text-xs text-gray-500 font-medium">Work Progress</p>
-                        <p className="text-sm text-gray-700">{attendance.workProgress || "-"}</p>
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleApprove(attendance._id)}
-                          className="flex-1 px-3 py-2 bg-green-600 text-white rounded text-xs font-medium hover:bg-green-700 transition-colors"
-                        >
-                          Approve
-                        </button>
-                        <button
-                          onClick={() => openRejectModal(attendance._id)}
-                          className="flex-1 px-3 py-2 bg-red-600 text-white rounded text-xs font-medium hover:bg-red-700 transition-colors"
-                        >
-                          Reject
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Desktop Table View */}
-                <div className="hidden lg:block overflow-x-auto border border-gray-200 rounded-lg">
-                  <table className="w-full min-w-[800px]">
-                    <thead className="bg-[#104774] text-white">
-                      <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium uppercase">Employee</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium uppercase">Date</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium uppercase">Login Time</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium uppercase">Task Description</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium uppercase">Work Progress</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium uppercase">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {filteredPendingAttendances.map((attendance, index) => (
-                        <tr key={attendance._id} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                          <td className="px-4 py-3">
-                            <div className="font-medium text-sm text-gray-800">
-                              {attendance.employee?.profileRef?.firstName} {attendance.employee?.profileRef?.lastName}
-                            </div>
-                            <div className="text-xs text-gray-500">{attendance.employee?.email}</div>
-                          </td>
-                          <td className="px-4 py-3 text-sm text-gray-700">{formatDate(attendance.date)}</td>
-                          <td className="px-4 py-3 text-sm text-gray-700">
-                            {attendance.checkIn ? formatTime(attendance.checkIn) : "-"}
-                          </td>
-                          <td className="px-4 py-3 text-sm text-gray-700 max-w-[200px]">
-                            <div className="truncate" title={attendance.taskDescription}>
-                              {attendance.taskDescription || "-"}
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-sm text-gray-700">{attendance.workProgress || "-"}</td>
-                          <td className="px-4 py-3">
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => handleApprove(attendance._id)}
-                                className="px-3 py-1.5 bg-green-600 text-white rounded text-xs font-medium hover:bg-green-700 transition-colors"
-                              >
-                                Approve
-                              </button>
-                              <button
-                                onClick={() => openRejectModal(attendance._id)}
-                                className="px-3 py-1.5 bg-red-600 text-white rounded text-xs font-medium hover:bg-red-700 transition-colors"
-                              >
-                                Reject
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1 md:mb-2">
+                Employee *
+              </label>
+              <select
+                name="employeeId"
+                value={formData.employeeId}
+                onChange={handleInputChange}
+                required
+                disabled={!selectedDepartment || checkingPayrolls}
+                className="w-full p-2 md:p-3 border border-gray-300 rounded-md text-sm md:text-base"
+              >
+                <option value="">Select Employee</option>
+                {checkingPayrolls ? (
+                  <option disabled>Checking payroll status...</option>
+                ) : employees.length === 0 && selectedDepartment ? (
+                  <option disabled>
+                    All employees already have payroll for this period
+                  </option>
+                ) : (
+                  employees.map((emp) => (
+                    <option key={emp._id} value={emp._id}>
+                      {emp.firstName} {emp.lastName} ({emp.employeeId})
+                    </option>
+                  ))
+                )}
+              </select>
+            </div>
           </div>
-        )}
 
-        {/* All Records Tab Content */}
-        {activeTab === "all" && (
+          {/* Hidden Month/Year Inputs */}
+          <input type="hidden" name="month" value={formData.month} />
+          <input type="hidden" name="year" value={formData.year} />
+
+          {/* Salary Inputs */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1 md:mb-2">
+                Basic Salary *
+              </label>
+              <input
+                name="basic"
+                type="number"
+                value={formData.basic}
+                onChange={handleInputChange}
+                required
+                min={0}
+                className="w-full p-2 md:p-3 border border-gray-300 rounded-md text-sm md:text-base"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1 md:mb-2">
+                HRA
+              </label>
+              <input
+                name="hra"
+                type="number"
+                value={formData.hra}
+                onChange={handleInputChange}
+                min={0}
+                className="w-full p-2 md:p-3 border border-gray-300 rounded-md text-sm md:text-base"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3 md:gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1 md:mb-2">
+                  Tax (%)
+                </label>
+                <input
+                  name="taxPercentage"
+                  type="number"
+                  value={formData.taxPercentage}
+                  onChange={handleInputChange}
+                  min={0}
+                  max={100}
+                  step={0.1}
+                  className="w-full p-2 md:p-3 border border-gray-300 rounded-md text-sm md:text-base"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1 md:mb-2">
+                  Tax Amount
+                </label>
+                <input
+                  name="tax"
+                  type="number"
+                  value={formData.tax}
+                  onChange={handleInputChange}
+                  readOnly
+                  className="w-full p-2 md:p-3 border border-gray-300 rounded-md bg-gray-100 text-sm md:text-base"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Allowances */}
           <div>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-800">All Attendance Records</h2>
-              <div className="flex items-center gap-3">
-                <span className="text-xs sm:text-sm text-gray-500">
-                  Showing {filteredAttendances.length} of {allAttendances.length} records
-                </span>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Allowances
+            </label>
+            <div className="space-y-2 md:space-y-3">
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input
+                  placeholder="Title"
+                  value={currentAllowance.title}
+                  onChange={(e) =>
+                    setCurrentAllowance((prev) => ({
+                      ...prev,
+                      title: e.target.value,
+                    }))
+                  }
+                  className="flex-1 p-2 border rounded text-sm md:text-base"
+                />
+                <input
+                  placeholder="Amount"
+                  type="number"
+                  value={currentAllowance.amount}
+                  onChange={(e) =>
+                    setCurrentAllowance((prev) => ({
+                      ...prev,
+                      amount: Number(e.target.value),
+                    }))
+                  }
+                  className="w-full sm:w-28 p-2 border rounded text-sm md:text-base"
+                />
                 <button
-                  onClick={fetchAllAttendances}
-                  className="flex items-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-xs sm:text-sm transition-colors"
+                  type="button"
+                  onClick={addAllowance}
+                  className="px-3 py-2 bg-green-600 text-white rounded text-sm md:text-base"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  Refresh
+                  Add
                 </button>
               </div>
+              {formData.allowances.map((a, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between p-2 bg-gray-50 rounded text-sm md:text-base"
+                >
+                  <span className="truncate mr-2">
+                    {a.title}: ₹{(a.amount || 0).toLocaleString()}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => removeAllowance(idx)}
+                    className="text-red-600 text-sm whitespace-nowrap"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
             </div>
-
-            {loading ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-                <p className="text-gray-500 mt-2 text-sm">Loading records...</p>
-              </div>
-            ) : filteredAttendances.length === 0 ? (
-              <div className="text-center py-8 bg-gray-50 rounded-lg">
-                <svg className="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <p className="text-gray-500 text-sm">No records found</p>
-              </div>
-            ) : (
-              <div className="overflow-hidden">
-                {/* Mobile Cards View */}
-                <div className="block lg:hidden space-y-3">
-                  {filteredAttendances.map((attendance) => (
-                    <div key={attendance._id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                      <div className="grid grid-cols-2 gap-3 mb-3">
-                        <div>
-                          <p className="text-xs text-gray-500 font-medium">Employee</p>
-                          <p className="text-sm font-medium text-gray-800">
-                            {attendance.employee?.profileRef?.firstName} {attendance.employee?.profileRef?.lastName}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500 font-medium">Date</p>
-                          <p className="text-sm text-gray-700">{formatDate(attendance.date)}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500 font-medium">Login</p>
-                          <p className="text-sm text-gray-700">{formatTime(attendance.checkIn)}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500 font-medium">Logout</p>
-                          <p className="text-sm text-gray-700">{formatTime(attendance.checkOut) || "-"}</p>
-                        </div>
-                      </div>
-
-                      <div className="mb-3">
-                        <p className="text-xs text-gray-500 font-medium">Status</p>
-                        <div className="mt-1">{getStatusBadge(attendance.status)}</div>
-                      </div>
-
-                      <div className="mb-3">
-                        <p className="text-xs text-gray-500 font-medium">Task</p>
-                        <p className="text-sm text-gray-700 line-clamp-2">{attendance.taskDescription || "-"}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Desktop Table View */}
-                <div className="hidden lg:block overflow-x-auto border border-gray-200 rounded-lg">
-                  <table className="w-full min-w-[1000px]">
-                    <thead className="bg-[#104774] text-white">
-                      <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium uppercase">Employee</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium uppercase">Date</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium uppercase">Login Time</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium uppercase">Logout Time</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium uppercase">Status</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium uppercase">Task</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {filteredAttendances.map((attendance, index) => (
-                        <tr key={attendance._id} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                          <td className="px-4 py-3">
-                            <div className="font-medium text-sm text-gray-800">
-                              {attendance.employee?.profileRef?.firstName} {attendance.employee?.profileRef?.lastName}
-                            </div>
-                            <div className="text-xs text-gray-500">{attendance.employee?.email}</div>
-                          </td>
-                          <td className="px-4 py-3 text-sm text-gray-700">{formatDate(attendance.date)}</td>
-                          <td className="px-4 py-3 text-sm text-gray-700">{formatTime(attendance.checkIn)}</td>
-                          <td className="px-4 py-3 text-sm text-gray-700">{formatTime(attendance.checkOut) || "-"}</td>
-                          <td className="px-4 py-3">{getStatusBadge(attendance.status)}</td>
-                          <td className="px-4 py-3 text-sm text-gray-700 max-w-[200px]">
-                            <div className="truncate" title={attendance.taskDescription}>
-                              {attendance.taskDescription || "-"}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
           </div>
-        )}
 
-        {/* HR Self Attendance Tab */}
-        {activeTab === "hr" && (
-          <HRAttendanceTab
-            token={token}
-            addNotification={addNotification}
-            user={user}
-          />
-        )}
+          {/* Deductions */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Deductions
+            </label>
+            <div className="space-y-2 md:space-y-3">
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input
+                  placeholder="Title"
+                  value={currentDeduction.title}
+                  onChange={(e) =>
+                    setCurrentDeduction((prev) => ({
+                      ...prev,
+                      title: e.target.value,
+                    }))
+                  }
+                  className="flex-1 p-2 border rounded text-sm md:text-base"
+                />
+                <input
+                  placeholder="Amount"
+                  type="number"
+                  value={currentDeduction.amount}
+                  onChange={(e) =>
+                    setCurrentDeduction((prev) => ({
+                      ...prev,
+                      amount: Number(e.target.value),
+                    }))
+                  }
+                  className="w-full sm:w-28 p-2 border rounded text-sm md:text-base"
+                />
+                <button
+                  type="button"
+                  onClick={addDeduction}
+                  className="px-3 py-2 bg-green-600 text-white rounded text-sm md:text-base"
+                >
+                  Add
+                </button>
+              </div>
+              {formData.deductions.map((d, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between p-2 bg-gray-50 rounded text-sm md:text-base"
+                >
+                  <span className="truncate mr-2">
+                    {d.title}: ₹{(d.amount || 0).toLocaleString()}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => removeDeduction(idx)}
+                    className="text-red-600 text-sm whitespace-nowrap"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Salary Breakdown */}
+          <div className="bg-gray-50 p-3 md:p-4 rounded-lg">
+            <h3 className="text-base md:text-lg font-semibold mb-2 md:mb-3">Salary Breakdown</h3>
+            <div className="space-y-1 md:space-y-2 text-sm md:text-base">
+              <div className="flex justify-between">
+                <span>Basic Salary:</span>
+                <span>₹{Number(formData.basic || 0).toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>HRA:</span>
+                <span>₹{Number(formData.hra || 0).toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Allowances:</span>
+                <span>₹{totalAllowances.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between text-green-600 font-medium">
+                <span>Total Earnings:</span>
+                <span>
+                  ₹
+                  {(
+                    Number(formData.basic || 0) +
+                    Number(formData.hra || 0) +
+                    totalAllowances
+                  ).toLocaleString()}
+                </span>
+              </div>
+
+              <hr className="my-1 md:my-2" />
+
+              <div className="flex justify-between">
+                <span>Deductions:</span>
+                <span className="text-red-600">
+                  -₹{sumItems(formData.deductions).toLocaleString()}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>Tax ({formData.taxPercentage || 0}%):</span>
+                <span className="text-red-600">
+                  -₹{Number(formData.tax || 0).toLocaleString()}
+                </span>
+              </div>
+
+              <div className="flex justify-between text-red-600 font-medium">
+                <span>Total Deductions:</span>
+                <span>
+                  -₹
+                  {(
+                    sumItems(formData.deductions) + Number(formData.tax || 0)
+                  ).toLocaleString()}
+                </span>
+              </div>
+
+              <hr className="my-1 md:my-2" />
+
+              <div className="flex justify-between text-base md:text-lg font-bold pt-1 md:pt-2">
+                <span>Net Pay:</span>
+                <span className="text-green-600">
+                  ₹
+                  {(
+                    Number(formData.basic || 0) +
+                    Number(formData.hra || 0) +
+                    totalAllowances -
+                    (sumItems(formData.deductions) + Number(formData.tax || 0))
+                  ).toLocaleString()}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex flex-col sm:flex-row justify-end gap-2 md:gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-3 md:px-4 py-2 border rounded text-sm md:text-base order-2 sm:order-1"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading || !formData.employeeId}
+              className="px-3 md:px-4 py-2 rounded text-white text-sm md:text-base order-1 sm:order-2"
+              style={{ backgroundColor: PRIMARY }}
+            >
+              {loading ? "Creating..." : "Create Payroll"}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
-
-    {/* Reject Modal */}
-    <RejectModal
-      isOpen={showRejectModal}
-      onClose={() => {
-        setShowRejectModal(false);
-        setRejectRemarks("");
-        setSelectedAttendance(null);
-      }}
-      onReject={handleReject}
-      remarks={rejectRemarks}
-      setRemarks={setRejectRemarks}
-    />
-  </div>
-);
-
+  );
+  
   // return (
   //   <div className="fixed inset-0 backdrop-blur-sm bg-opacity-40 flex items-center justify-center p-4 z-50">
   //     <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-xl">
@@ -2171,6 +2069,8 @@ const CreatePayrollModal = ({
   //     </div>
   //   </div>
   // );
+
+
 };
 
 export default CreatePayrollModal;

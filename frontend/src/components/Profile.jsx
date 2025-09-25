@@ -381,13 +381,13 @@ const EmployeeProfile = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto min-h-[75vh]">
-      {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-2">
-        <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+    <div className="max-w-6xl mx-auto max-h-[80vh]">
+      {/* Header - Compact */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+        <div className="flex flex-col sm:flex-row items-center gap-4">
           {/* Profile Image */}
           <div className="flex-shrink-0 relative">
-            <div className="w-32 h-32 rounded-full bg-gray-100 flex items-center justify-center border-2 border-gray-200 relative group">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gray-100 flex items-center justify-center border-2 border-gray-200 relative group">
               {employee.avatarUrl ? (
                 <img
                   src={employee.avatarUrl}
@@ -395,7 +395,7 @@ const EmployeeProfile = () => {
                   className="w-full h-full rounded-full object-cover"
                 />
               ) : (
-                <span className="text-4xl text-gray-600 font-semibold">
+                <span className="text-2xl sm:text-3xl text-gray-600 font-semibold">
                   {employee.firstName?.charAt(0)}
                   {employee.lastName?.charAt(0)}
                 </span>
@@ -404,9 +404,9 @@ const EmployeeProfile = () => {
               {/* Upload Overlay */}
               <label className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                 {uploading ? (
-                  <Loader className="w-6 h-6 text-white animate-spin" />
+                  <Loader className="w-4 h-4 text-white animate-spin" />
                 ) : (
-                  <Camera className="w-6 h-6 text-white" />
+                  <Camera className="w-4 h-4 text-white" />
                 )}
                 <input
                   type="file"
@@ -418,8 +418,8 @@ const EmployeeProfile = () => {
               </label>
             </div>
 
-            <div className="text-center mt-3">
-              <label className="text-sm text-[#104774] cursor-pointer hover:underline">
+            <div className="text-center mt-2">
+              <label className="text-xs text-[#104774] cursor-pointer hover:underline">
                 Change Photo
                 <input
                   type="file"
@@ -436,14 +436,14 @@ const EmployeeProfile = () => {
           </div>
 
           {/* Basic Info */}
-          <div className="flex-1 text-center md:text-left">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <div className="flex-1 text-center sm:text-left">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
               {employee.firstName} {employee.lastName}
             </h1>
-            <p className="text-xl text-[#104774] font-semibold mb-3">
+            <p className="text-base sm:text-lg text-[#104774] font-semibold mb-2">
               {employee.designation || "Software Developer"}
             </p>
-            <div className="space-y-1 text-gray-600">
+            <div className="space-y-1 text-sm text-gray-600">
               <p>
                 Employee ID:{" "}
                 <span className="font-medium text-gray-800">
@@ -462,7 +462,7 @@ const EmployeeProfile = () => {
           {/* Status Badge */}
           <div className="flex-shrink-0">
             <span
-              className={`px-4 py-2 rounded-md text-sm font-semibold ${
+              className={`px-3 py-1 rounded-md text-xs font-semibold ${
                 employee.user?.isActive
                   ? "bg-green-50 text-green-700 border border-green-200"
                   : "bg-red-50 text-red-700 border border-red-200"
@@ -474,100 +474,113 @@ const EmployeeProfile = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left Column - Personal Information */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-3 border-b border-gray-100">
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Personal Information */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <h2 className="text-base font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-100">
             Personal Information
           </h2>
 
-          <div className="space-y-4">
-            <div className="flex items-center">
-              <div className="w-2/5 text-gray-600 font-medium">Phone:</div>
-              <div className="w-3/5 text-gray-900 font-medium">
+          <div className="space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center">
+              <div className="w-full sm:w-2/5 text-gray-600 font-medium text-sm mb-1 sm:mb-0">
+                Phone:
+              </div>
+              <div className="w-full sm:w-3/5 text-gray-900 font-medium text-sm">
                 {employee.phone || "+91 12347 65890"}
               </div>
             </div>
 
-            <div className="flex items-center">
-              <div className="w-2/5 text-gray-600 font-medium">Email:</div>
-              <div className="w-3/5 text-gray-900 font-medium break-all">
+            <div className="flex flex-col sm:flex-row sm:items-center">
+              <div className="w-full sm:w-2/5 text-gray-600 font-medium text-sm mb-1 sm:mb-0">
+                Email:
+              </div>
+              <div className="w-full sm:w-3/5 text-gray-900 font-medium text-sm break-all">
                 {employee.user?.email || "anthony@gmail.com"}
               </div>
             </div>
 
-            <div className="flex items-center">
-              <div className="w-2/5 text-gray-600 font-medium">
+            <div className="flex flex-col sm:flex-row sm:items-center">
+              <div className="w-full sm:w-2/5 text-gray-600 font-medium text-sm mb-1 sm:mb-0">
                 Date of Birth:
               </div>
-              <div className="w-3/5 text-gray-900 font-medium">
+              <div className="w-full sm:w-3/5 text-gray-900 font-medium text-sm">
                 {formatDate(employee.dob) || "28 December 1992"}
               </div>
             </div>
 
-            <div className="flex items-start">
-              <div className="w-2/5 text-gray-600 font-medium">Address:</div>
-              <div className="w-3/5 text-gray-900 font-medium">
+            <div className="flex flex-col sm:flex-row sm:items-start">
+              <div className="w-full sm:w-2/5 text-gray-600 font-medium text-sm mb-1 sm:mb-0">
+                Address:
+              </div>
+              <div className="w-full sm:w-3/5 text-gray-900 font-medium text-sm">
                 {employee.address || "Dehradun, Uttarakhand"}
               </div>
             </div>
 
-            <div className="flex items-center">
-              <div className="w-2/5 text-gray-600 font-medium">Gender:</div>
-              <div className="w-3/5 text-gray-900 font-medium capitalize">
+            <div className="flex flex-col sm:flex-row sm:items-center">
+              <div className="w-full sm:w-2/5 text-gray-600 font-medium text-sm mb-1 sm:mb-0">
+                Gender:
+              </div>
+              <div className="w-full sm:w-3/5 text-gray-900 font-medium text-sm capitalize">
                 {employee.gender || "Male"}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right Column - Job Details */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-3 border-b border-gray-100">
+        {/* Job Details */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <h2 className="text-base font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-100">
             Job Details
           </h2>
 
-          <div className="space-y-4">
-            <div className="flex items-center">
-              <div className="w-2/5 text-gray-600 font-medium">
+          <div className="space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center">
+              <div className="w-full sm:w-2/5 text-gray-600 font-medium text-sm mb-1 sm:mb-0">
                 Designation:
               </div>
-              <div className="w-3/5 text-gray-900 font-medium">
+              <div className="w-full sm:w-3/5 text-gray-900 font-medium text-sm">
                 {employee.designation || "Software Developer"}
               </div>
             </div>
 
-            <div className="flex items-center">
-              <div className="w-2/5 text-gray-600 font-medium">Department:</div>
-              <div className="w-3/5 text-gray-900 font-medium">
+            <div className="flex flex-col sm:flex-row sm:items-center">
+              <div className="w-full sm:w-2/5 text-gray-600 font-medium text-sm mb-1 sm:mb-0">
+                Department:
+              </div>
+              <div className="w-full sm:w-3/5 text-gray-900 font-medium text-sm">
                 {employee.department || "IT & Development"}
               </div>
             </div>
 
-            <div className="flex items-center">
-              <div className="w-2/5 text-gray-600 font-medium">
+            <div className="flex flex-col sm:flex-row sm:items-center">
+              <div className="w-full sm:w-2/5 text-gray-600 font-medium text-sm mb-1 sm:mb-0">
                 Employment Type:
               </div>
-              <div className="w-3/5 text-gray-900 font-medium capitalize">
+              <div className="w-full sm:w-3/5 text-gray-900 font-medium text-sm capitalize">
                 {employee.employmentType
                   ? employee.employmentType.replace("-", " ")
                   : "Full Time"}
               </div>
             </div>
 
-            <div className="flex items-center">
-              <div className="w-2/5 text-gray-600 font-medium">
+            <div className="flex flex-col sm:flex-row sm:items-center">
+              <div className="w-full sm:w-2/5 text-gray-600 font-medium text-sm mb-1 sm:mb-0">
                 Shift Timing:
               </div>
-              <div className="w-3/5 text-gray-900 font-medium">
+              <div className="w-full sm:w-3/5 text-gray-900 font-medium text-sm">
                 {formatShiftTiming(employee.shiftTiming) ||
                   "10:00 AM – 07:00 PM"}
               </div>
             </div>
 
-            <div className="flex items-center">
-              <div className="w-2/5 text-gray-600 font-medium">Work Mode:</div>
-              <div className="w-3/5 text-gray-900 font-medium capitalize">
+            <div className="flex flex-col sm:flex-row sm:items-center">
+              <div className="w-full sm:w-2/5 text-gray-600 font-medium text-sm mb-1 sm:mb-0">
+                Work Mode:
+              </div>
+              <div className="w-full sm:w-3/5 text-gray-900 font-medium text-sm capitalize">
                 {employee.workMode
                   ? employee.workMode.replace(/-/g, " ")
                   : "Work From Home"}
@@ -577,24 +590,25 @@ const EmployeeProfile = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-2 ">
-        {/* Bank Details Section */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 h-60 overflow-y-scroll ">
-          <div className="flex justify-between items-center mb-4 border-b border-gray-100 pb-3">
-            <h2 className="text-lg font-semibold text-gray-900">
+      {/* Bottom Sections */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+        {/* Bank Details */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-3 pb-2 border-b border-gray-100">
+            <h2 className="text-base font-semibold text-gray-900 mb-2 sm:mb-0">
               Bank Details
             </h2>
             <button
               onClick={() => setModalOpen(true)}
-              className="flex items-center gap-2 px-3 py-1.5 bg-[#104774] text-white text-sm rounded hover:bg-[#0d3a5f]"
+              className="flex items-center gap-1 px-3 py-1.5 bg-[#104774] text-white text-xs rounded hover:bg-[#0d3a5f] w-full sm:w-auto justify-center"
             >
-              {bankDetails ? <Edit size={16} /> : <Plus size={16} />}
+              {bankDetails ? <Edit size={14} /> : <Plus size={14} />}
               {bankDetails ? "Edit" : "Add"}
             </button>
           </div>
 
           {bankDetails ? (
-            <div className="space-y-3 text-gray-700">
+            <div className="space-y-2 text-gray-700 text-sm">
               <p>
                 <span className="font-medium">Account Holder:</span>{" "}
                 {bankDetails.accountHolderName}
@@ -617,31 +631,31 @@ const EmployeeProfile = () => {
               </p>
             </div>
           ) : (
-            <div className="text-center py-4 text-gray-500">
+            <div className="text-center py-4 text-gray-500 text-sm">
               No bank details added yet.
             </div>
           )}
         </div>
 
         {/* Documents Section */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 h-60 overflow-y-scroll">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-3 border-b border-gray-100">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <h2 className="text-base font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-100">
             Documents
           </h2>
 
           {employee.documents && employee.documents.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-4">
+            <div className="space-y-2 max-h-28 overflow-y-auto">
               {employee.documents.map((doc, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors"
+                  className="flex items-center justify-between p-2 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors"
                 >
                   <div className="flex items-center min-w-0 flex-1">
-                    <div className="w-10 h-10 bg-gray-50 border border-gray-200 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
-                      <span className="text-gray-500 text-sm">📄</span>
+                    <div className="w-8 h-8 bg-gray-50 border border-gray-200 rounded flex items-center justify-center mr-2 flex-shrink-0">
+                      <span className="text-gray-500 text-xs">📄</span>
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
+                      <p className="text-xs font-medium text-gray-900 truncate">
                         {doc.name}
                       </p>
                       <p className="text-xs text-gray-500">
@@ -654,7 +668,7 @@ const EmployeeProfile = () => {
                     href={doc.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="ml-3 text-[#104774] hover:text-[#0d3a5f] text-sm font-medium flex-shrink-0"
+                    className="ml-2 text-[#104774] hover:text-[#0d3a5f] text-xs font-medium flex-shrink-0 whitespace-nowrap"
                   >
                     View
                   </a>
@@ -662,11 +676,11 @@ const EmployeeProfile = () => {
               ))}
             </div>
           ) : (
-            <div className="text-center py-8">
-              <div className="w-16 h-16 bg-gray-50 border border-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
-                <span className="text-gray-400 text-2xl">📂</span>
+            <div className="text-center py-4">
+              <div className="w-12 h-12 bg-gray-50 border border-gray-200 rounded-full flex items-center justify-center mx-auto mb-2">
+                <span className="text-gray-400 text-xl">📂</span>
               </div>
-              <p className="text-gray-500 font-medium">
+              <p className="text-gray-500 text-sm font-medium">
                 No documents available
               </p>
             </div>
