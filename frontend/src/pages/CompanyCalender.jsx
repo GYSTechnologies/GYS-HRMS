@@ -452,324 +452,59 @@ export default function CompanyCalendar() {
   // FullCalendar uses the combined deduped list
   const calendarEvents = getCombinedEvents();
 
-  return(
-    <div className="space-y-4 sm:space-y-6 lg:space-y-8 p-2 sm:p-4 lg:p-0">
-      <style>{style}</style>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Company Calendar</h1>
-          <p className="text-gray-500 text-xs sm:text-sm mt-1">Manage company events and schedules</p>
-        </div>
-        {user.role !== "employee" && (
-          <button 
-            onClick={handleAddEvent} 
-            className="flex items-center justify-center bg-[#104774] text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl hover:bg-[#0d3a61] transition-all duration-200 text-sm sm:text-base"
-          >
-            <Plus size={16} className="mr-2 sm:mr-2" />
-            <span className="sm:inline">Add Event</span>
-          </button>
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-        <div className="lg:col-span-2">
-          <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="bg-[#104774] p-3 sm:p-4 lg:p-6 text-white">
-              <div className="flex justify-between items-center">
-                <button 
-                  onClick={handlePrevMonth} 
-                  className="p-1.5 sm:p-2 hover:bg-[#0d3a61] rounded-md sm:rounded-lg transition-colors"
-                >
-                  <ChevronLeft size={20} className="sm:hidden" />
-                  <ChevronLeft size={24} className="hidden sm:block" />
-                </button>
-                <div className="text-center px-2">
-                  <h2 className="text-base sm:text-lg lg:text-xl font-semibold">
-                    {currentDate.toLocaleDateString("en-US", { 
-                      month: "long", 
-                      year: "numeric" 
-                    })}
-                  </h2>
-                  <p className="text-blue-100 text-xs sm:text-sm hidden sm:block">
-                    Click on any date to view events
-                  </p>
-                </div>
-                <button 
-                  onClick={handleNextMonth} 
-                  className="p-1.5 sm:p-2 hover:bg-[#0d3a61] rounded-md sm:rounded-lg transition-colors"
-                >
-                  <ChevronRight size={20} className="sm:hidden" />
-                  <ChevronRight size={24} className="hidden sm:block" />
-                </button>
-              </div>
-            </div>
-
-            <div className="calendar-container">
-              <FullCalendar
-                ref={calendarRef}
-                plugins={[dayGridPlugin, interactionPlugin]}
-                initialView="dayGridMonth"
-                events={calendarEvents}
-                dateClick={handleDateClick}
-                eventClick={handleEventClick}
-                height="auto"
-                headerToolbar={false}
-                initialDate={currentDate}
-                datesSet={handleDatesSet}
-                eventContent={renderEventContent}
-                dayCellContent={dayCellContent}
-                dayCellClassNames={dayCellClassNames}
-                dayMaxEvents={1}
-                fixedWeekCount={false}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-4 sm:space-y-6">
-          <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 p-3 sm:p-4 lg:p-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4 gap-2">
-              <div className="flex items-center">
-                <Calendar size={20} className="text-[#104774] mr-2 sm:mr-3 sm:hidden" />
-                <Calendar size={24} className="text-[#104774] mr-2 sm:mr-3 hidden sm:block" />
-                <h3 className="text-base sm:text-lg font-semibold text-gray-800">
-                  {formatDate(selectedDate)}
-                  {(isSunday(selectedDate) || sidebarEvents.some((ev) => ev.extendedProps?.isHoliday)) && (
-                    <span className="ml-2 text-red-600 text-xs sm:text-sm font-normal">
-                      (Holiday)
-                    </span>
-                  )}
-                </h3>
-              </div>
-              {user.role !== "employee" && sidebarEvents.length > 0 && (
-                <button 
-                  onClick={handleAddEvent} 
-                  className="text-[#104774] text-xs sm:text-sm hover:text-[#0d3a61] self-start sm:self-center"
-                >
-                  + Add Event
-                </button>
-              )}
-            </div>
-
-            {sidebarEvents.length > 0 ? (
-              <div className="space-y-2 sm:space-y-3">
-                {sidebarEvents.map((event, idx) => {
-                  const eventStart = new Date(event.start);
-                  const eventEnd = event.end ? new Date(event.end) : null;
-                  return (
-                    <div 
-                      key={idx} 
-                      className={`p-3 sm:p-4 rounded-lg sm:rounded-xl border ${getEventBgColor(event.extendedProps?.category || "meeting")} ${
-                        user.role !== "employee" && !event.extendedProps?.isSundayHoliday && !event.extendedProps?.isHoliday 
-                          ? "cursor-pointer hover:shadow-md transition-shadow" 
-                          : ""
-                      }`} 
-                      onClick={() => {
-                        if (user.role !== "employee" && !event.extendedProps?.isSundayHoliday && !event.extendedProps?.isHoliday) {
-                          setEditingEvent(event);
-                          setFormData({ 
-                            title: event.title, 
-                            description: event.extendedProps?.description || "", 
-                            startDate: event.start, 
-                            endDate: event.extendedProps?.originalEndDate || event.start, 
-                            category: event.extendedProps?.category || "meeting" 
-                          });
-                          setOpen(true);
-                        }
-                      }}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-gray-800 text-sm sm:text-base truncate">
-                            {event.title}
-                            {(event.extendedProps?.isSundayHoliday || event.extendedProps?.isHoliday) && (
-                              <span className="ml-2 text-green-600 text-xs font-normal"></span>
-                            )}
-                          </h4>
-                          {event.extendedProps?.description && (
-                            <p className="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2 line-clamp-2">
-                              {event.extendedProps.description}
-                            </p>
-                          )}
-                          <div className="text-xs text-gray-400 mt-1 sm:mt-2">
-                            {eventStart.toLocaleDateString()}
-                            {eventEnd && eventEnd > eventStart && ` to ${eventEnd.toLocaleDateString()}`}
-                          </div>
-                        </div>
-                        <div 
-                          className="w-3 h-3 rounded-full ml-2 flex-shrink-0" 
-                          style={{ backgroundColor: getEventColor(event.extendedProps?.category || "meeting") }} 
-                        />
-                      </div>
-                      {user.role !== "employee" && !event.extendedProps?.isSundayHoliday && !event.extendedProps?.isHoliday && (
-                        <div className="text-xs text-[#104774] mt-2 hidden sm:block">
-                          Click to edit
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="text-center py-6 sm:py-8">
-                <Calendar size={40} className="text-gray-300 mx-auto mb-2 sm:mb-3 sm:hidden" />
-                <Calendar size={48} className="text-gray-300 mx-auto mb-2 sm:mb-3 hidden sm:block" />
-                <p className="text-gray-500 text-sm sm:text-base">No events scheduled</p>
-                {user.role !== "employee" && (
-                  <button 
-                    onClick={handleAddEvent} 
-                    className="text-[#104774] text-xs sm:text-sm mt-2 hover:text-[#0d3a61]"
-                  >
-                    + Add Event
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {open && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4">
-          <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg w-full max-w-sm sm:max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center p-4 sm:p-6 border-b">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-800">
-                {editingEvent ? "Edit Event" : "Add Event"}
-              </h3>
-              <button 
-                onClick={() => setOpen(false)} 
-                className="text-gray-400 hover:text-gray-600 p-1"
-              >
-                <X size={18} className="sm:hidden" />
-                <X size={20} className="hidden sm:block" />
-              </button>
-            </div>
-
-            <div className="p-4 sm:p-6 space-y-3 sm:space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Event Title
-                </label>
-                <input 
-                  type="text" 
-                  placeholder="Enter event title" 
-                  value={formData.title} 
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })} 
-                  className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base focus:ring-2 focus:ring-[#104774] focus:border-transparent" 
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description
-                </label>
-                <textarea 
-                  placeholder="Enter event description" 
-                  value={formData.description} 
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })} 
-                  rows={3} 
-                  className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base focus:ring-2 focus:ring-[#104774] focus:border-transparent resize-none" 
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Category
-                </label>
-                <select 
-                  value={formData.category} 
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })} 
-                  className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base focus:ring-2 focus:ring-[#104774] focus:border-transparent"
-                >
-                  <option value="meeting">Meeting</option>
-                  <option value="deadline">Deadline</option>
-                  <option value="event">Company Event</option>
-                  <option value="leave">Leave Day</option>
-                  <option value="holiday">Holiday</option>
-                </select>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Start Date
-                  </label>
-                  <input 
-                    type="date" 
-                    value={formData.startDate ? formData.startDate.slice(0, 10) : ""} 
-                    onChange={(e) => setFormData({ ...formData, startDate: e.target.value })} 
-                    className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base focus:ring-2 focus:ring-[#104774] focus:border-transparent" 
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    End Date (optional)
-                  </label>
-                  <input 
-                    type="date" 
-                    value={formData.endDate ? formData.endDate.slice(0, 10) : ""} 
-                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })} 
-                    className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base focus:ring-2 focus:ring-[#104774] focus:border-transparent" 
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 p-4 sm:p-6 border-t">
-              <button 
-                onClick={() => setOpen(false)} 
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 text-sm sm:text-base order-2 sm:order-1"
-              >
-                Cancel
-              </button>
-              {editingEvent && (
-                <button 
-                  onClick={handleDelete} 
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm sm:text-base order-3 sm:order-2"
-                >
-                  Delete
-                </button>
-              )}
-              <button 
-                onClick={handleSave} 
-                className="px-4 py-2 bg-[#104774] text-white rounded-lg hover:bg-[#0d3a61] text-sm sm:text-base order-1 sm:order-3"
-              >
-                {editingEvent ? "Update" : "Save"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-  // return (
-  //   <div className="space-y-8">
+  // return(
+  //   <div className="max-h-[80vh] space-y-4 sm:space-y-6 lg:space-y-8 p-2 sm:p-4 lg:p-0">
   //     <style>{style}</style>
-  //     <div className="flex items-center justify-between ">
+  //     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
   //       <div>
-  //         <h1 className="text-2xl font-bold text-gray-800">Company Calendar</h1>
-  //         <p className="text-gray-500 text-sm mt-1">Manage company events and schedules</p>
+  //         <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Company Calendar</h1>
+  //         <p className="text-gray-500 text-xs sm:text-sm mt-1">Manage company events and schedules</p>
   //       </div>
   //       {user.role !== "employee" && (
-  //         <button onClick={handleAddEvent} className="flex items-center bg-[#104774] text-white px-4 py-2 rounded-xl hover:bg-[#0d3a61] transition-all duration-200"><Plus size={18} className="mr-2" />Add Event</button>
+  //         <button 
+  //           onClick={handleAddEvent} 
+  //           className="flex items-center justify-center bg-[#104774] text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl hover:bg-[#0d3a61] transition-all duration-200 text-sm sm:text-base"
+  //         >
+  //           <Plus size={16} className="mr-2 sm:mr-2" />
+  //           <span className="sm:inline">Add Event</span>
+  //         </button>
   //       )}
   //     </div>
 
-  //     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+  //     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
   //       <div className="lg:col-span-2">
-  //         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-  //           <div className="bg-[#104774] p-6 text-white">
+  //         <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+  //           <div className="bg-[#104774] p-3 sm:p-4 lg:p-6 text-white">
   //             <div className="flex justify-between items-center">
-  //               <button onClick={handlePrevMonth} className="p-2 hover:bg-[#0d3a61] rounded-lg transition-colors"><ChevronLeft size={24} /></button>
-  //               <div className="text-center">
-  //                 <h2 className="text-xl font-semibold">{currentDate.toLocaleDateString("en-US", { month: "long", year: "numeric" })}</h2>
-  //                 <p className="text-blue-100 text-sm">Click on any date to view events</p>
+  //               <button 
+  //                 onClick={handlePrevMonth} 
+  //                 className="p-1.5 sm:p-2 hover:bg-[#0d3a61] rounded-md sm:rounded-lg transition-colors"
+  //               >
+  //                 <ChevronLeft size={20} className="sm:hidden" />
+  //                 <ChevronLeft size={24} className="hidden sm:block" />
+  //               </button>
+  //               <div className="text-center px-2">
+  //                 <h2 className="text-base sm:text-lg lg:text-xl font-semibold">
+  //                   {currentDate.toLocaleDateString("en-US", { 
+  //                     month: "long", 
+  //                     year: "numeric" 
+  //                   })}
+  //                 </h2>
+  //                 <p className="text-blue-100 text-xs sm:text-sm hidden sm:block">
+  //                   Click on any date to view events
+  //                 </p>
   //               </div>
-  //               <button onClick={handleNextMonth} className="p-2 hover:bg-[#0d3a61] rounded-lg transition-colors"><ChevronRight size={24} /></button>
+  //               <button 
+  //                 onClick={handleNextMonth} 
+  //                 className="p-1.5 sm:p-2 hover:bg-[#0d3a61] rounded-md sm:rounded-lg transition-colors"
+  //               >
+  //                 <ChevronRight size={20} className="sm:hidden" />
+  //                 <ChevronRight size={24} className="hidden sm:block" />
+  //               </button>
   //             </div>
   //           </div>
 
-  //           <div className="">
+  //           <div className="calendar-container">
   //             <FullCalendar
   //               ref={calendarRef}
   //               plugins={[dayGridPlugin, interactionPlugin]}
@@ -791,47 +526,103 @@ export default function CompanyCalendar() {
   //         </div>
   //       </div>
 
-  //       <div className="space-y-6">
-  //         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-  //           <div className="flex items-center justify-between mb-4">
+  //       <div className="space-y-4 sm:space-y-6">
+  //         <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 p-3 sm:p-4 lg:p-6">
+  //           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4 gap-2">
   //             <div className="flex items-center">
-  //               <Calendar size={24} className="text-[#104774] mr-3" />
-  //               <h3 className="text-lg font-semibold text-gray-800">{formatDate(selectedDate)}{(isSunday(selectedDate) || sidebarEvents.some((ev) => ev.extendedProps?.isHoliday)) && (<span className="ml-2 text-red-600 text-sm font-normal">(Holiday)</span>)}</h3>
+  //               <Calendar size={20} className="text-[#104774] mr-2 sm:mr-3 sm:hidden" />
+  //               <Calendar size={24} className="text-[#104774] mr-2 sm:mr-3 hidden sm:block" />
+  //               <h3 className="text-base sm:text-lg font-semibold text-gray-800">
+  //                 {formatDate(selectedDate)}
+  //                 {(isSunday(selectedDate) || sidebarEvents.some((ev) => ev.extendedProps?.isHoliday)) && (
+  //                   <span className="ml-2 text-red-600 text-xs sm:text-sm font-normal">
+  //                     (Holiday)
+  //                   </span>
+  //                 )}
+  //               </h3>
   //             </div>
-  //             {user.role !== "employee" && sidebarEvents.length > 0 && (<button onClick={handleAddEvent} className="text-[#104774] text-sm hover:text-[#0d3a61]">+ Add Event</button>)}
+  //             {user.role !== "employee" && sidebarEvents.length > 0 && (
+  //               <button 
+  //                 onClick={handleAddEvent} 
+  //                 className="text-[#104774] text-xs sm:text-sm hover:text-[#0d3a61] self-start sm:self-center"
+  //               >
+  //                 + Add Event
+  //               </button>
+  //             )}
   //           </div>
 
   //           {sidebarEvents.length > 0 ? (
-  //             <div className="space-y-3">
+  //             <div className="space-y-2 sm:space-y-3">
   //               {sidebarEvents.map((event, idx) => {
   //                 const eventStart = new Date(event.start);
   //                 const eventEnd = event.end ? new Date(event.end) : null;
   //                 return (
-  //                   <div key={idx} className={`p-4 rounded-xl border ${getEventBgColor(event.extendedProps?.category || "meeting")} ${user.role !== "employee" && !event.extendedProps?.isSundayHoliday && !event.extendedProps?.isHoliday ? "cursor-pointer hover:shadow-md transition-shadow" : ""}`} onClick={() => {
-  //                     if (user.role !== "employee" && !event.extendedProps?.isSundayHoliday && !event.extendedProps?.isHoliday) {
-  //                       setEditingEvent(event);
-  //                       setFormData({ title: event.title, description: event.extendedProps?.description || "", startDate: event.start, endDate: event.extendedProps?.originalEndDate || event.start, category: event.extendedProps?.category || "meeting" });
-  //                       setOpen(true);
-  //                     }
-  //                   }}>
+  //                   <div 
+  //                     key={idx} 
+  //                     className={`p-3 sm:p-4 rounded-lg sm:rounded-xl border ${getEventBgColor(event.extendedProps?.category || "meeting")} ${
+  //                       user.role !== "employee" && !event.extendedProps?.isSundayHoliday && !event.extendedProps?.isHoliday 
+  //                         ? "cursor-pointer hover:shadow-md transition-shadow" 
+  //                         : ""
+  //                     }`} 
+  //                     onClick={() => {
+  //                       if (user.role !== "employee" && !event.extendedProps?.isSundayHoliday && !event.extendedProps?.isHoliday) {
+  //                         setEditingEvent(event);
+  //                         setFormData({ 
+  //                           title: event.title, 
+  //                           description: event.extendedProps?.description || "", 
+  //                           startDate: event.start, 
+  //                           endDate: event.extendedProps?.originalEndDate || event.start, 
+  //                           category: event.extendedProps?.category || "meeting" 
+  //                         });
+  //                         setOpen(true);
+  //                       }
+  //                     }}
+  //                   >
   //                     <div className="flex items-start justify-between">
-  //                       <div className="flex-1">
-  //                         <h4 className="font-semibold text-gray-800">{event.title}{(event.extendedProps?.isSundayHoliday || event.extendedProps?.isHoliday) && (<span className="ml-2 text-green-600 text-xs font-normal"></span>)}</h4>
-  //                         {event.extendedProps?.description && (<p className="text-sm text-gray-500 mt-2">{event.extendedProps.description}</p>)}
-  //                         <div className="text-xs text-gray-400 mt-2">{eventStart.toLocaleDateString()}{eventEnd && eventEnd > eventStart && ` to ${eventEnd.toLocaleDateString()}`}</div>
+  //                       <div className="flex-1 min-w-0">
+  //                         <h4 className="font-semibold text-gray-800 text-sm sm:text-base truncate">
+  //                           {event.title}
+  //                           {(event.extendedProps?.isSundayHoliday || event.extendedProps?.isHoliday) && (
+  //                             <span className="ml-2 text-green-600 text-xs font-normal"></span>
+  //                           )}
+  //                         </h4>
+  //                         {event.extendedProps?.description && (
+  //                           <p className="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2 line-clamp-2">
+  //                             {event.extendedProps.description}
+  //                           </p>
+  //                         )}
+  //                         <div className="text-xs text-gray-400 mt-1 sm:mt-2">
+  //                           {eventStart.toLocaleDateString()}
+  //                           {eventEnd && eventEnd > eventStart && ` to ${eventEnd.toLocaleDateString()}`}
+  //                         </div>
   //                       </div>
-  //                       <div className={`w-3 h-3 rounded-full ml-2 flex-shrink-0`} style={{ backgroundColor: getEventColor(event.extendedProps?.category || "meeting") }} />
+  //                       <div 
+  //                         className="w-3 h-3 rounded-full ml-2 flex-shrink-0" 
+  //                         style={{ backgroundColor: getEventColor(event.extendedProps?.category || "meeting") }} 
+  //                       />
   //                     </div>
-  //                     {user.role !== "employee" && !event.extendedProps?.isSundayHoliday && !event.extendedProps?.isHoliday && (<div className="text-xs text-[#104774] mt-2">Click to edit</div>)}
+  //                     {user.role !== "employee" && !event.extendedProps?.isSundayHoliday && !event.extendedProps?.isHoliday && (
+  //                       <div className="text-xs text-[#104774] mt-2 hidden sm:block">
+  //                         Click to edit
+  //                       </div>
+  //                     )}
   //                   </div>
   //                 );
   //               })}
   //             </div>
   //           ) : (
-  //             <div className="text-center py-8">
-  //               <Calendar size={48} className="text-gray-300 mx-auto mb-3" />
-  //               <p className="text-gray-500">No events scheduled</p>
-  //               {user.role !== "employee" && (<button onClick={handleAddEvent} className="text-[#104774] text-sm mt-2 hover:text-[#0d3a61]">+ Add Event</button>)}
+  //             <div className="text-center py-6 sm:py-8">
+  //               <Calendar size={40} className="text-gray-300 mx-auto mb-2 sm:mb-3 sm:hidden" />
+  //               <Calendar size={48} className="text-gray-300 mx-auto mb-2 sm:mb-3 hidden sm:block" />
+  //               <p className="text-gray-500 text-sm sm:text-base">No events scheduled</p>
+  //               {user.role !== "employee" && (
+  //                 <button 
+  //                   onClick={handleAddEvent} 
+  //                   className="text-[#104774] text-xs sm:text-sm mt-2 hover:text-[#0d3a61]"
+  //                 >
+  //                   + Add Event
+  //                 </button>
+  //               )}
   //             </div>
   //           )}
   //         </div>
@@ -839,27 +630,57 @@ export default function CompanyCalendar() {
   //     </div>
 
   //     {open && (
-  //       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-  //         <div className="bg-white rounded-2xl shadow-lg w-full max-w-md">
-  //           <div className="flex justify-between items-center p-6 border-b">
-  //             <h3 className="text-lg font-semibold text-gray-800">{editingEvent ? "Edit Event" : "Add Event"}</h3>
-  //             <button onClick={() => setOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+  //       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4">
+  //         <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg w-full max-w-sm sm:max-w-md max-h-[90vh] overflow-y-auto">
+  //           <div className="flex justify-between items-center p-4 sm:p-6 border-b">
+  //             <h3 className="text-base sm:text-lg font-semibold text-gray-800">
+  //               {editingEvent ? "Edit Event" : "Add Event"}
+  //             </h3>
+  //             <button 
+  //               onClick={() => setOpen(false)} 
+  //               className="text-gray-400 hover:text-gray-600 p-1"
+  //             >
+  //               <X size={18} className="sm:hidden" />
+  //               <X size={20} className="hidden sm:block" />
+  //             </button>
   //           </div>
 
-  //           <div className="p-6 space-y-4">
+  //           <div className="p-4 sm:p-6 space-y-3 sm:space-y-4">
   //             <div>
-  //               <label className="block text-sm font-medium text-gray-700 mb-1">Event Title</label>
-  //               <input type="text" placeholder="Enter event title" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[#104774] focus:border-transparent" />
+  //               <label className="block text-sm font-medium text-gray-700 mb-1">
+  //                 Event Title
+  //               </label>
+  //               <input 
+  //                 type="text" 
+  //                 placeholder="Enter event title" 
+  //                 value={formData.title} 
+  //                 onChange={(e) => setFormData({ ...formData, title: e.target.value })} 
+  //                 className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base focus:ring-2 focus:ring-[#104774] focus:border-transparent" 
+  //               />
   //             </div>
 
   //             <div>
-  //               <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-  //               <textarea placeholder="Enter event description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} rows={3} className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[#104774] focus:border-transparent" />
+  //               <label className="block text-sm font-medium text-gray-700 mb-1">
+  //                 Description
+  //               </label>
+  //               <textarea 
+  //                 placeholder="Enter event description" 
+  //                 value={formData.description} 
+  //                 onChange={(e) => setFormData({ ...formData, description: e.target.value })} 
+  //                 rows={3} 
+  //                 className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base focus:ring-2 focus:ring-[#104774] focus:border-transparent resize-none" 
+  //               />
   //             </div>
 
   //             <div>
-  //               <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-  //               <select value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })} className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[#104774] focus:border-transparent">
+  //               <label className="block text-sm font-medium text-gray-700 mb-1">
+  //                 Category
+  //               </label>
+  //               <select 
+  //                 value={formData.category} 
+  //                 onChange={(e) => setFormData({ ...formData, category: e.target.value })} 
+  //                 className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base focus:ring-2 focus:ring-[#104774] focus:border-transparent"
+  //               >
   //                 <option value="meeting">Meeting</option>
   //                 <option value="deadline">Deadline</option>
   //                 <option value="event">Company Event</option>
@@ -868,26 +689,359 @@ export default function CompanyCalendar() {
   //               </select>
   //             </div>
 
-  //             <div className="grid grid-cols-2 gap-4">
+  //             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
   //               <div>
-  //                 <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
-  //                 <input type="date" value={formData.startDate ? formData.startDate.slice(0, 10) : ""} onChange={(e) => setFormData({ ...formData, startDate: e.target.value })} className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[#104774] focus:border-transparent" />
+  //                 <label className="block text-sm font-medium text-gray-700 mb-1">
+  //                   Start Date
+  //                 </label>
+  //                 <input 
+  //                   type="date" 
+  //                   value={formData.startDate ? formData.startDate.slice(0, 10) : ""} 
+  //                   onChange={(e) => setFormData({ ...formData, startDate: e.target.value })} 
+  //                   className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base focus:ring-2 focus:ring-[#104774] focus:border-transparent" 
+  //                 />
   //               </div>
   //               <div>
-  //                 <label className="block text-sm font-medium text-gray-700 mb-1">End Date (optional)</label>
-  //                 <input type="date" value={formData.endDate ? formData.endDate.slice(0, 10) : ""} onChange={(e) => setFormData({ ...formData, endDate: e.target.value })} className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[#104774] focus:border-transparent" />
+  //                 <label className="block text-sm font-medium text-gray-700 mb-1">
+  //                   End Date (optional)
+  //                 </label>
+  //                 <input 
+  //                   type="date" 
+  //                   value={formData.endDate ? formData.endDate.slice(0, 10) : ""} 
+  //                   onChange={(e) => setFormData({ ...formData, endDate: e.target.value })} 
+  //                   className="w-full border border-gray-300 rounded-lg p-2.5 sm:p-3 text-sm sm:text-base focus:ring-2 focus:ring-[#104774] focus:border-transparent" 
+  //                 />
   //               </div>
   //             </div>
   //           </div>
 
-  //           <div className="flex justify-end gap-3 p-6 border-t">
-  //             <button onClick={() => setOpen(false)} className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Cancel</button>
-  //             {editingEvent && (<button onClick={handleDelete} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Delete</button>)}
-  //             <button onClick={handleSave} className="px-4 py-2 bg-[#104774] text-white rounded-lg hover:bg-[#0d3a61]">{editingEvent ? "Update" : "Save"}</button>
+  //           <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 p-4 sm:p-6 border-t">
+  //             <button 
+  //               onClick={() => setOpen(false)} 
+  //               className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 text-sm sm:text-base order-2 sm:order-1"
+  //             >
+  //               Cancel
+  //             </button>
+  //             {editingEvent && (
+  //               <button 
+  //                 onClick={handleDelete} 
+  //                 className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm sm:text-base order-3 sm:order-2"
+  //               >
+  //                 Delete
+  //               </button>
+  //             )}
+  //             <button 
+  //               onClick={handleSave} 
+  //               className="px-4 py-2 bg-[#104774] text-white rounded-lg hover:bg-[#0d3a61] text-sm sm:text-base order-1 sm:order-3"
+  //             >
+  //               {editingEvent ? "Update" : "Save"}
+  //             </button>
   //           </div>
   //         </div>
   //       </div>
   //     )}
   //   </div>
-  // );
+  // )
+
+
+  return (
+  <div className="max-h-[80vh] bg-gray-50 space-y-4 md:space-y-6">
+    <style>{style}</style>
+    
+    {/* Header Section */}
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div>
+        <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800">Company Calendar</h1>
+        <p className="text-gray-500 text-xs sm:text-sm mt-1">Manage company events and schedules</p>
+      </div>
+      {user.role !== "employee" && (
+        <button 
+          onClick={handleAddEvent} 
+          className="flex items-center justify-center bg-[#104774] text-white px-3 py-2 rounded-md hover:bg-[#0d3a61] transition-all duration-200 text-xs sm:text-sm"
+        >
+          <Plus size={14} className="mr-2" />
+          <span>Add Event</span>
+        </button>
+      )}
+    </div>
+
+    {/* Main Content Grid */}
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+      {/* Calendar Section */}
+      <div className="lg:col-span-2">
+        <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+          {/* Calendar Header */}
+          <div className="bg-[#104774] p-3 md:p-4 text-white">
+            <div className="flex justify-between items-center">
+              <button 
+                onClick={handlePrevMonth} 
+                className="p-1.5 hover:bg-[#0d3a61] rounded-md transition-colors"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <div className="text-center px-2">
+                <h2 className="text-sm md:text-base font-semibold">
+                  {currentDate.toLocaleDateString("en-US", { 
+                    month: "long", 
+                    year: "numeric" 
+                  })}
+                </h2>
+                <p className="text-blue-100 text-xs hidden sm:block">
+                  Click on any date to view events
+                </p>
+              </div>
+              <button 
+                onClick={handleNextMonth} 
+                className="p-1.5 hover:bg-[#0d3a61] rounded-md transition-colors"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+          </div>
+
+          {/* Calendar Component */}
+          <div className="calendar-container">
+            <FullCalendar
+              ref={calendarRef}
+              plugins={[dayGridPlugin, interactionPlugin]}
+              initialView="dayGridMonth"
+              events={calendarEvents}
+              dateClick={handleDateClick}
+              eventClick={handleEventClick}
+              height="auto"
+              headerToolbar={false}
+              initialDate={currentDate}
+              datesSet={handleDatesSet}
+              eventContent={renderEventContent}
+              dayCellContent={dayCellContent}
+              dayCellClassNames={dayCellClassNames}
+              dayMaxEvents={1}
+              fixedWeekCount={false}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Sidebar Events */}
+      <div className="space-y-4 md:space-y-6">
+        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 md:p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-2">
+            <div className="flex items-center">
+              <Calendar size={18} className="text-[#104774] mr-2" />
+              <h3 className="text-sm md:text-base font-semibold text-gray-800">
+                {formatDate(selectedDate)}
+                {(isSunday(selectedDate) || sidebarEvents.some((ev) => ev.extendedProps?.isHoliday)) && (
+                  <span className="ml-2 text-red-600 text-xs font-normal">
+                    (Holiday)
+                  </span>
+                )}
+              </h3>
+            </div>
+            {user.role !== "employee" && sidebarEvents.length > 0 && (
+              <button 
+                onClick={handleAddEvent} 
+                className="text-[#104774] text-xs hover:text-[#0d3a61] self-start sm:self-center"
+              >
+                + Add Event
+              </button>
+            )}
+          </div>
+
+          {sidebarEvents.length > 0 ? (
+            <div className="space-y-2">
+              {sidebarEvents.map((event, idx) => {
+                const eventStart = new Date(event.start);
+                const eventEnd = event.end ? new Date(event.end) : null;
+                return (
+                  <div 
+                    key={idx} 
+                    className={`p-3 rounded-md border ${
+                      getEventBgColor(event.extendedProps?.category || "meeting")
+                    } ${
+                      user.role !== "employee" && !event.extendedProps?.isSundayHoliday && !event.extendedProps?.isHoliday 
+                        ? "cursor-pointer hover:shadow-md transition-shadow" 
+                        : ""
+                    }`} 
+                    onClick={() => {
+                      if (user.role !== "employee" && !event.extendedProps?.isSundayHoliday && !event.extendedProps?.isHoliday) {
+                        setEditingEvent(event);
+                        setFormData({ 
+                          title: event.title, 
+                          description: event.extendedProps?.description || "", 
+                          startDate: event.start, 
+                          endDate: event.extendedProps?.originalEndDate || event.start, 
+                          category: event.extendedProps?.category || "meeting" 
+                        });
+                        setOpen(true);
+                      }
+                    }}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-gray-800 text-xs md:text-sm truncate">
+                          {event.title}
+                          {(event.extendedProps?.isSundayHoliday || event.extendedProps?.isHoliday) && (
+                            <span className="ml-2 text-green-600 text-xs font-normal"></span>
+                          )}
+                        </h4>
+                        {event.extendedProps?.description && (
+                          <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                            {event.extendedProps.description}
+                          </p>
+                        )}
+                        <div className="text-xs text-gray-400 mt-1">
+                          {eventStart.toLocaleDateString()}
+                          {eventEnd && eventEnd > eventStart && ` to ${eventEnd.toLocaleDateString()}`}
+                        </div>
+                      </div>
+                      <div 
+                        className="w-3 h-3 rounded-full ml-2 flex-shrink-0" 
+                        style={{ backgroundColor: getEventColor(event.extendedProps?.category || "meeting") }} 
+                      />
+                    </div>
+                    {user.role !== "employee" && !event.extendedProps?.isSundayHoliday && !event.extendedProps?.isHoliday && (
+                      <div className="text-xs text-[#104774] mt-2 hidden sm:block">
+                        Click to edit
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-4">
+              <Calendar size={32} className="text-gray-300 mx-auto mb-2" />
+              <p className="text-gray-500 text-xs">No events scheduled</p>
+              {user.role !== "employee" && (
+                <button 
+                  onClick={handleAddEvent} 
+                  className="text-[#104774] text-xs mt-2 hover:text-[#0d3a61]"
+                >
+                  + Add Event
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+
+    {/* Event Modal */}
+    {open && (
+      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-3">
+        <div className="bg-white rounded-lg shadow-lg w-full max-w-sm max-h-[90vh] overflow-y-auto">
+          <div className="flex justify-between items-center p-4 border-b">
+            <h3 className="text-sm md:text-base font-semibold text-gray-800">
+              {editingEvent ? "Edit Event" : "Add Event"}
+            </h3>
+            <button 
+              onClick={() => setOpen(false)} 
+              className="text-gray-400 hover:text-gray-600 p-1"
+            >
+              <X size={16} />
+            </button>
+          </div>
+
+          <div className="p-4 space-y-3">
+            <div>
+              <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
+                Event Title
+              </label>
+              <input 
+                type="text" 
+                placeholder="Enter event title" 
+                value={formData.title} 
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })} 
+                className="w-full border border-slate-300 rounded-md p-2 text-xs md:text-sm focus:ring-2 focus:ring-[#104774] focus:border-transparent" 
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
+                Description
+              </label>
+              <textarea 
+                placeholder="Enter event description" 
+                value={formData.description} 
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })} 
+                rows={3} 
+                className="w-full border border-slate-300 rounded-md p-2 text-xs md:text-sm focus:ring-2 focus:ring-[#104774] focus:border-transparent resize-none" 
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
+                Category
+              </label>
+              <select 
+                value={formData.category} 
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })} 
+                className="w-full border border-slate-300 rounded-md p-2 text-xs md:text-sm focus:ring-2 focus:ring-[#104774] focus:border-transparent"
+              >
+                <option value="meeting">Meeting</option>
+                <option value="deadline">Deadline</option>
+                <option value="event">Company Event</option>
+                <option value="leave">Leave Day</option>
+                <option value="holiday">Holiday</option>
+              </select>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
+                  Start Date
+                </label>
+                <input 
+                  type="date" 
+                  value={formData.startDate ? formData.startDate.slice(0, 10) : ""} 
+                  onChange={(e) => setFormData({ ...formData, startDate: e.target.value })} 
+                  className="w-full border border-slate-300 rounded-md p-2 text-xs md:text-sm focus:ring-2 focus:ring-[#104774] focus:border-transparent" 
+                />
+              </div>
+              <div>
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-1">
+                  End Date (optional)
+                </label>
+                <input 
+                  type="date" 
+                  value={formData.endDate ? formData.endDate.slice(0, 10) : ""} 
+                  onChange={(e) => setFormData({ ...formData, endDate: e.target.value })} 
+                  className="w-full border border-slate-300 rounded-md p-2 text-xs md:text-sm focus:ring-2 focus:ring-[#104774] focus:border-transparent" 
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row justify-end gap-2 p-4 border-t">
+            <button 
+              onClick={() => setOpen(false)} 
+              className="px-3 py-2 border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50 text-xs sm:text-sm order-2 sm:order-1"
+            >
+              Cancel
+            </button>
+            {editingEvent && (
+              <button 
+                onClick={handleDelete} 
+                className="px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-xs sm:text-sm order-3 sm:order-2"
+              >
+                Delete
+              </button>
+            )}
+            <button 
+              onClick={handleSave} 
+              className="px-3 py-2 bg-[#104774] text-white rounded-md hover:bg-[#0d3a61] text-xs sm:text-sm order-1 sm:order-3"
+            >
+              {editingEvent ? "Update" : "Save"}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
+)
+
+
+
+
+  
 }

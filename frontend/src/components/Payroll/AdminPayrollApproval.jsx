@@ -318,33 +318,534 @@ const AdminPayrollApproval = () => {
     );
   }
 
+  return (
+  <div className="max-h-screen  bg-gray-50">
+    <style>{`
+      .primary-btn:hover { background: ${PRIMARY_HOVER} !important }
+    `}</style>
+
+    <NotificationToast notifications={notifications} />
+
+    {/* Header Section */}
+    <header className="mb-4 md:mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800">
+            Payroll Approval
+          </h1>
+          <p className="text-xs sm:text-sm text-gray-600 mt-1">
+            Review and approve employee payrolls
+          </p>
+        </div>
+        <button
+          onClick={fetchPayrolls}
+          className="px-3 py-2 text-xs sm:text-sm rounded-md text-white primary-btn flex items-center gap-2 justify-center"
+          style={{ backgroundColor: PRIMARY }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+            />
+          </svg>
+          <span>Refresh</span>
+        </button>
+      </div>
+    </header>
+
+    {/* Stats Cards */}
+    <div className="flex flex-col xl:flex-row gap-4 md:gap-6 mb-4 md:mb-6">
+      <div className="flex-shrink-0">
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 md:gap-4" id="stats-cards">
+          <div className="bg-white p-3 md:p-4 rounded-lg shadow border-l-4 border-blue-500 text-center min-w-[120px]">
+            <h3 className="text-xs md:text-sm text-gray-500">Total Payrolls</h3>
+            <p className="text-base md:text-lg font-bold">{stats.total}</p>
+          </div>
+          <div className="bg-white p-3 md:p-4 rounded-lg shadow border-l-4 border-yellow-500 text-center min-w-[120px]">
+            <h3 className="text-xs md:text-sm text-gray-500">Pending Approval</h3>
+            <p className="text-base md:text-lg font-bold text-yellow-600">
+              {stats.pending}
+            </p>
+          </div>
+          <div className="bg-white p-3 md:p-4 rounded-lg shadow border-l-4 border-green-500 text-center min-w-[120px]">
+            <h3 className="text-xs md:text-sm text-gray-500">Approved</h3>
+            <p className="text-base md:text-lg font-bold text-green-600">
+              {stats.approved}
+            </p>
+          </div>
+          <div className="bg-white p-3 md:p-4 rounded-lg shadow border-l-4 border-red-500 text-center min-w-[120px]">
+            <h3 className="text-xs md:text-sm text-gray-500">Rejected</h3>
+            <p className="text-base md:text-lg font-bold text-red-600">
+              {stats.rejected}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Filters Section */}
+      <div className="flex-1 bg-white shadow rounded-lg border-l-4 border-blue-500">
+        <div className="p-3 md:p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 items-end">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Year
+              </label>
+              <select
+                name="year"
+                value={filters.year}
+                onChange={handleFilterChange}
+                className="w-full p-2 text-xs border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                {years.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Month
+              </label>
+              <select
+                name="month"
+                value={filters.month}
+                onChange={handleFilterChange}
+                className="w-full p-2 text-xs border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">All Months</option>
+                {months.map((month, index) => (
+                  <option key={index + 1} value={index + 1}>
+                    {month}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Status
+              </label>
+              <select
+                name="status"
+                value={filters.status}
+                onChange={handleFilterChange}
+                className="w-full p-2 text-xs border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">All Status</option>
+                <option value="pending_approval">Pending Approval</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Employee
+              </label>
+              <select
+                name="employee"
+                value={filters.employee}
+                onChange={handleFilterChange}
+                className="w-full p-2 text-xs border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">All Employees</option>
+                {employees.map((employee) => (
+                  <option key={employee._id} value={employee._id}>
+                    {employee.firstName} {employee.lastName}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex justify-center sm:justify-start">
+              <button
+                onClick={clearFilters}
+                className="px-3 py-2 text-xs bg-slate-100 text-slate-600 rounded-md hover:bg-slate-200 transition-colors flex items-center gap-1 border"
+                title="Clear Filters"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-3 w-3"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+                Clear
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Bulk Actions */}
+    {payrolls.length > 0 && (
+      <div className="mb-4 md:mb-6 bg-blue-50 p-3 md:p-4 rounded-lg border border-blue-200">
+        <h3 className="text-sm md:text-base font-semibold text-blue-800 mb-3">
+          Bulk Actions
+        </h3>
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={selectedPayrolls.size === selectableCount}
+              onChange={toggleSelectAll}
+              className="h-4 w-4 text-blue-600 rounded"
+            />
+            <span className="text-xs md:text-sm text-slate-700">
+              Select all ({selectedPayrolls.size} selected)
+            </span>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-2">
+            <select
+              value={bulkAction}
+              onChange={(e) => {
+                setBulkAction(e.target.value);
+                setShowBulkRejectInput(e.target.value === "reject");
+              }}
+              className="p-2 border border-slate-300 rounded-md text-xs"
+            >
+              <option value="">Select Action</option>
+              <option value="approve">Roll Out Selected</option>
+              <option value="reject">Reject Selected</option>
+            </select>
+
+            {showBulkRejectInput && (
+              <input
+                type="text"
+                value={bulkRejectionReason}
+                onChange={(e) => setBulkRejectionReason(e.target.value)}
+                placeholder="Reason for rejection"
+                className="p-2 border border-slate-300 rounded-md flex-1 text-xs"
+              />
+            )}
+
+            <button
+              onClick={handleBulkAction}
+              disabled={actionLoading === "bulk" || !bulkAction}
+              className="px-3 py-2 bg-[#104774] text-white rounded-md hover:bg-[#002442] disabled:opacity-50 flex items-center justify-center gap-2 text-xs"
+            >
+              {actionLoading === "bulk" ? (
+                <>
+                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                  <span>Processing...</span>
+                </>
+              ) : (
+                "Apply to Selected"
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Payroll Table */}
+    <div className="bg-white shadow rounded-lg overflow-hidden">
+      <div className="px-3 md:px-4 py-3 border-b border-slate-200 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+        <h2 className="text-sm md:text-base font-semibold text-gray-800">
+          Payroll Records ({payrolls.length})
+        </h2>
+        <span className="text-xs text-slate-500">
+          {filters.status === "pending_approval"
+            ? "Pending Approval"
+            : filters.status === "approved"
+            ? "Approved"
+            : filters.status === "rejected"
+            ? "Rejected"
+            : "All Records"}
+        </span>
+      </div>
+
+      {payrolls.length === 0 ? (
+        <div className="text-center py-6 px-4">
+          <svg
+            className="w-12 h-12 text-slate-300 mx-auto mb-3"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+          <p className="text-slate-500 text-sm">No payroll records found</p>
+          <p className="text-xs text-slate-400 mt-1">
+            {filters.status === "pending_approval"
+              ? "No payrolls pending approval"
+              : "Try adjusting your filters"}
+          </p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-slate-200">
+            <thead className="bg-slate-50">
+              <tr>
+                <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">
+                  <input
+                    type="checkbox"
+                    checked={selectedPayrolls.size === selectableCount}
+                    onChange={toggleSelectAll}
+                    className="h-4 w-4 text-blue-600 rounded"
+                  />
+                </th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase min-w-[150px]">
+                  Employee
+                </th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase min-w-[100px]">
+                  Period
+                </th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase min-w-[80px]">
+                  Net Pay
+                </th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase min-w-[100px]">
+                  Status
+                </th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase min-w-[100px]">
+                  Generated By
+                </th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase min-w-[150px]">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+
+            <tbody className="bg-white divide-y divide-slate-200">
+              {payrolls.map((payroll) => (
+                <tr key={payroll._id} className="hover:bg-slate-50">
+                  <td className="px-3 py-2 whitespace-nowrap">
+                    <input
+                      type="checkbox"
+                      checked={selectedPayrolls.has(payroll._id)}
+                      onChange={() => toggleSelectPayroll(payroll._id)}
+                      className="h-4 w-4 text-blue-600 rounded"
+                      disabled={payroll.status === "approved"}
+                      title={
+                        payroll.status === "approved"
+                          ? "Already Rolled Out"
+                          : undefined
+                      }
+                    />
+                  </td>
+
+                  <td className="px-3 py-2 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0 h-6 w-6 md:h-8 md:w-8">
+                        <img
+                          className="h-6 w-6 md:h-8 md:w-8 rounded-full object-cover"
+                          src={
+                            payroll.employee?.avatarUrl || "/default-avatar.png"
+                          }
+                          alt={payroll.employee?.firstName}
+                        />
+                      </div>
+                      <div className="ml-2">
+                        <div className="text-xs md:text-sm font-medium text-slate-900">
+                          {payroll.employee?.firstName}{" "}
+                          {payroll.employee?.lastName}
+                        </div>
+                        <div className="text-xs text-slate-400">
+                          {payroll.employee?.email || "—"}
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          {payroll.employee?.employeeId}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+
+                  <td className="px-3 py-2 whitespace-nowrap">
+                    <div className="text-xs md:text-sm text-slate-900">
+                      {months[parseInt(payroll.month.split("-")[1], 10) - 1]}{" "}
+                      {payroll.year}
+                    </div>
+                    {payroll.generatedAt && (
+                      <div className="text-xs text-slate-500">
+                        {formatDate(payroll.generatedAt)}
+                      </div>
+                    )}
+                  </td>
+
+                  <td className="px-3 py-2 whitespace-nowrap">
+                    <div className="text-xs md:text-sm font-semibold text-green-600">
+                      {formatCurrency(payroll.basic)}
+                    </div>
+                  </td>
+
+                  <td className="px-3 py-2 whitespace-nowrap">
+                    {getStatusBadge(payroll.status)}
+                  </td>
+
+                  <td className="px-3 py-2 whitespace-nowrap text-xs text-slate-500">
+                    {payroll.generatedBy || "—"}
+                  </td>
+
+                  <td className="px-3 py-2 whitespace-nowrap text-xs font-medium">
+                    <div className="flex flex-col sm:flex-row gap-1">
+                      <button
+                        onClick={() => {
+                          setSelectedPayroll(payroll);
+                          setShowDetailsModal(true);
+                        }}
+                        className="text-blue-600 hover:text-blue-900 flex items-center gap-1 justify-center sm:justify-start p-1"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-3 w-3"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                          />
+                        </svg>
+                        <span className="text-xs">Review</span>
+                      </button>
+
+                      {payroll.status === "pending_approval" && (
+                        <>
+                          <button
+                            onClick={() =>
+                              handleApproveReject(payroll._id, "approve")
+                            }
+                            disabled={actionLoading === payroll._id}
+                            className="text-green-600 hover:text-green-900 disabled:opacity-50 flex items-center gap-1 justify-center sm:justify-start p-1"
+                          >
+                            {actionLoading === payroll._id ? (
+                              <>
+                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-green-600"></div>
+                                <span className="text-xs">Processing...</span>
+                              </>
+                            ) : (
+                              <>
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  className="h-3 w-3"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                                <span className="text-xs">Roll Out</span>
+                              </>
+                            )}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedPayroll(payroll);
+                              setShowDetailsModal(true);
+                            }}
+                            className="text-red-600 hover:text-red-900 flex items-center gap-1 justify-center sm:justify-start p-1"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-3 w-3"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                            <span className="text-xs">Reject</span>
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+
+    {/* Details Modal */}
+    {showDetailsModal && selectedPayroll && (
+      <PayrollDetailsModal
+        isOpen={showDetailsModal}
+        onClose={() => setShowDetailsModal(false)}
+        payroll={selectedPayroll}
+        onApproveReject={handleApproveReject}
+        actionLoading={actionLoading}
+        formatCurrency={formatCurrency}
+        isHR={false}
+        actionLabel="Roll Out"
+      />
+    )}
+  </div>
+);
+
+
+
+
   // return (
-  //   <div className="min-h-[80vh] p-4">
+  //   <div className="min-h-[80vh] p-2 sm:p-4">
   //     <style>{`
   //       .primary-btn:hover { background: ${PRIMARY_HOVER} !important }
   //     `}</style>
 
   //     <NotificationToast notifications={notifications} />
 
-  //     {/* Header */}
-  //     <header className="mb-6">
+  //     <header className="mb-4 sm:mb-6">
   //       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
   //         <div>
-  //           <h1 className="text-2xl font-bold text-gray-800">
+  //           <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
   //             Payroll Approval
   //           </h1>
-  //           <p className="text-sm text-gray-600 mt-1">
+  //           <p className="text-xs sm:text-sm text-gray-600 mt-1">
   //             Review and approve employee payrolls
   //           </p>
   //         </div>
   //         <button
   //           onClick={fetchPayrolls}
-  //           className="px-4 py-2 rounded-md text-white primary-btn flex items-center gap-2"
+  //           className="px-3 py-2 sm:px-4 text-xs sm:text-sm rounded-md text-white primary-btn flex items-center gap-2 justify-center"
   //           style={{ backgroundColor: PRIMARY }}
   //         >
   //           <svg
   //             xmlns="http://www.w3.org/2000/svg"
-  //             className="h-5 w-5"
+  //             className="h-4 w-4 sm:h-5 sm:w-5"
   //             fill="none"
   //             viewBox="0 0 24 24"
   //             stroke="currentColor"
@@ -356,55 +857,42 @@ const AdminPayrollApproval = () => {
   //               d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
   //             />
   //           </svg>
-  //           Refresh
+  //           <span className="hidden sm:inline">Refresh</span>
   //         </button>
   //       </div>
   //     </header>
 
-  //     <div className="flex flex-col xl:flex-row gap-6 mb-6">
-  //       {/* Left: Stats Cards */}
+  //     <div className="flex flex-col xl:flex-row gap-4 sm:gap-6 mb-4 sm:mb-6">
   //       <div className="flex-shrink-0">
-  //         <div
-  //           className="grid grid-cols-2 xl:grid-cols-4 gap-4"
-  //           id="stats-cards"
-  //         >
-  //           <div className="bg-white p-4 rounded-lg shadow border-l-4 border-blue-500 text-center min-w-[200px]">
-  //             <h3 className="text-sm text-gray-500">Total Payrolls</h3>
-  //             <p className="text-2xl font-bold">{stats.total}</p>
+  //         <div className="grid grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-4" id="stats-cards">
+  //           <div className="bg-white p-3 sm:p-4 rounded-lg shadow border-l-4 border-blue-500 text-center min-w-[120px] sm:min-w-[200px]">
+  //             <h3 className="text-xs sm:text-sm text-gray-500">Total Payrolls</h3>
+  //             <p className="text-lg sm:text-2xl font-bold">{stats.total}</p>
   //           </div>
-  //           <div className="bg-white p-4 rounded-lg shadow border-l-4 border-yellow-500 text-center min-w-[200px]">
-  //             <h3 className="text-sm text-gray-500">Pending Approval</h3>
-  //             <p className="text-2xl font-bold text-yellow-600">
+  //           <div className="bg-white p-3 sm:p-4 rounded-lg shadow border-l-4 border-yellow-500 text-center min-w-[120px] sm:min-w-[200px]">
+  //             <h3 className="text-xs sm:text-sm text-gray-500">Pending Approval</h3>
+  //             <p className="text-lg sm:text-2xl font-bold text-yellow-600">
   //               {stats.pending}
   //             </p>
   //           </div>
-  //           <div className="bg-white p-4 rounded-lg shadow border-l-4 border-green-500 text-center min-w-[200px]">
-  //             <h3 className="text-sm text-gray-500">Approved</h3>
-  //             <p className="text-2xl font-bold text-green-600">
+  //           <div className="bg-white p-3 sm:p-4 rounded-lg shadow border-l-4 border-green-500 text-center min-w-[120px] sm:min-w-[200px]">
+  //             <h3 className="text-xs sm:text-sm text-gray-500">Approved</h3>
+  //             <p className="text-lg sm:text-2xl font-bold text-green-600">
   //               {stats.approved}
   //             </p>
   //           </div>
-  //           <div className="bg-white p-4 rounded-lg shadow border-l-4 border-red-500 text-center min-w-[200px]">
-  //             <h3 className="text-sm text-gray-500">Rejected</h3>
-  //             <p className="text-2xl font-bold text-red-600">
+  //           <div className="bg-white p-3 sm:p-4 rounded-lg shadow border-l-4 border-red-500 text-center min-w-[120px] sm:min-w-[200px]">
+  //             <h3 className="text-xs sm:text-sm text-gray-500">Rejected</h3>
+  //             <p className="text-lg sm:text-2xl font-bold text-red-600">
   //               {stats.rejected}
   //             </p>
   //           </div>
   //         </div>
   //       </div>
 
-  //       {/* Right: Filters */}
-  //       <div
-  //         className="flex-1 bg-white shadow rounded-lg border-l-4 border-blue-500"
-  //         style={{
-  //           height: "", // Matches stats cards height
-  //           display: "flex",
-  //           flexDirection: "column",
-  //         }}
-  //       >
-  //         <div className="flex-1 p-4">
-  //           <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 h-full items-center">
-  //             {/* Year */}
+  //       <div className="flex-1 bg-white shadow rounded-lg border-l-4 border-blue-500">
+  //         <div className="p-3 sm:p-4">
+  //           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 items-end">
   //             <div>
   //               <label className="block text-xs font-medium text-gray-600 mb-1">
   //                 Year
@@ -413,7 +901,7 @@ const AdminPayrollApproval = () => {
   //                 name="year"
   //                 value={filters.year}
   //                 onChange={handleFilterChange}
-  //                 className="w-full p-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //                 className="w-full p-2 text-xs sm:text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
   //               >
   //                 {years.map((year) => (
   //                   <option key={year} value={year}>
@@ -423,7 +911,6 @@ const AdminPayrollApproval = () => {
   //               </select>
   //             </div>
 
-  //             {/* Month */}
   //             <div>
   //               <label className="block text-xs font-medium text-gray-600 mb-1">
   //                 Month
@@ -432,7 +919,7 @@ const AdminPayrollApproval = () => {
   //                 name="month"
   //                 value={filters.month}
   //                 onChange={handleFilterChange}
-  //                 className="w-full p-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //                 className="w-full p-2 text-xs sm:text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
   //               >
   //                 <option value="">All Months</option>
   //                 {months.map((month, index) => (
@@ -443,7 +930,6 @@ const AdminPayrollApproval = () => {
   //               </select>
   //             </div>
 
-  //             {/* Status */}
   //             <div>
   //               <label className="block text-xs font-medium text-gray-600 mb-1">
   //                 Status
@@ -452,7 +938,7 @@ const AdminPayrollApproval = () => {
   //                 name="status"
   //                 value={filters.status}
   //                 onChange={handleFilterChange}
-  //                 className="w-full p-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //                 className="w-full p-2 text-xs sm:text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
   //               >
   //                 <option value="">All Status</option>
   //                 <option value="pending_approval">Pending Approval</option>
@@ -461,7 +947,6 @@ const AdminPayrollApproval = () => {
   //               </select>
   //             </div>
 
-  //             {/* Employee */}
   //             <div>
   //               <label className="block text-xs font-medium text-gray-600 mb-1">
   //                 Employee
@@ -470,7 +955,7 @@ const AdminPayrollApproval = () => {
   //                 name="employee"
   //                 value={filters.employee}
   //                 onChange={handleFilterChange}
-  //                 className="w-full p-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  //                 className="w-full p-2 text-xs sm:text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
   //               >
   //                 <option value="">All Employees</option>
   //                 {employees.map((employee) => (
@@ -481,8 +966,7 @@ const AdminPayrollApproval = () => {
   //               </select>
   //             </div>
 
-  //             {/* Buttons */}
-  //             <div className="flex gap-2 justify-center mt-4 ">
+  //             <div className="flex justify-center sm:justify-start">
   //               <button
   //                 onClick={clearFilters}
   //                 className="px-3 py-2 text-xs bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200 transition-colors flex items-center gap-1 border"
@@ -510,13 +994,12 @@ const AdminPayrollApproval = () => {
   //       </div>
   //     </div>
 
-  //     {/* Bulk Actions */}
   //     {payrolls.length > 0 && (
-  //       <div className="mb-6 bg-blue-50 p-4 rounded-lg border border-blue-200">
-  //         <h3 className="text-lg font-semibold text-blue-800 mb-3">
+  //       <div className="mb-4 sm:mb-6 bg-blue-50 p-3 sm:p-4 rounded-lg border border-blue-200">
+  //         <h3 className="text-base sm:text-lg font-semibold text-blue-800 mb-3">
   //           Bulk Actions
   //         </h3>
-  //         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
+  //         <div className="flex flex-col gap-3">
   //           <div className="flex items-center gap-2">
   //             <input
   //               type="checkbox"
@@ -524,19 +1007,19 @@ const AdminPayrollApproval = () => {
   //               onChange={toggleSelectAll}
   //               className="h-4 w-4 text-blue-600 rounded"
   //             />
-  //             <span className="text-sm text-gray-700">
+  //             <span className="text-xs sm:text-sm text-gray-700">
   //               Select all ({selectedPayrolls.size} selected)
   //             </span>
   //           </div>
 
-  //           <div className="flex flex-col md:flex-row gap-2 flex-1">
+  //           <div className="flex flex-col sm:flex-row gap-2">
   //             <select
   //               value={bulkAction}
   //               onChange={(e) => {
   //                 setBulkAction(e.target.value);
   //                 setShowBulkRejectInput(e.target.value === "reject");
   //               }}
-  //               className="p-2 border border-gray-300 rounded-md"
+  //               className="p-2 border border-gray-300 rounded-md text-xs sm:text-sm"
   //             >
   //               <option value="">Select Action</option>
   //               <option value="approve">Roll Out Selected</option>
@@ -549,19 +1032,19 @@ const AdminPayrollApproval = () => {
   //                 value={bulkRejectionReason}
   //                 onChange={(e) => setBulkRejectionReason(e.target.value)}
   //                 placeholder="Reason for rejection"
-  //                 className="p-2 border border-gray-300 rounded-md flex-1"
+  //                 className="p-2 border border-gray-300 rounded-md flex-1 text-xs sm:text-sm"
   //               />
   //             )}
 
   //             <button
   //               onClick={handleBulkAction}
   //               disabled={actionLoading === "bulk" || !bulkAction}
-  //               className="px-4 py-2 bg-[#104774] text-white rounded-md hover:bg-[#002442] disabled:opacity-50 flex items-center gap-2"
+  //               className="px-3 sm:px-4 py-2 bg-[#104774] text-white rounded-md hover:bg-[#002442] disabled:opacity-50 flex items-center justify-center gap-2 text-xs sm:text-sm"
   //             >
   //               {actionLoading === "bulk" ? (
   //                 <>
-  //                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-  //                   Processing...
+  //                   <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-white"></div>
+  //                   <span className="hidden sm:inline">Processing...</span>
   //                 </>
   //               ) : (
   //                 "Apply to Selected"
@@ -572,13 +1055,12 @@ const AdminPayrollApproval = () => {
   //       </div>
   //     )}
 
-  //     {/* Payroll Table */}
   //     <div className="bg-white shadow rounded-lg overflow-hidden">
-  //       <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-  //         <h2 className="text-lg font-semibold text-gray-800">
+  //       <div className="px-3 sm:px-6 py-3 sm:py-4 border-b border-gray-200 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+  //         <h2 className="text-base sm:text-lg font-semibold text-gray-800">
   //           Payroll Records ({payrolls.length})
   //         </h2>
-  //         <span className="text-sm text-gray-500">
+  //         <span className="text-xs sm:text-sm text-gray-500">
   //           {filters.status === "pending_approval"
   //             ? "Pending Approval"
   //             : filters.status === "approved"
@@ -590,9 +1072,9 @@ const AdminPayrollApproval = () => {
   //       </div>
 
   //       {payrolls.length === 0 ? (
-  //         <div className="text-center py-12">
+  //         <div className="text-center py-8 sm:py-12 px-4">
   //           <svg
-  //             className="w-16 h-16 text-gray-300 mx-auto mb-4"
+  //             className="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-4"
   //             fill="none"
   //             stroke="currentColor"
   //             viewBox="0 0 24 24"
@@ -604,8 +1086,8 @@ const AdminPayrollApproval = () => {
   //               d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
   //             />
   //           </svg>
-  //           <p className="text-gray-500">No payroll records found</p>
-  //           <p className="text-sm text-gray-400 mt-1">
+  //           <p className="text-gray-500 text-sm sm:text-base">No payroll records found</p>
+  //           <p className="text-xs sm:text-sm text-gray-400 mt-1">
   //             {filters.status === "pending_approval"
   //               ? "No payrolls pending approval"
   //               : "Try adjusting your filters"}
@@ -616,7 +1098,7 @@ const AdminPayrollApproval = () => {
   //           <table className="min-w-full divide-y divide-gray-200">
   //             <thead className="bg-gray-50">
   //               <tr>
-  //                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+  //                 <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
   //                   <input
   //                     type="checkbox"
   //                     checked={selectedPayrolls.size === selectableCount}
@@ -624,22 +1106,22 @@ const AdminPayrollApproval = () => {
   //                     className="h-4 w-4 text-blue-600 rounded"
   //                   />
   //                 </th>
-  //                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+  //                 <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px]">
   //                   Employee
   //                 </th>
-  //                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+  //                 <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
   //                   Period
   //                 </th>
-  //                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+  //                 <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">
   //                   Net Pay
   //                 </th>
-  //                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+  //                 <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
   //                   Status
   //                 </th>
-  //                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+  //                 <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
   //                   Generated By
   //                 </th>
-  //                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+  //                 <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[180px]">
   //                   Actions
   //                 </th>
   //               </tr>
@@ -648,13 +1130,13 @@ const AdminPayrollApproval = () => {
   //             <tbody className="bg-white divide-y divide-gray-200">
   //               {payrolls.map((payroll) => (
   //                 <tr key={payroll._id} className="hover:bg-gray-50">
-  //                   <td className="px-6 py-4 whitespace-nowrap">
+  //                   <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
   //                     <input
   //                       type="checkbox"
   //                       checked={selectedPayrolls.has(payroll._id)}
   //                       onChange={() => toggleSelectPayroll(payroll._id)}
   //                       className="h-4 w-4 text-blue-600 rounded"
-  //                       disabled={payroll.status === "approved"} // <-- disabled for approved
+  //                       disabled={payroll.status === "approved"}
   //                       title={
   //                         payroll.status === "approved"
   //                           ? "Already Rolled Out"
@@ -663,76 +1145,70 @@ const AdminPayrollApproval = () => {
   //                     />
   //                   </td>
 
-  //                   {/* Employee Info */}
-  //                   <td className="px-6 py-4 whitespace-nowrap">
+  //                   <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
   //                     <div className="flex items-center">
-  //                       <div className="flex-shrink-0 h-10 w-10">
+  //                       <div className="flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10">
   //                         <img
-  //                           className="h-10 w-10 rounded-full object-cover"
+  //                           className="h-8 w-8 sm:h-10 sm:w-10 rounded-full object-cover"
   //                           src={
   //                             payroll.employee?.avatarUrl || "/default-avatar.png"
   //                           }
   //                           alt={payroll.employee?.firstName}
   //                         />
   //                       </div>
-  //                       <div className="ml-4">
-  //                         <div className="text-sm font-medium text-gray-900">
+  //                       <div className="ml-2 sm:ml-4">
+  //                         <div className="text-xs sm:text-sm font-medium text-gray-900">
   //                           {payroll.employee?.firstName}{" "}
   //                           {payroll.employee?.lastName}
   //                         </div>
   //                         <div className="text-xs text-gray-400">
   //                           {payroll.employee?.email || "—"}
   //                         </div>
-  //                         <div className="text-sm text-gray-500">
+  //                         <div className="text-xs sm:text-sm text-gray-500">
   //                           {payroll.employee?.employeeId}
   //                         </div>
   //                       </div>
   //                     </div>
   //                   </td>
 
-  //                   {/* Period */}
-  //                   <td className="px-6 py-4 whitespace-nowrap">
-  //                     <div className="text-sm text-gray-900">
+  //                   <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
+  //                     <div className="text-xs sm:text-sm text-gray-900">
   //                       {months[parseInt(payroll.month.split("-")[1], 10) - 1]}{" "}
   //                       {payroll.year}
   //                     </div>
   //                     {payroll.generatedAt && (
-  //                       <div className="text-sm text-gray-500">
+  //                       <div className="text-xs sm:text-sm text-gray-500">
   //                         {formatDate(payroll.generatedAt)}
   //                       </div>
   //                     )}
   //                   </td>
 
-  //                   {/* Net Pay */}
-  //                   <td className="px-6 py-4 whitespace-nowrap">
-  //                     <div className="text-sm font-semibold text-green-600">
+  //                   <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
+  //                     <div className="text-xs sm:text-sm font-semibold text-green-600">
   //                       {formatCurrency(payroll.basic)}
   //                     </div>
   //                   </td>
 
-  //                   {/* Status */}
-  //                   <td className="px-6 py-4 whitespace-nowrap">
+  //                   <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
   //                     {getStatusBadge(payroll.status)}
   //                   </td>
 
-  //                   {/* Generated By */}
-  //                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+  //                   <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
   //                     {payroll.generatedBy || "—"}
   //                   </td>
 
-  //                   {/* Actions */}
-  //                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-  //                     <div className="flex gap-2">
+  //                   <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium">
+  //                     <div className="flex flex-col sm:flex-row gap-1 sm:gap-2">
   //                       <button
   //                         onClick={() => {
   //                           setSelectedPayroll(payroll);
   //                           setShowDetailsModal(true);
   //                         }}
-  //                         className="text-blue-600 hover:text-blue-900 flex items-center gap-1"
+  //                         className="text-blue-600 hover:text-blue-900 flex items-center gap-1 justify-center sm:justify-start p-1 sm:p-0"
   //                       >
   //                         <svg
   //                           xmlns="http://www.w3.org/2000/svg"
-  //                           className="h-4 w-4"
+  //                           className="h-3 w-3 sm:h-4 sm:w-4"
   //                           fill="none"
   //                           viewBox="0 0 24 24"
   //                           stroke="currentColor"
@@ -750,7 +1226,7 @@ const AdminPayrollApproval = () => {
   //                             d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
   //                           />
   //                         </svg>
-  //                         Review
+  //                         <span className="text-xs">Review</span>
   //                       </button>
 
   //                       {payroll.status === "pending_approval" && (
@@ -760,18 +1236,18 @@ const AdminPayrollApproval = () => {
   //                               handleApproveReject(payroll._id, "approve")
   //                             }
   //                             disabled={actionLoading === payroll._id}
-  //                             className="text-green-600 hover:text-green-900 disabled:opacity-50 flex items-center gap-1"
+  //                             className="text-green-600 hover:text-green-900 disabled:opacity-50 flex items-center gap-1 justify-center sm:justify-start p-1 sm:p-0"
   //                           >
   //                             {actionLoading === payroll._id ? (
   //                               <>
   //                                 <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-green-600"></div>
-  //                                 Processing...
+  //                                 <span className="text-xs hidden sm:inline">Processing...</span>
   //                               </>
   //                             ) : (
   //                               <>
   //                                 <svg
   //                                   xmlns="http://www.w3.org/2000/svg"
-  //                                   className="h-4 w-4"
+  //                                   className="h-3 w-3 sm:h-4 sm:w-4"
   //                                   fill="none"
   //                                   viewBox="0 0 24 24"
   //                                   stroke="currentColor"
@@ -783,8 +1259,7 @@ const AdminPayrollApproval = () => {
   //                                     d="M5 13l4 4L19 7"
   //                                   />
   //                                 </svg>
-  //                                 {/* label changed to Roll Out */}
-  //                                 Roll Out
+  //                                 <span className="text-xs">Roll Out</span>
   //                               </>
   //                             )}
   //                           </button>
@@ -793,11 +1268,11 @@ const AdminPayrollApproval = () => {
   //                               setSelectedPayroll(payroll);
   //                               setShowDetailsModal(true);
   //                             }}
-  //                             className="text-red-600 hover:text-red-900 flex items-center gap-1"
+  //                             className="text-red-600 hover:text-red-900 flex items-center gap-1 justify-center sm:justify-start p-1 sm:p-0"
   //                           >
   //                             <svg
   //                               xmlns="http://www.w3.org/2000/svg"
-  //                               className="h-4 w-4"
+  //                               className="h-3 w-3 sm:h-4 sm:w-4"
   //                               fill="none"
   //                               viewBox="0 0 24 24"
   //                               stroke="currentColor"
@@ -809,7 +1284,7 @@ const AdminPayrollApproval = () => {
   //                                 d="M6 18L18 6M6 6l12 12"
   //                               />
   //                             </svg>
-  //                             Reject
+  //                             <span className="text-xs">Reject</span>
   //                           </button>
   //                         </>
   //                       )}
@@ -823,7 +1298,6 @@ const AdminPayrollApproval = () => {
   //       )}
   //     </div>
 
-  //     {/* Payroll Details Modal */}
   //     {showDetailsModal && selectedPayroll && (
   //       <PayrollDetailsModal
   //         isOpen={showDetailsModal}
@@ -833,504 +1307,12 @@ const AdminPayrollApproval = () => {
   //         actionLoading={actionLoading}
   //         formatCurrency={formatCurrency}
   //         isHR={false}
-  //         // pass optional label so modal (if supports it) can show "Roll Out"
   //         actionLabel="Roll Out"
   //       />
   //     )}
   //   </div>
   // );
-  return (
-    <div className="min-h-[80vh] p-2 sm:p-4">
-      <style>{`
-        .primary-btn:hover { background: ${PRIMARY_HOVER} !important }
-      `}</style>
 
-      <NotificationToast notifications={notifications} />
-
-      <header className="mb-4 sm:mb-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
-              Payroll Approval
-            </h1>
-            <p className="text-xs sm:text-sm text-gray-600 mt-1">
-              Review and approve employee payrolls
-            </p>
-          </div>
-          <button
-            onClick={fetchPayrolls}
-            className="px-3 py-2 sm:px-4 text-xs sm:text-sm rounded-md text-white primary-btn flex items-center gap-2 justify-center"
-            style={{ backgroundColor: PRIMARY }}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-4 w-4 sm:h-5 sm:w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-              />
-            </svg>
-            <span className="hidden sm:inline">Refresh</span>
-          </button>
-        </div>
-      </header>
-
-      <div className="flex flex-col xl:flex-row gap-4 sm:gap-6 mb-4 sm:mb-6">
-        <div className="flex-shrink-0">
-          <div className="grid grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-4" id="stats-cards">
-            <div className="bg-white p-3 sm:p-4 rounded-lg shadow border-l-4 border-blue-500 text-center min-w-[120px] sm:min-w-[200px]">
-              <h3 className="text-xs sm:text-sm text-gray-500">Total Payrolls</h3>
-              <p className="text-lg sm:text-2xl font-bold">{stats.total}</p>
-            </div>
-            <div className="bg-white p-3 sm:p-4 rounded-lg shadow border-l-4 border-yellow-500 text-center min-w-[120px] sm:min-w-[200px]">
-              <h3 className="text-xs sm:text-sm text-gray-500">Pending Approval</h3>
-              <p className="text-lg sm:text-2xl font-bold text-yellow-600">
-                {stats.pending}
-              </p>
-            </div>
-            <div className="bg-white p-3 sm:p-4 rounded-lg shadow border-l-4 border-green-500 text-center min-w-[120px] sm:min-w-[200px]">
-              <h3 className="text-xs sm:text-sm text-gray-500">Approved</h3>
-              <p className="text-lg sm:text-2xl font-bold text-green-600">
-                {stats.approved}
-              </p>
-            </div>
-            <div className="bg-white p-3 sm:p-4 rounded-lg shadow border-l-4 border-red-500 text-center min-w-[120px] sm:min-w-[200px]">
-              <h3 className="text-xs sm:text-sm text-gray-500">Rejected</h3>
-              <p className="text-lg sm:text-2xl font-bold text-red-600">
-                {stats.rejected}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex-1 bg-white shadow rounded-lg border-l-4 border-blue-500">
-          <div className="p-3 sm:p-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 items-end">
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Year
-                </label>
-                <select
-                  name="year"
-                  value={filters.year}
-                  onChange={handleFilterChange}
-                  className="w-full p-2 text-xs sm:text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  {years.map((year) => (
-                    <option key={year} value={year}>
-                      {year}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Month
-                </label>
-                <select
-                  name="month"
-                  value={filters.month}
-                  onChange={handleFilterChange}
-                  className="w-full p-2 text-xs sm:text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">All Months</option>
-                  {months.map((month, index) => (
-                    <option key={index + 1} value={index + 1}>
-                      {month}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Status
-                </label>
-                <select
-                  name="status"
-                  value={filters.status}
-                  onChange={handleFilterChange}
-                  className="w-full p-2 text-xs sm:text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">All Status</option>
-                  <option value="pending_approval">Pending Approval</option>
-                  <option value="approved">Approved</option>
-                  <option value="rejected">Rejected</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Employee
-                </label>
-                <select
-                  name="employee"
-                  value={filters.employee}
-                  onChange={handleFilterChange}
-                  className="w-full p-2 text-xs sm:text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">All Employees</option>
-                  {employees.map((employee) => (
-                    <option key={employee._id} value={employee._id}>
-                      {employee.firstName} {employee.lastName}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="flex justify-center sm:justify-start">
-                <button
-                  onClick={clearFilters}
-                  className="px-3 py-2 text-xs bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200 transition-colors flex items-center gap-1 border"
-                  title="Clear Filters"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-3 w-3"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                  Clear
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {payrolls.length > 0 && (
-        <div className="mb-4 sm:mb-6 bg-blue-50 p-3 sm:p-4 rounded-lg border border-blue-200">
-          <h3 className="text-base sm:text-lg font-semibold text-blue-800 mb-3">
-            Bulk Actions
-          </h3>
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={selectedPayrolls.size === selectableCount}
-                onChange={toggleSelectAll}
-                className="h-4 w-4 text-blue-600 rounded"
-              />
-              <span className="text-xs sm:text-sm text-gray-700">
-                Select all ({selectedPayrolls.size} selected)
-              </span>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-2">
-              <select
-                value={bulkAction}
-                onChange={(e) => {
-                  setBulkAction(e.target.value);
-                  setShowBulkRejectInput(e.target.value === "reject");
-                }}
-                className="p-2 border border-gray-300 rounded-md text-xs sm:text-sm"
-              >
-                <option value="">Select Action</option>
-                <option value="approve">Roll Out Selected</option>
-                <option value="reject">Reject Selected</option>
-              </select>
-
-              {showBulkRejectInput && (
-                <input
-                  type="text"
-                  value={bulkRejectionReason}
-                  onChange={(e) => setBulkRejectionReason(e.target.value)}
-                  placeholder="Reason for rejection"
-                  className="p-2 border border-gray-300 rounded-md flex-1 text-xs sm:text-sm"
-                />
-              )}
-
-              <button
-                onClick={handleBulkAction}
-                disabled={actionLoading === "bulk" || !bulkAction}
-                className="px-3 sm:px-4 py-2 bg-[#104774] text-white rounded-md hover:bg-[#002442] disabled:opacity-50 flex items-center justify-center gap-2 text-xs sm:text-sm"
-              >
-                {actionLoading === "bulk" ? (
-                  <>
-                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-white"></div>
-                    <span className="hidden sm:inline">Processing...</span>
-                  </>
-                ) : (
-                  "Apply to Selected"
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="bg-white shadow rounded-lg overflow-hidden">
-        <div className="px-3 sm:px-6 py-3 sm:py-4 border-b border-gray-200 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-          <h2 className="text-base sm:text-lg font-semibold text-gray-800">
-            Payroll Records ({payrolls.length})
-          </h2>
-          <span className="text-xs sm:text-sm text-gray-500">
-            {filters.status === "pending_approval"
-              ? "Pending Approval"
-              : filters.status === "approved"
-              ? "Approved"
-              : filters.status === "rejected"
-              ? "Rejected"
-              : "All Records"}
-          </span>
-        </div>
-
-        {payrolls.length === 0 ? (
-          <div className="text-center py-8 sm:py-12 px-4">
-            <svg
-              className="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-            <p className="text-gray-500 text-sm sm:text-base">No payroll records found</p>
-            <p className="text-xs sm:text-sm text-gray-400 mt-1">
-              {filters.status === "pending_approval"
-                ? "No payrolls pending approval"
-                : "Try adjusting your filters"}
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    <input
-                      type="checkbox"
-                      checked={selectedPayrolls.size === selectableCount}
-                      onChange={toggleSelectAll}
-                      className="h-4 w-4 text-blue-600 rounded"
-                    />
-                  </th>
-                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px]">
-                    Employee
-                  </th>
-                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
-                    Period
-                  </th>
-                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">
-                    Net Pay
-                  </th>
-                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
-                    Status
-                  </th>
-                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
-                    Generated By
-                  </th>
-                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[180px]">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody className="bg-white divide-y divide-gray-200">
-                {payrolls.map((payroll) => (
-                  <tr key={payroll._id} className="hover:bg-gray-50">
-                    <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
-                      <input
-                        type="checkbox"
-                        checked={selectedPayrolls.has(payroll._id)}
-                        onChange={() => toggleSelectPayroll(payroll._id)}
-                        className="h-4 w-4 text-blue-600 rounded"
-                        disabled={payroll.status === "approved"}
-                        title={
-                          payroll.status === "approved"
-                            ? "Already Rolled Out"
-                            : undefined
-                        }
-                      />
-                    </td>
-
-                    <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10">
-                          <img
-                            className="h-8 w-8 sm:h-10 sm:w-10 rounded-full object-cover"
-                            src={
-                              payroll.employee?.avatarUrl || "/default-avatar.png"
-                            }
-                            alt={payroll.employee?.firstName}
-                          />
-                        </div>
-                        <div className="ml-2 sm:ml-4">
-                          <div className="text-xs sm:text-sm font-medium text-gray-900">
-                            {payroll.employee?.firstName}{" "}
-                            {payroll.employee?.lastName}
-                          </div>
-                          <div className="text-xs text-gray-400">
-                            {payroll.employee?.email || "—"}
-                          </div>
-                          <div className="text-xs sm:text-sm text-gray-500">
-                            {payroll.employee?.employeeId}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-
-                    <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
-                      <div className="text-xs sm:text-sm text-gray-900">
-                        {months[parseInt(payroll.month.split("-")[1], 10) - 1]}{" "}
-                        {payroll.year}
-                      </div>
-                      {payroll.generatedAt && (
-                        <div className="text-xs sm:text-sm text-gray-500">
-                          {formatDate(payroll.generatedAt)}
-                        </div>
-                      )}
-                    </td>
-
-                    <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
-                      <div className="text-xs sm:text-sm font-semibold text-green-600">
-                        {formatCurrency(payroll.basic)}
-                      </div>
-                    </td>
-
-                    <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
-                      {getStatusBadge(payroll.status)}
-                    </td>
-
-                    <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
-                      {payroll.generatedBy || "—"}
-                    </td>
-
-                    <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium">
-                      <div className="flex flex-col sm:flex-row gap-1 sm:gap-2">
-                        <button
-                          onClick={() => {
-                            setSelectedPayroll(payroll);
-                            setShowDetailsModal(true);
-                          }}
-                          className="text-blue-600 hover:text-blue-900 flex items-center gap-1 justify-center sm:justify-start p-1 sm:p-0"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-3 w-3 sm:h-4 sm:w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                            />
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                            />
-                          </svg>
-                          <span className="text-xs">Review</span>
-                        </button>
-
-                        {payroll.status === "pending_approval" && (
-                          <>
-                            <button
-                              onClick={() =>
-                                handleApproveReject(payroll._id, "approve")
-                              }
-                              disabled={actionLoading === payroll._id}
-                              className="text-green-600 hover:text-green-900 disabled:opacity-50 flex items-center gap-1 justify-center sm:justify-start p-1 sm:p-0"
-                            >
-                              {actionLoading === payroll._id ? (
-                                <>
-                                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-green-600"></div>
-                                  <span className="text-xs hidden sm:inline">Processing...</span>
-                                </>
-                              ) : (
-                                <>
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="h-3 w-3 sm:h-4 sm:w-4"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M5 13l4 4L19 7"
-                                    />
-                                  </svg>
-                                  <span className="text-xs">Roll Out</span>
-                                </>
-                              )}
-                            </button>
-                            <button
-                              onClick={() => {
-                                setSelectedPayroll(payroll);
-                                setShowDetailsModal(true);
-                              }}
-                              className="text-red-600 hover:text-red-900 flex items-center gap-1 justify-center sm:justify-start p-1 sm:p-0"
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-3 w-3 sm:h-4 sm:w-4"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M6 18L18 6M6 6l12 12"
-                                />
-                              </svg>
-                              <span className="text-xs">Reject</span>
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {showDetailsModal && selectedPayroll && (
-        <PayrollDetailsModal
-          isOpen={showDetailsModal}
-          onClose={() => setShowDetailsModal(false)}
-          payroll={selectedPayroll}
-          onApproveReject={handleApproveReject}
-          actionLoading={actionLoading}
-          formatCurrency={formatCurrency}
-          isHR={false}
-          actionLabel="Roll Out"
-        />
-      )}
-    </div>
-  );
 };
 
 export default AdminPayrollApproval;

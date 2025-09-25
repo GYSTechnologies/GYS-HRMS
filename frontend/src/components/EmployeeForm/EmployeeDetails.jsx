@@ -144,203 +144,371 @@ const EmployeeDetails = ({ employeeId, onClose }) => {
       </div>
     );
 
-  return (
-    <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-xl flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-gray-800">
-            Employee Details - {employee.firstName} {employee.lastName}
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-2xl"
-          >
-            ×
-          </button>
-        </div>
+    return (
+  <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm z-50 flex items-center justify-center p-2">
+    <div className="bg-white rounded-md shadow-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto text-sm">
+      
+      {/* Header */}
+      <div className="sticky top-0 bg-white border-b border-gray-200 p-2 flex justify-between items-center">
+        <h2 className="text-sm font-semibold text-gray-800">
+          Employee Details - {employee.firstName} {employee.lastName}
+        </h2>
+        <button
+          onClick={onClose}
+          className="text-gray-500 hover:text-gray-700 text-base"
+        >
+          ×
+        </button>
+      </div>
 
-        {/* Content */}
-        <div className="p-6 space-y-6">
-          {/* Personal & Job Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Personal Info */}
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="text-lg font-semibold mb-4 text-[#104774]">
-                Personal Information
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-center">
-                  <span className="font-medium w-32">Employee ID:</span>
-                  <span className="text-gray-700">{employee.employeeId}</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="font-medium w-32">Name:</span>
-                  <span className="text-gray-700">
-                    {employee.firstName} {employee.lastName}
-                  </span>
-                </div>
-                <div className="flex items-center">
-                  <span className="font-medium w-32">Email:</span>
-                  <span className="text-gray-700">{employee.user?.email}</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="font-medium w-32">Phone:</span>
-                  <span className="text-gray-700">{employee.phone || "N/A"}</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="font-medium w-32">Date of Birth:</span>
-                  <span className="text-gray-700">
-                    {employee.dob
-                      ? new Date(employee.dob).toLocaleDateString()
-                      : "N/A"}
-                  </span>
-                </div>
-                <div className="flex items-center">
-                  <span className="font-medium w-32">Gender:</span>
-                  <span className="text-gray-700 capitalize">
-                    {employee.gender || "N/A"}
-                  </span>
-                </div>
-                <div className="flex items-start">
-                  <span className="font-medium w-32">Address:</span>
-                  <span className="text-gray-700 flex-1">
-                    {employee.address || "N/A"}
-                  </span>
-                </div>
+      {/* Content */}
+      <div className="p-3 space-y-4">
+        
+        {/* Personal & Job Information */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          
+          {/* Personal Info */}
+          <div className="bg-gray-50 p-2 rounded">
+            <h3 className="text-xs font-semibold mb-2 text-[#104774]">
+              Personal Information
+            </h3>
+            <div className="space-y-1.5">
+              <div className="flex">
+                <span className="font-medium w-24">ID:</span>
+                <span>{employee.employeeId}</span>
               </div>
-            </div>
-
-            {/* Job Info */}
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="text-lg font-semibold mb-4 text-[#104774]">
-                Job Information
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-center">
-                  <span className="font-medium w-32">Department:</span>
-                  <span className="text-gray-700">{employee.department || "N/A"}</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="font-medium w-32">Designation:</span>
-                  <span className="text-gray-700">{employee.designation || "N/A"}</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="font-medium w-32">Date of Joining:</span>
-                  <span className="text-gray-700">
-                    {employee.dateOfJoining
-                      ? new Date(employee.dateOfJoining).toLocaleDateString()
-                      : "N/A"}
-                  </span>
-                </div>
-                <div className="flex items-center">
-                  <span className="font-medium w-32">Employment Type:</span>
-                  <span className="text-gray-700 capitalize">
-                    {employee.employmentType?.replace("-", " ") || "N/A"}
-                  </span>
-                </div>
-                <div className="flex items-center">
-                  <span className="font-medium w-32">Work Mode:</span>
-                  <span className="text-gray-700 capitalize">
-                    {employee.workMode?.replace(/-/g, " ") || "N/A"}
-                  </span>
-                </div>
-                {employee.shiftTiming?.start || employee.shiftTiming?.end ? (
-                  <div className="flex items-center">
-                    <span className="font-medium w-32">Shift Timing:</span>
-                    <span className="text-gray-700">
-                      {employee.shiftTiming.start && employee.shiftTiming.end
-                        ? `${employee.shiftTiming.start} - ${employee.shiftTiming.end}`
-                        : "N/A"}
-                    </span>
-                  </div>
-                ) : null}
-                <div className="flex items-center">
-                  <span className="font-medium w-32">Role:</span>
-                  <span className="text-gray-700 capitalize">{employee.user?.role || "N/A"}</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="font-medium w-32">Status:</span>
-                  <span
-                    className={`px-2 py-1 rounded text-xs ${
-                      employee.user?.isActive
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                    }`}
-                  >
-                    {employee.user?.isActive ? "Active" : "Inactive"}
-                  </span>
-                </div>
+              <div className="flex">
+                <span className="font-medium w-24">Name:</span>
+                <span>{employee.firstName} {employee.lastName}</span>
+              </div>
+              <div className="flex">
+                <span className="font-medium w-24">Email:</span>
+                <span>{employee.user?.email}</span>
+              </div>
+              <div className="flex">
+                <span className="font-medium w-24">Phone:</span>
+                <span>{employee.phone || "N/A"}</span>
+              </div>
+              <div className="flex">
+                <span className="font-medium w-24">DOB:</span>
+                <span>
+                  {employee.dob ? new Date(employee.dob).toLocaleDateString() : "N/A"}
+                </span>
+              </div>
+              <div className="flex">
+                <span className="font-medium w-24">Gender:</span>
+                <span className="capitalize">{employee.gender || "N/A"}</span>
+              </div>
+              <div className="flex items-start">
+                <span className="font-medium w-24">Address:</span>
+                <span>{employee.address || "N/A"}</span>
               </div>
             </div>
           </div>
 
-          {/* Bank & Documents */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {employee.bankDetails && (
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="text-lg font-semibold mb-4 text-[#104774]">Bank Details</h3>
-                <div className="space-y-3 text-gray-700">
-                  <div className="flex items-center">
-                    <span className="font-medium w-36">Account Holder:</span>
-                    <span className="font-semibold">{employee.bankDetails.accountHolderName}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="font-medium w-36">Account Number:</span>
-                    <span className="font-semibold">{employee.bankDetails.accountNumber}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="font-medium w-36">Bank Name:</span>
-                    <span className="font-semibold">{employee.bankDetails.bankName}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="font-medium w-36">IFSC Code:</span>
-                    <span className="font-semibold">{employee.bankDetails.ifscCode}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="font-medium w-36">Account Type:</span>
-                    <span className="font-semibold">{employee.bankDetails.accountType}</span>
-                  </div>
-                </div>
+          {/* Job Info */}
+          <div className="bg-gray-50 p-2 rounded">
+            <h3 className="text-xs font-semibold mb-2 text-[#104774]">
+              Job Information
+            </h3>
+            <div className="space-y-1.5">
+              <div className="flex">
+                <span className="font-medium w-24">Dept:</span>
+                <span>{employee.department || "N/A"}</span>
               </div>
-            )}
-
-            {employee.documents?.length > 0 && (
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="text-lg font-semibold mb-4 text-[#104774]">Documents</h3>
-                <div className="space-y-2">
-                  {employee.documents.map((doc, index) => (
-                    <div key={index} className="flex items-center justify-between bg-white p-3 rounded border">
-                      <span className="text-sm text-gray-700 truncate">{doc.name || getFilenameFromUrl(doc.url)}</span>
-                      <div className="flex items-center space-x-3">
-                        <button
-                          onClick={() => handleDownload(doc.url, doc.name, index)}
-                          disabled={downloading?.[index]}
-                          className="text-[#104774] hover:underline text-sm font-medium"
-                        >
-                          {downloading?.[index] ? "Downloading..." : "Download"}
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <div className="flex">
+                <span className="font-medium w-24">Designation:</span>
+                <span>{employee.designation || "N/A"}</span>
               </div>
-            )}
+              <div className="flex">
+                <span className="font-medium w-24">Joining:</span>
+                <span>
+                  {employee.dateOfJoining ? new Date(employee.dateOfJoining).toLocaleDateString() : "N/A"}
+                </span>
+              </div>
+              <div className="flex">
+                <span className="font-medium w-24">Type:</span>
+                <span className="capitalize">{employee.employmentType || "N/A"}</span>
+              </div>
+              <div className="flex">
+                <span className="font-medium w-24">Work Mode:</span>
+                <span className="capitalize">{employee.workMode || "N/A"}</span>
+              </div>
+              {employee.shiftTiming?.start && (
+                <div className="flex">
+                  <span className="font-medium w-24">Shift:</span>
+                  <span>
+                    {employee.shiftTiming.start} - {employee.shiftTiming.end}
+                  </span>
+                </div>
+              )}
+              <div className="flex">
+                <span className="font-medium w-24">Role:</span>
+                <span>{employee.user?.role || "N/A"}</span>
+              </div>
+              <div className="flex">
+                <span className="font-medium w-24">Status:</span>
+                <span
+                  className={`px-2 py-0.5 rounded text-[10px] ${
+                    employee.user?.isActive
+                      ? "bg-green-100 text-green-700"
+                      : "bg-red-100 text-red-700"
+                  }`}
+                >
+                  {employee.user?.isActive ? "Active" : "Inactive"}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="sticky bottom-0 bg-white border-t border-gray-200 p-6 rounded-b-xl text-right">
-          <button
-            onClick={onClose}
-            className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
-          >
-            Close
-          </button>
+        {/* Bank & Documents */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          {employee.bankDetails && (
+            <div className="bg-gray-50 p-2 rounded">
+              <h3 className="text-xs font-semibold mb-2 text-[#104774]">Bank</h3>
+              <div className="space-y-1 text-xs">
+                <div className="flex"><span className="w-28">Holder:</span><span>{employee.bankDetails.accountHolderName}</span></div>
+                <div className="flex"><span className="w-28">Number:</span><span>{employee.bankDetails.accountNumber}</span></div>
+                <div className="flex"><span className="w-28">Bank:</span><span>{employee.bankDetails.bankName}</span></div>
+                <div className="flex"><span className="w-28">IFSC:</span><span>{employee.bankDetails.ifscCode}</span></div>
+                <div className="flex"><span className="w-28">Type:</span><span>{employee.bankDetails.accountType}</span></div>
+              </div>
+            </div>
+          )}
+
+          {employee.documents?.length > 0 && (
+            <div className="bg-gray-50 p-2 rounded">
+              <h3 className="text-xs font-semibold mb-2 text-[#104774]">Documents</h3>
+              <div className="space-y-1">
+                {employee.documents.map((doc, index) => (
+                  <div key={index} className="flex items-center justify-between bg-white p-2 rounded border text-xs">
+                    <span className="truncate">{doc.name || getFilenameFromUrl(doc.url)}</span>
+                    <button
+                      onClick={() => handleDownload(doc.url, doc.name, index)}
+                      disabled={downloading?.[index]}
+                      className="text-[#104774] hover:underline"
+                    >
+                      {downloading?.[index] ? "..." : "Download"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Footer */}
+      <div className="sticky bottom-0 bg-white border-t border-gray-200 p-2 text-right">
+        <button
+          onClick={onClose}
+          className="px-3 py-1 bg-gray-600 text-white rounded text-xs hover:bg-gray-700"
+        >
+          Close
+        </button>
+      </div>
     </div>
-  );
+  </div>
+);
+
+  // return (
+  //   <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  //     <div className="bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+  //       {/* Header */}
+  //       <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-xl flex justify-between items-center">
+  //         <h2 className="text-2xl font-bold text-gray-800">
+  //           Employee Details - {employee.firstName} {employee.lastName}
+  //         </h2>
+  //         <button
+  //           onClick={onClose}
+  //           className="text-gray-500 hover:text-gray-700 text-2xl"
+  //         >
+  //           ×
+  //         </button>
+  //       </div>
+
+  //       {/* Content */}
+  //       <div className="p-6 space-y-6">
+  //         {/* Personal & Job Information */}
+  //         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+  //           {/* Personal Info */}
+  //           <div className="bg-gray-50 p-4 rounded-lg">
+  //             <h3 className="text-lg font-semibold mb-4 text-[#104774]">
+  //               Personal Information
+  //             </h3>
+  //             <div className="space-y-3">
+  //               <div className="flex items-center">
+  //                 <span className="font-medium w-32">Employee ID:</span>
+  //                 <span className="text-gray-700">{employee.employeeId}</span>
+  //               </div>
+  //               <div className="flex items-center">
+  //                 <span className="font-medium w-32">Name:</span>
+  //                 <span className="text-gray-700">
+  //                   {employee.firstName} {employee.lastName}
+  //                 </span>
+  //               </div>
+  //               <div className="flex items-center">
+  //                 <span className="font-medium w-32">Email:</span>
+  //                 <span className="text-gray-700">{employee.user?.email}</span>
+  //               </div>
+  //               <div className="flex items-center">
+  //                 <span className="font-medium w-32">Phone:</span>
+  //                 <span className="text-gray-700">{employee.phone || "N/A"}</span>
+  //               </div>
+  //               <div className="flex items-center">
+  //                 <span className="font-medium w-32">Date of Birth:</span>
+  //                 <span className="text-gray-700">
+  //                   {employee.dob
+  //                     ? new Date(employee.dob).toLocaleDateString()
+  //                     : "N/A"}
+  //                 </span>
+  //               </div>
+  //               <div className="flex items-center">
+  //                 <span className="font-medium w-32">Gender:</span>
+  //                 <span className="text-gray-700 capitalize">
+  //                   {employee.gender || "N/A"}
+  //                 </span>
+  //               </div>
+  //               <div className="flex items-start">
+  //                 <span className="font-medium w-32">Address:</span>
+  //                 <span className="text-gray-700 flex-1">
+  //                   {employee.address || "N/A"}
+  //                 </span>
+  //               </div>
+  //             </div>
+  //           </div>
+
+  //           {/* Job Info */}
+  //           <div className="bg-gray-50 p-4 rounded-lg">
+  //             <h3 className="text-lg font-semibold mb-4 text-[#104774]">
+  //               Job Information
+  //             </h3>
+  //             <div className="space-y-3">
+  //               <div className="flex items-center">
+  //                 <span className="font-medium w-32">Department:</span>
+  //                 <span className="text-gray-700">{employee.department || "N/A"}</span>
+  //               </div>
+  //               <div className="flex items-center">
+  //                 <span className="font-medium w-32">Designation:</span>
+  //                 <span className="text-gray-700">{employee.designation || "N/A"}</span>
+  //               </div>
+  //               <div className="flex items-center">
+  //                 <span className="font-medium w-32">Date of Joining:</span>
+  //                 <span className="text-gray-700">
+  //                   {employee.dateOfJoining
+  //                     ? new Date(employee.dateOfJoining).toLocaleDateString()
+  //                     : "N/A"}
+  //                 </span>
+  //               </div>
+  //               <div className="flex items-center">
+  //                 <span className="font-medium w-32">Employment Type:</span>
+  //                 <span className="text-gray-700 capitalize">
+  //                   {employee.employmentType?.replace("-", " ") || "N/A"}
+  //                 </span>
+  //               </div>
+  //               <div className="flex items-center">
+  //                 <span className="font-medium w-32">Work Mode:</span>
+  //                 <span className="text-gray-700 capitalize">
+  //                   {employee.workMode?.replace(/-/g, " ") || "N/A"}
+  //                 </span>
+  //               </div>
+  //               {employee.shiftTiming?.start || employee.shiftTiming?.end ? (
+  //                 <div className="flex items-center">
+  //                   <span className="font-medium w-32">Shift Timing:</span>
+  //                   <span className="text-gray-700">
+  //                     {employee.shiftTiming.start && employee.shiftTiming.end
+  //                       ? `${employee.shiftTiming.start} - ${employee.shiftTiming.end}`
+  //                       : "N/A"}
+  //                   </span>
+  //                 </div>
+  //               ) : null}
+  //               <div className="flex items-center">
+  //                 <span className="font-medium w-32">Role:</span>
+  //                 <span className="text-gray-700 capitalize">{employee.user?.role || "N/A"}</span>
+  //               </div>
+  //               <div className="flex items-center">
+  //                 <span className="font-medium w-32">Status:</span>
+  //                 <span
+  //                   className={`px-2 py-1 rounded text-xs ${
+  //                     employee.user?.isActive
+  //                       ? "bg-green-100 text-green-800"
+  //                       : "bg-red-100 text-red-800"
+  //                   }`}
+  //                 >
+  //                   {employee.user?.isActive ? "Active" : "Inactive"}
+  //                 </span>
+  //               </div>
+  //             </div>
+  //           </div>
+  //         </div>
+
+  //         {/* Bank & Documents */}
+  //         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  //           {employee.bankDetails && (
+  //             <div className="bg-gray-50 p-4 rounded-lg">
+  //               <h3 className="text-lg font-semibold mb-4 text-[#104774]">Bank Details</h3>
+  //               <div className="space-y-3 text-gray-700">
+  //                 <div className="flex items-center">
+  //                   <span className="font-medium w-36">Account Holder:</span>
+  //                   <span className="font-semibold">{employee.bankDetails.accountHolderName}</span>
+  //                 </div>
+  //                 <div className="flex items-center">
+  //                   <span className="font-medium w-36">Account Number:</span>
+  //                   <span className="font-semibold">{employee.bankDetails.accountNumber}</span>
+  //                 </div>
+  //                 <div className="flex items-center">
+  //                   <span className="font-medium w-36">Bank Name:</span>
+  //                   <span className="font-semibold">{employee.bankDetails.bankName}</span>
+  //                 </div>
+  //                 <div className="flex items-center">
+  //                   <span className="font-medium w-36">IFSC Code:</span>
+  //                   <span className="font-semibold">{employee.bankDetails.ifscCode}</span>
+  //                 </div>
+  //                 <div className="flex items-center">
+  //                   <span className="font-medium w-36">Account Type:</span>
+  //                   <span className="font-semibold">{employee.bankDetails.accountType}</span>
+  //                 </div>
+  //               </div>
+  //             </div>
+  //           )}
+
+  //           {employee.documents?.length > 0 && (
+  //             <div className="bg-gray-50 p-4 rounded-lg">
+  //               <h3 className="text-lg font-semibold mb-4 text-[#104774]">Documents</h3>
+  //               <div className="space-y-2">
+  //                 {employee.documents.map((doc, index) => (
+  //                   <div key={index} className="flex items-center justify-between bg-white p-3 rounded border">
+  //                     <span className="text-sm text-gray-700 truncate">{doc.name || getFilenameFromUrl(doc.url)}</span>
+  //                     <div className="flex items-center space-x-3">
+  //                       <button
+  //                         onClick={() => handleDownload(doc.url, doc.name, index)}
+  //                         disabled={downloading?.[index]}
+  //                         className="text-[#104774] hover:underline text-sm font-medium"
+  //                       >
+  //                         {downloading?.[index] ? "Downloading..." : "Download"}
+  //                       </button>
+  //                     </div>
+  //                   </div>
+  //                 ))}
+  //               </div>
+  //             </div>
+  //           )}
+  //         </div>
+  //       </div>
+
+  //       {/* Footer */}
+  //       <div className="sticky bottom-0 bg-white border-t border-gray-200 p-6 rounded-b-xl text-right">
+  //         <button
+  //           onClick={onClose}
+  //           className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+  //         >
+  //           Close
+  //         </button>
+  //       </div>
+  //     </div>
+  //   </div>
+  // );
 };
 
 export default EmployeeDetails;

@@ -389,101 +389,956 @@ const AdminLeaves = () => {
   // Get active leave types for filter dropdown
   const activeLeaveTypes = leaveTypes.filter((lt) => lt.isActive);
 
-  return (
-  <div className="flex flex-col md:flex-row gap-4 md:gap-6 p-3 md:p-6 bg-gray-50 min-h-screen">
-    {/* Mobile Sidebar Toggle */}
-    <div className="md:hidden flex justify-between items-center p-3 bg-white rounded-lg shadow-sm mb-3">
-      <h1 className="text-xl font-bold text-gray-800">
-        Admin Leave Management
-      </h1>
+//   return (
+//   <div className="flex flex-col md:flex-row gap-4 md:gap-6 p-3 md:p-6 bg-gray-50 max-h-[80vh]">
+//     {/* Mobile Sidebar Toggle */}
+//     <div className="md:hidden flex justify-between items-center p-3 bg-white rounded-lg shadow-sm mb-3">
+//       <h1 className="text-xl font-bold text-gray-800">
+//         Admin Leave Management
+//       </h1>
+//       <button
+//         onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
+//         className="p-2 rounded-lg bg-[#104774] text-white"
+//       >
+//         {mobileSidebarOpen ? <X size={20} /> : <Menu size={20} />}
+//       </button>
+//     </div>
+
+//     {/* Main Content */}
+//     <div className="flex-1 space-y-4 md:space-y-6">
+//       {/* Header */}
+//       <div className="hidden md:flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-4 bg-white p-4 rounded-xl shadow-sm">
+//         <h1 className="text-xl md:text-2xl font-bold text-gray-800">
+//           Admin Leave Management
+//         </h1>
+//         <div className="flex flex-wrap gap-2">
+//           <button
+//             className="flex items-center bg-[#104774] text-white px-3 md:px-4 py-2 rounded-lg font-medium hover:bg-[#0d3a61] transition-all duration-200 text-sm md:text-base"
+//             onClick={() => {
+//               setSelectedPolicy(null);
+//               document.getElementById("policyModal").classList.remove("hidden");
+//             }}
+//           >
+//             <Plus size={16} className="mr-1 md:mr-2" /> Set Policy
+//           </button>
+//           <button
+//             className="flex items-center bg-green-600 text-white px-3 md:px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-all duration-200 text-sm md:text-base"
+//             onClick={fetchData}
+//           >
+//             <RefreshCw size={16} className="mr-1 md:mr-2" /> Refresh
+//           </button>
+//         </div>
+//       </div>
+
+//       {/* Stats Cards */}
+//       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
+//         <StatCard
+//           title="Total Requests"
+//           value={stats.total}
+//           subtitle="This Month"
+//           icon={Calendar}
+//           color="bg-blue-500"
+//         />
+//         <StatCard
+//           title="Pending"
+//           value={stats.pending}
+//           subtitle="Require Action"
+//           icon={Clock}
+//           color="bg-yellow-500"
+//         />
+//         <StatCard
+//           title="Approved"
+//           value={stats.approved}
+//           subtitle="This month"
+//           icon={CheckCircle}
+//           color="bg-green-500"
+//         />
+//         <StatCard
+//           title="Rejected"
+//           value={stats.rejected}
+//           subtitle="Leaves"
+//           icon={XCircle}
+//           color="bg-red-500"
+//         />
+//       </div>
+
+//       {/* Filters and Search */}
+//       <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-4 shadow-sm border border-gray-200">
+//         <div className="flex flex-col md:flex-row gap-3">
+//           <div className="relative flex-1">
+//             <Search
+//               className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+//               size={16}
+//             />
+//             <input
+//               type="text"
+//               placeholder="Search by employee, type, or reason..."
+//               value={searchTerm}
+//               onChange={(e) => setSearchTerm(e.target.value)}
+//               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#104774] text-sm md:text-base"
+//             />
+//           </div>
+
+//           <div className="flex flex-wrap gap-2">
+//             <select
+//               value={statusFilter}
+//               onChange={(e) => setStatusFilter(e.target.value)}
+//               className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#104774] text-sm w-full md:w-auto"
+//             >
+//               <option value="all">All Status</option>
+//               <option value="pending">Pending</option>
+//               <option value="approved">Approved</option>
+//               <option value="rejected">Rejected</option>
+//               <option value="cancelled">Cancelled</option>
+//             </select>
+
+//             <select
+//               value={typeFilter}
+//               onChange={(e) => setTypeFilter(e.target.value)}
+//               className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#104774] text-sm w-full md:w-auto"
+//             >
+//               <option value="all">All Types</option>
+//               {activeLeaveTypes.map((type) => (
+//                 <option key={type._id} value={type.name}>
+//                   {type.name
+//                     .replace(/_/g, " ")
+//                     .replace(/\b\w/g, (l) => l.toUpperCase())}
+//                 </option>
+//               ))}
+//             </select>
+//           </div>
+//         </div>
+
+//         <div className="mt-2 text-xs md:text-sm text-gray-500">
+//           Showing {filteredRequests.length} of {leaveRequests.length} requests
+//         </div>
+//       </div>
+
+//       {/* Leave Requests Table */}
+//       <div className="bg-white rounded-lg md:rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+//         <div className="p-3 md:p-4 border-b border-gray-200 flex items-center space-x-2 md:space-x-3">
+//           <Calendar size={20} className="text-[#104774]" />
+//           <h3 className="text-base md:text-lg font-semibold text-gray-800">
+//             All Leave Requests
+//           </h3>
+//         </div>
+
+//         {loading ? (
+//           <div className="p-6 md:p-8 text-center">
+//             <RefreshCw
+//               className="animate-spin mx-auto text-[#104774]"
+//               size={28}
+//             />
+//             <p className="mt-2 text-gray-500 text-sm md:text-base">Loading leave requests...</p>
+//           </div>
+//         ) : filteredRequests.length === 0 ? (
+//           <div className="p-6 md:p-8 text-center">
+//             <p className="text-gray-500 text-sm md:text-base">No leave requests found</p>
+//           </div>
+//         ) : (
+//           <>
+//             <div className="overflow-x-auto">
+//               <div className="min-w-[800px] md:min-w-full max-h-[400px] md:max-h-[500px] overflow-y-auto">
+//                 <table className="w-full border-collapse">
+//                   <thead className="bg-[#104774] text-white sticky top-0 z-10">
+//                     <tr>
+//                       <th className="p-2 md:p-3 text-left text-xs md:text-sm font-medium whitespace-nowrap">Employee</th>
+//                       <th className="p-2 md:p-3 text-left text-xs md:text-sm font-medium whitespace-nowrap">Type</th>
+//                       <th className="p-2 md:p-3 text-left text-xs md:text-sm font-medium whitespace-nowrap">From</th>
+//                       <th className="p-2 md:p-3 text-left text-xs md:text-sm font-medium whitespace-nowrap">To</th>
+//                       <th className="p-2 md:p-3 text-left text-xs md:text-sm font-medium whitespace-nowrap">Days</th>
+//                       <th className="p-2 md:p-3 text-left text-xs md:text-sm font-medium whitespace-nowrap">Balance</th>
+//                       <th className="p-2 md:p-3 text-left text-xs md:text-sm font-medium whitespace-nowrap">Status</th>
+//                       <th className="p-2 md:p-3 text-left text-xs md:text-sm font-medium whitespace-nowrap">Actions</th>
+//                     </tr>
+//                   </thead>
+//                   <tbody className="divide-y divide-gray-100">
+//                     {currentItems
+//                       .sort((a, b) => new Date(b.appliedAt) - new Date(a.appliedAt))
+//                       .map((req, index) => {
+//                         const hasSufficientBalance =
+//                           req.currentRemaining &&
+//                           req.currentRemaining[req.leaveType] >= req.totalDays;
+
+//                         return (
+//                           <React.Fragment key={req._id}>
+//                             <tr className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-gray-100 transition-colors`}>
+//                               <td className="p-2 md:p-3 text-xs md:text-sm whitespace-nowrap">
+//                                 <div className="truncate max-w-[120px] md:max-w-none">
+//                                   {req.employee?.email || "N/A"}
+//                                 </div>
+//                               </td>
+//                               <td className="p-2 md:p-3 text-xs md:text-sm capitalize whitespace-nowrap">
+//                                 {req.leaveType.replace(/_/g, " ")}
+//                               </td>
+//                               <td className="p-2 md:p-3 text-xs md:text-sm whitespace-nowrap">
+//                                 {format(new Date(req.fromDate), "dd MMM yyyy")}
+//                               </td>
+//                               <td className="p-2 md:p-3 text-xs md:text-sm whitespace-nowrap">
+//                                 {format(new Date(req.toDate), "dd MMM yyyy")}
+//                               </td>
+//                               <td className="p-2 md:p-3 text-xs md:text-sm whitespace-nowrap">
+//                                 {req.totalDays}
+//                               </td>
+//                               <td className="p-2 md:p-3 text-xs md:text-sm whitespace-nowrap">
+//                                 <div className="flex items-center">
+//                                   {req.currentRemaining ? (
+//                                     <>
+//                                       <span
+//                                         className={
+//                                           hasSufficientBalance
+//                                             ? "text-green-600 font-medium"
+//                                             : "text-red-600 font-medium"
+//                                         }
+//                                       >
+//                                         {req.currentRemaining[req.leaveType]}/
+//                                         {
+//                                           req.balanceSnapshot?.remaining[
+//                                             req.leaveType
+//                                           ]
+//                                         }
+//                                       </span>
+//                                       {!hasSufficientBalance && (
+//                                         <AlertCircle
+//                                           size={14}
+//                                           className="text-red-500 ml-1"
+//                                         />
+//                                       )}
+//                                     </>
+//                                   ) : (
+//                                     <span className="text-gray-400">N/A</span>
+//                                   )}
+//                                 </div>
+//                               </td>
+//                               <td className="p-2 md:p-3">
+//                                 <StatusBadge status={req.status} />
+//                               </td>
+//                               <td className="p-2 md:p-3">
+//                                 <div className="flex space-x-1 md:space-x-2">
+//                                   <button
+//                                     className="p-1 md:p-1.5 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200"
+//                                     onClick={() =>
+//                                       setExpandedRequest(
+//                                         expandedRequest === req._id
+//                                           ? null
+//                                           : req._id
+//                                       )
+//                                     }
+//                                     title="View Details"
+//                                   >
+//                                     <Eye size={14} />
+//                                   </button>
+//                                   {req.status === "pending" && (
+//                                     <>
+//                                       <button
+//                                         className="p-1 md:p-1.5 rounded-full bg-green-100 text-green-600 hover:bg-green-200"
+//                                         onClick={() => {
+//                                           setSelectedRequest(req);
+//                                           document
+//                                             .getElementById("actionModal")
+//                                             .classList.remove("hidden");
+//                                         }}
+//                                         title="Approve"
+//                                       >
+//                                         <CheckCircle size={14} />
+//                                       </button>
+//                                       <button
+//                                         className="p-1 md:p-1.5 rounded-full bg-red-100 text-red-600 hover:bg-red-200"
+//                                         onClick={() => {
+//                                           setSelectedRequest(req);
+//                                           document
+//                                             .getElementById("actionModal")
+//                                             .classList.remove("hidden");
+//                                         }}
+//                                         title="Reject"
+//                                       >
+//                                         <XCircle size={14} />
+//                                       </button>
+//                                     </>
+//                                   )}
+//                                 </div>
+//                               </td>
+//                             </tr>
+
+//                             {expandedRequest === req._id && (
+//                               <tr>
+//                                 <td colSpan="8" className="p-3 md:p-6 bg-gray-50">
+//                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
+//                                     <div className="bg-white p-3 md:p-5 rounded-lg md:rounded-xl shadow-sm border">
+//                                       <h4 className="text-[#104774] font-semibold text-sm md:text-base mb-2 md:mb-3">
+//                                         Request Details
+//                                       </h4>
+//                                       <div className="space-y-1 md:space-y-2 text-xs md:text-sm">
+//                                         <p>
+//                                           <span className="font-medium">Reason:</span>{" "}
+//                                           {req.reason || "-"}
+//                                         </p>
+//                                         <p>
+//                                           <span className="font-medium">Applied On:</span>{" "}
+//                                           {format(
+//                                             new Date(req.appliedAt),
+//                                             "dd MMM yyyy, hh:mm a"
+//                                           )}
+//                                         </p>
+//                                         {req.processedBy && (
+//                                           <p>
+//                                             <span className="font-medium">Processed By:</span>{" "}
+//                                             {req.processedBy?.email || "Admin"}
+//                                           </p>
+//                                         )}
+//                                         {req.processedAt && (
+//                                           <p>
+//                                             <span className="font-medium">Processed At:</span>{" "}
+//                                             {format(
+//                                               new Date(req.processedAt),
+//                                               "dd MMM yyyy, hh:mm a"
+//                                             )}
+//                                           </p>
+//                                         )}
+//                                         {req.remarks && (
+//                                           <p>
+//                                             <span className="font-medium">Remarks:</span>{" "}
+//                                             {req.remarks}
+//                                           </p>
+//                                         )}
+//                                       </div>
+//                                     </div>
+
+//                                     <div className="bg-white p-3 md:p-5 rounded-lg md:rounded-xl shadow-sm border">
+//                                       <h4 className="text-[#104774] font-semibold text-sm md:text-base mb-2 md:mb-3">
+//                                         Balance Information
+//                                       </h4>
+//                                       <div className="space-y-1 md:space-y-2 text-xs md:text-sm">
+//                                         <p>
+//                                           <span className="font-medium">Remaining at request:</span>{" "}
+//                                           {req.balanceSnapshot?.remaining?.[
+//                                             req.leaveType
+//                                           ] ?? "-"}
+//                                         </p>
+//                                         <p>
+//                                           <span className="font-medium">Current remaining:</span>{" "}
+//                                           {req.currentRemaining?.[req.leaveType] ?? "-"}
+//                                         </p>
+//                                         {!hasSufficientBalance && (
+//                                           <p className="text-red-600 font-medium flex items-center mt-1 md:mt-2">
+//                                             <AlertCircle size={14} className="mr-1" />
+//                                             Insufficient balance
+//                                           </p>
+//                                         )}
+//                                       </div>
+//                                     </div>
+//                                   </div>
+//                                 </td>
+//                               </tr>
+//                             )}
+//                           </React.Fragment>
+//                         );
+//                       })}
+//                   </tbody>
+//                 </table>
+//               </div>
+//             </div>
+
+//             {/* Pagination */}
+//             {totalPages > 1 && (
+//               <div className="p-3 md:p-4 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-3">
+//                 <div className="text-xs md:text-sm text-gray-500">
+//                   Showing {indexOfFirstItem + 1} to{" "}
+//                   {Math.min(indexOfLastItem, filteredRequests.length)} of{" "}
+//                   {filteredRequests.length} entries
+//                 </div>
+//                 <div className="flex space-x-1">
+//                   <button
+//                     onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+//                     disabled={currentPage === 1}
+//                     className="px-2 md:px-3 py-1 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed text-xs md:text-sm hover:bg-gray-100"
+//                   >
+//                     Previous
+//                   </button>
+
+//                   {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+//                     let pageNum;
+//                     if (totalPages <= 5) {
+//                       pageNum = i + 1;
+//                     } else if (currentPage <= 3) {
+//                       pageNum = i + 1;
+//                     } else if (currentPage >= totalPages - 2) {
+//                       pageNum = totalPages - 4 + i;
+//                     } else {
+//                       pageNum = currentPage - 2 + i;
+//                     }
+
+//                     return (
+//                       <button
+//                         key={pageNum}
+//                         onClick={() => setCurrentPage(pageNum)}
+//                         className={`px-2 md:px-3 py-1 rounded-lg border text-xs md:text-sm transition ${
+//                           currentPage === pageNum
+//                             ? "bg-[#104774] text-white border-[#104774]"
+//                             : "hover:bg-gray-100 border-gray-300"
+//                         }`}
+//                       >
+//                         {pageNum}
+//                       </button>
+//                     );
+//                   })}
+
+//                   <button
+//                     onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+//                     disabled={currentPage === totalPages}
+//                     className="px-2 md:px-3 py-1 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed text-xs md:text-sm hover:bg-gray-100"
+//                   >
+//                     Next
+//                   </button>
+//                 </div>
+//               </div>
+//             )}
+//           </>
+//         )}
+//       </div>
+//     </div>
+
+//     {/* Sidebar */}
+//     <div
+//       className={`w-full md:w-80 space-y-4 md:space-y-6 ${
+//         mobileSidebarOpen ? "block" : "hidden"
+//       } md:block`}
+//     >
+//       {/* Leave Policies */}
+//       <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-4 shadow-sm border border-gray-200">
+//         <div className="flex items-center justify-between mb-3 md:mb-4">
+//           <h3 className="text-base md:text-lg font-semibold">Leave Policies</h3>
+//           <button
+//             className="text-[#104774] hover:text-[#0d3a61]"
+//             onClick={() => {
+//               setSelectedPolicy(null);
+//               document.getElementById("policyModal").classList.remove("hidden");
+//             }}
+//           >
+//             <Plus size={18} />
+//           </button>
+//         </div>
+
+//         {policies.length === 0 ? (
+//           <p className="text-gray-500 text-center py-3 md:py-4 text-sm">
+//             No policies set yet
+//           </p>
+//         ) : (
+//           <div className="space-y-2 md:space-y-3 max-h-60 md:max-h-80 overflow-y-auto">
+//             {policies.map((p) => {
+//               const leaves =
+//                 p.leaves instanceof Map
+//                   ? Object.fromEntries(p.leaves)
+//                   : p.leaves;
+
+//               return (
+//                 <div
+//                   key={p._id}
+//                   className="border border-gray-200 rounded-lg p-2 md:p-3 hover:shadow-md transition-shadow"
+//                 >
+//                   <div className="flex justify-between items-start mb-1 md:mb-2">
+//                     <h4 className="font-medium text-[#104774] text-sm md:text-base">
+//                       {p.role.charAt(0).toUpperCase() + p.role.slice(1)} -{" "}
+//                       {p.year}
+//                     </h4>
+//                     <button
+//                       onClick={() => handleEditPolicy(p)}
+//                       className="text-gray-500 hover:text-[#104774]"
+//                     >
+//                       <Edit size={14} />
+//                     </button>
+//                   </div>
+//                   <div className="space-y-1 text-xs md:text-sm">
+//                     {Object.entries(leaves).map(([type, days]) => (
+//                       <p key={type} className="flex justify-between">
+//                         <span className="capitalize">
+//                           {type.replace(/_/g, " ")}:
+//                         </span>{" "}
+//                         <span className="font-medium">{days}</span>
+//                       </p>
+//                     ))}
+//                   </div>
+//                 </div>
+//               );
+//             })}
+//           </div>
+//         )}
+//       </div>
+
+//       {/* Leave Types */}
+//       <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-4 shadow-sm border border-gray-200">
+//         <div className="flex items-center justify-between mb-3 md:mb-4">
+//           <h3 className="text-base md:text-lg font-semibold">Leave Types</h3>
+//           <button
+//             className="text-[#104774] hover:text-[#0d3a61]"
+//             onClick={() => {
+//               setSelectedLeaveType(null);
+//               setLeaveTypeForm({ name: "", isActive: true });
+//               document.getElementById("leaveTypeModal").classList.remove("hidden");
+//             }}
+//           >
+//             <Plus size={18} />
+//           </button>
+//         </div>
+
+//         {leaveTypes.length === 0 ? (
+//           <p className="text-gray-500 text-center py-3 md:py-4 text-sm">
+//             No leave types set yet
+//           </p>
+//         ) : (
+//           <div className="space-y-1 md:space-y-2 max-h-60 md:max-h-80 overflow-y-auto">
+//             {leaveTypes.map((type) => (
+//               <div
+//                 key={type._id}
+//                 className="flex justify-between items-center py-1 md:py-2 border-b border-gray-100 last:border-0"
+//               >
+//                 <div className="flex items-center">
+//                   <span
+//                     className={`text-xs md:text-sm ${
+//                       type.isActive
+//                         ? "text-gray-800"
+//                         : "text-gray-400 line-through"
+//                     }`}
+//                   >
+//                     {type.name
+//                       .replace(/_/g, " ")
+//                       .replace(/\b\w/g, (l) => l.toUpperCase())}
+//                   </span>
+//                   {!type.isActive && (
+//                     <span className="ml-2 text-xs text-gray-400">(Inactive)</span>
+//                   )}
+//                 </div>
+//                 <div className="flex space-x-1 md:space-x-2">
+//                   <button
+//                     onClick={() => handleEditLeaveType(type)}
+//                     className="text-gray-500 hover:text-[#104774] p-1"
+//                   >
+//                     <Edit size={12} />
+//                   </button>
+//                   <button
+//                     onClick={() => handleToggleLeaveTypeStatus(type._id)}
+//                     className={`p-1 text-xs ${
+//                       type.isActive
+//                         ? "text-yellow-500 hover:text-yellow-700"
+//                         : "text-green-500 hover:text-green-700"
+//                     }`}
+//                   >
+//                     {type.isActive ? "Disable" : "Enable"}
+//                   </button>
+//                   <button
+//                     onClick={() => handleDeleteLeaveType(type._id)}
+//                     className="text-gray-500 hover:text-red-600 p-1"
+//                   >
+//                     <Trash2 size={12} />
+//                   </button>
+//                 </div>
+//               </div>
+//             ))}
+//           </div>
+//         )}
+//       </div>
+//     </div>
+
+//     {/* Policy Modal */}
+//     <div
+//       id="policyModal"
+//       className="fixed inset-0 backdrop-blur-sm  bg-opacity-40 flex items-center justify-center hidden z-50 p-3 md:p-4"
+//     >
+//       <div className="bg-white p-4 md:p-6 rounded-lg md:rounded-xl w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl">
+//         <h3 className="text-lg font-semibold mb-3 md:mb-4">
+//           {selectedPolicy ? "Edit Leave Policy" : "Create Leave Policy"}
+//         </h3>
+//         <form onSubmit={handlePolicySubmit} className="space-y-3 md:space-y-4">
+//           <div>
+//             <label className="block text-sm font-medium mb-1">Role</label>
+//             <select
+//               value={policyForm.role}
+//               onChange={(e) =>
+//                 setPolicyForm({ ...policyForm, role: e.target.value })
+//               }
+//               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#104774] text-sm md:text-base"
+//             >
+//               <option value="employee">Employee</option>
+//               <option value="hr">HR</option>
+//             </select>
+//           </div>
+//           <div>
+//             <label className="block text-sm font-medium mb-1">Year</label>
+//             <input
+//               type="number"
+//               min="2000"
+//               max="2100"
+//               value={policyForm.year}
+//               onChange={(e) =>
+//                 setPolicyForm({
+//                   ...policyForm,
+//                   year: parseInt(e.target.value) || new Date().getFullYear(),
+//                 })
+//               }
+//               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#104774] text-sm md:text-base"
+//             />
+//           </div>
+
+//           <div>
+//             <label className="block text-sm font-medium mb-1">
+//               Leave Types
+//             </label>
+//             <div className="space-y-2 md:space-y-3">
+//               {leaveTypes
+//                 .filter((lt) => lt.isActive)
+//                 .map((type) => (
+//                   <div key={type._id}>
+//                     <label className="block text-sm font-medium mb-1 capitalize">
+//                       {type.name.replace(/_/g, " ")} Leaves
+//                     </label>
+//                     <input
+//                       type="number"
+//                       min="0"
+//                       value={policyForm.leaves[type.name] || 0}
+//                       onChange={(e) =>
+//                         setPolicyForm({
+//                           ...policyForm,
+//                           leaves: {
+//                             ...policyForm.leaves,
+//                             [type.name]: parseInt(e.target.value) || 0,
+//                           },
+//                         })
+//                       }
+//                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#104774] text-sm md:text-base"
+//                     />
+//                   </div>
+//                 ))}
+//             </div>
+//           </div>
+
+//           <div className="flex justify-end space-x-2 pt-3 md:pt-4">
+//             <button
+//               type="button"
+//               className="px-3 md:px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition-colors text-sm md:text-base"
+//               onClick={() =>
+//                 document.getElementById("policyModal").classList.add("hidden")
+//               }
+//             >
+//               Cancel
+//             </button>
+//             <button
+//               type="submit"
+//               className="px-3 md:px-4 py-2 rounded-lg bg-[#104774] text-white hover:bg-[#0d3a61] transition-colors text-sm md:text-base"
+//             >
+//               {selectedPolicy ? "Update Policy" : "Save Policy"}
+//             </button>
+//           </div>
+//         </form>
+//       </div>
+//     </div>
+
+//     {/* Leave Type Modal */}
+//     <div
+//       id="leaveTypeModal"
+//       className="fixed inset-0 backdrop-blur-sm  bg-opacity-40 flex items-center justify-center hidden z-50 p-3 md:p-4"
+//     >
+//       <div className="bg-white p-4 md:p-6 rounded-lg md:rounded-xl w-full max-w-md border border-gray-200 shadow-2xl">
+//         <h3 className="text-lg font-semibold mb-3 md:mb-4">
+//           {selectedLeaveType ? "Edit Leave Type" : "Add Leave Type"}
+//         </h3>
+//         <form onSubmit={handleLeaveTypeSubmit} className="space-y-3 md:space-y-4">
+//           <div>
+//             <label className="block text-sm font-medium mb-1">
+//               Leave Type Name
+//             </label>
+//             <input
+//               type="text"
+//               value={leaveTypeForm.name}
+//               onChange={(e) =>
+//                 setLeaveTypeForm({ ...leaveTypeForm, name: e.target.value })
+//               }
+//               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#104774] text-sm md:text-base"
+//               placeholder="e.g., Work From Home"
+//               required
+//             />
+//             <p className="text-xs text-gray-500 mt-1">
+//               Use underscores for spaces (e.g., "work_from_home")
+//             </p>
+//           </div>
+
+//           <div className="flex justify-end space-x-2 pt-2">
+//             <button
+//               type="button"
+//               className="px-3 md:px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition-colors text-sm md:text-base"
+//               onClick={() => {
+//                 document.getElementById("leaveTypeModal").classList.add("hidden");
+//                 setSelectedLeaveType(null);
+//               }}
+//             >
+//               Cancel
+//             </button>
+//             <button
+//               type="submit"
+//               className="px-3 md:px-4 py-2 rounded-lg bg-[#104774] text-white hover:bg-[#0d3a61] transition-colors text-sm md:text-base"
+//             >
+//               {selectedLeaveType ? "Update" : "Add"} Leave Type
+//             </button>
+//           </div>
+//         </form>
+//       </div>
+//     </div>
+
+//     {/* Action Modal */}
+//     {/* <div
+//       id="actionModal"
+//       className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-40 flex items-center justify-center hidden z-50 p-3 md:p-4"
+//     >
+//       <div className="bg-white p-4 md:p-6 rounded-lg md:rounded-xl w-full max-w-md border border-gray-200 shadow-2xl">
+//         <h3 className="text-lg font-semibold mb-3 md:mb-4">Process Leave Request</h3>
+//         {selectedRequest && (
+//           <>
+//             <div className="mb-3 md:mb-4 p-3 bg-gray-50 rounded-lg">
+//               <p className="text-sm md:text-base">
+//                 <strong>Employee:</strong> {selectedRequest.employee?.email}
+//               </p>
+//               <p className="text-sm md:text-base">
+//                 <strong>Type:</strong> {selectedRequest.leaveType}
+//               </p>
+//               <p className="text-sm md:text-base">
+//                 <strong>Duration:</strong> {selectedRequest.totalDays} days
+//               </p>
+//               <p className="text-sm md:text-base">
+//                 <strong>Reason:</strong> {selectedRequest.reason || "-"}
+//               </p>
+
+//               {selectedRequest.currentRemaining && (
+//                 <p
+//                   className={`mt-2 text-sm md:text-base ${
+//                     selectedRequest.currentRemaining[
+//                       selectedRequest.leaveType
+//                     ] < selectedRequest.totalDays
+//                       ? "text-red-600 font-medium"
+//                       : ""
+//                   }`}
+//                 >
+//                   <strong>Remaining Balance:</strong>{" "}
+//                   {
+//                     selectedRequest.currentRemaining[
+//                       selectedRequest.leaveType
+//                     ]
+//                   }
+//                   /
+//                   {
+//                     selectedRequest.balanceSnapshot?.remaining[
+//                       selectedRequest.leaveType
+//                     ]
+//                   }
+//                   {selectedRequest.currentRemaining[
+//                     selectedRequest.leaveType
+//                   ] < selectedRequest.totalDays && (
+//                     <span className="ml-1">(Insufficient balance)</span>
+//                   )}
+//                 </p>
+//               )}
+//             </div>
+
+//             <div className="mb-3 md:mb-4">
+//               <label className="block text-sm font-medium mb-1">
+//                 Remarks (Optional)
+//               </label>
+//               <textarea
+//                 value={actionRemark}
+//                 onChange={(e) => setActionRemark(e.target.value)}
+//                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#104774] text-sm md:text-base"
+//                 rows="3"
+//                 placeholder="Add remarks for this action..."
+//               />
+//             </div>
+
+//             <div className="flex justify-end space-x-2">
+//               <button
+//                 className="px-3 md:px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition-colors text-sm md:text-base"
+//                 onClick={() => {
+//                   document.getElementById("actionModal").classList.add("hidden");
+//                   setActionRemark("");
+//                 }}
+//               >
+//                 Cancel
+//               </button>
+//               <button
+//                 className="px-3 md:px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors text-sm md:text-base"
+//                 onClick={() => handleAction(selectedRequest._id, "reject")}
+//               >
+//                 Reject
+//               </button>
+//               <button
+//                 className="px-3 md:px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors text-sm md:text-base"
+//                 onClick={() => handleAction(selectedRequest._id, "approve")}
+//               >
+//                 Approve
+//               </button>
+//             </div>
+//           </>
+//         )}
+//       </div>
+//     </div> */}
+//     <div
+//   id="actionModal"
+//   className="fixed inset-0 backdrop-blur-sm  bg-opacity-40 flex items-center justify-center hidden z-50 p-2 sm:p-3 md:p-4"
+// >
+//   <div className="bg-white p-3 sm:p-4 md:p-6 rounded-lg md:rounded-xl w-full max-w-md mx-2 sm:mx-4 border border-gray-200 shadow-2xl max-h-[90vh] overflow-y-auto">
+//     <h3 className="text-base sm:text-lg font-semibold mb-3 md:mb-4">Process Leave Request</h3>
+//     {selectedRequest && (
+//       <>
+//         <div className="mb-3 md:mb-4 p-2 sm:p-3 bg-gray-50 rounded-lg">
+//           <p className="text-xs sm:text-sm md:text-base break-words">
+//             <strong>Employee:</strong> {selectedRequest.employee?.email}
+//           </p>
+//           <p className="text-xs sm:text-sm md:text-base">
+//             <strong>Type:</strong> {selectedRequest.leaveType}
+//           </p>
+//           <p className="text-xs sm:text-sm md:text-base">
+//             <strong>Duration:</strong> {selectedRequest.totalDays} days
+//           </p>
+//           <p className="text-xs sm:text-sm md:text-base break-words">
+//             <strong>Reason:</strong> {selectedRequest.reason || "-"}
+//           </p>
+
+//           {selectedRequest.currentRemaining && (
+//             <p
+//               className={`mt-2 text-xs sm:text-sm md:text-base break-words ${
+//                 selectedRequest.currentRemaining[
+//                   selectedRequest.leaveType
+//                 ] < selectedRequest.totalDays
+//                   ? "text-red-600 font-medium"
+//                   : ""
+//               }`}
+//             >
+//               <strong>Remaining Balance:</strong>{" "}
+//               {
+//                 selectedRequest.currentRemaining[
+//                   selectedRequest.leaveType
+//                 ]
+//               }
+//               /
+//               {
+//                 selectedRequest.balanceSnapshot?.remaining[
+//                   selectedRequest.leaveType
+//                 ]
+//               }
+//               {selectedRequest.currentRemaining[
+//                 selectedRequest.leaveType
+//               ] < selectedRequest.totalDays && (
+//                 <span className="ml-1">(Insufficient balance)</span>
+//               )}
+//             </p>
+//           )}
+//         </div>
+
+//         <div className="mb-3 md:mb-4">
+//           <label className="block text-xs sm:text-sm font-medium mb-1">
+//             Remarks (Optional)
+//           </label>
+//           <textarea
+//             value={actionRemark}
+//             onChange={(e) => setActionRemark(e.target.value)}
+//             className="w-full border border-gray-300 rounded-lg px-2 sm:px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#104774] text-xs sm:text-sm md:text-base"
+//             rows="3"
+//             placeholder="Add remarks for this action..."
+//           />
+//         </div>
+
+//         <div className="flex flex-col sm:flex-row justify-end gap-2 sm:space-x-2">
+//           <button
+//             className="px-3 md:px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition-colors text-xs sm:text-sm md:text-base order-3 sm:order-1"
+//             onClick={() => {
+//               document.getElementById("actionModal").classList.add("hidden");
+//               setActionRemark("");
+//             }}
+//           >
+//             Cancel
+//           </button>
+//           <div className="flex space-x-2 order-1 sm:order-2">
+//             <button
+//               className="px-3 md:px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors text-xs sm:text-sm md:text-base flex-1"
+//               onClick={() => handleAction(selectedRequest._id, "reject")}
+//             >
+//               Reject
+//             </button>
+//             <button
+//               className="px-3 md:px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors text-xs sm:text-sm md:text-base flex-1"
+//               onClick={() => handleAction(selectedRequest._id, "approve")}
+//             >
+//               Approve
+//             </button>
+//           </div>
+//         </div>
+//       </>
+//     )}
+//   </div>
+// </div>
+//   </div>
+// );
+
+
+return (
+  <div className="flex flex-col md:flex-row gap-3 md:gap-4 p-2 bg-gray-50 max-h-[80vh] text-[13px]">
+    {/* Mobile Header */}
+    <div className="md:hidden flex justify-between items-center p-2 bg-white rounded shadow-sm mb-2">
+      <h1 className="text-sm font-semibold text-gray-800">Admin Leave Management</h1>
       <button
         onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
-        className="p-2 rounded-lg bg-[#104774] text-white"
+        className="p-1 rounded bg-[#104774] text-white"
       >
-        {mobileSidebarOpen ? <X size={20} /> : <Menu size={20} />}
+        {mobileSidebarOpen ? <X size={16} /> : <Menu size={16} />}
       </button>
     </div>
 
     {/* Main Content */}
-    <div className="flex-1 space-y-4 md:space-y-6">
+    <div className="flex-1 space-y-3">
       {/* Header */}
-      <div className="hidden md:flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-4 bg-white p-4 rounded-xl shadow-sm">
-        <h1 className="text-xl md:text-2xl font-bold text-gray-800">
-          Admin Leave Management
-        </h1>
-        <div className="flex flex-wrap gap-2">
+      <div className="hidden md:flex items-center justify-between bg-white p-3 rounded shadow-sm">
+        <h1 className="text-base font-semibold text-gray-800">Admin Leave Management</h1>
+        <div className="flex gap-2">
           <button
-            className="flex items-center bg-[#104774] text-white px-3 md:px-4 py-2 rounded-lg font-medium hover:bg-[#0d3a61] transition-all duration-200 text-sm md:text-base"
+            className="flex items-center bg-[#104774] text-white px-3 py-1.5 rounded text-xs hover:bg-[#0d3a61]"
             onClick={() => {
               setSelectedPolicy(null);
               document.getElementById("policyModal").classList.remove("hidden");
             }}
           >
-            <Plus size={16} className="mr-1 md:mr-2" /> Set Policy
+            <Plus size={13} className="mr-1" /> Set Policy
           </button>
           <button
-            className="flex items-center bg-green-600 text-white px-3 md:px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-all duration-200 text-sm md:text-base"
+            className="flex items-center bg-green-600 text-white px-3 py-1.5 rounded text-xs hover:bg-green-700"
             onClick={fetchData}
           >
-            <RefreshCw size={16} className="mr-1 md:mr-2" /> Refresh
+            <RefreshCw size={13} className="mr-1" /> Refresh
           </button>
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
-        <StatCard
-          title="Total Requests"
-          value={stats.total}
-          subtitle="This Month"
-          icon={Calendar}
-          color="bg-blue-500"
-        />
-        <StatCard
-          title="Pending"
-          value={stats.pending}
-          subtitle="Require Action"
-          icon={Clock}
-          color="bg-yellow-500"
-        />
-        <StatCard
-          title="Approved"
-          value={stats.approved}
-          subtitle="This month"
-          icon={CheckCircle}
-          color="bg-green-500"
-        />
-        <StatCard
-          title="Rejected"
-          value={stats.rejected}
-          subtitle="Leaves"
-          icon={XCircle}
-          color="bg-red-500"
-        />
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+        <StatCard title="Total Requests" value={stats.total} subtitle="This Month" icon={Calendar} color="bg-blue-500" />
+        <StatCard title="Pending" value={stats.pending} subtitle="Require Action" icon={Clock} color="bg-yellow-500" />
+        <StatCard title="Approved" value={stats.approved} subtitle="This Month" icon={CheckCircle} color="bg-green-500" />
+        <StatCard title="Rejected" value={stats.rejected} subtitle="Leaves" icon={XCircle} color="bg-red-500" />
       </div>
 
-      {/* Filters and Search */}
-      <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-4 shadow-sm border border-gray-200">
-        <div className="flex flex-col md:flex-row gap-3">
+      {/* Filters */}
+      <div className="bg-white rounded p-2.5 shadow-sm border border-gray-200">
+        <div className="flex flex-col md:flex-row gap-2">
           <div className="relative flex-1">
-            <Search
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-              size={16}
-            />
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" size={13} />
             <input
               type="text"
               placeholder="Search by employee, type, or reason..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#104774] text-sm md:text-base"
+              className="w-full pl-7 pr-2 py-1.5 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-[#104774]"
             />
           </div>
-
           <div className="flex flex-wrap gap-2">
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#104774] text-sm w-full md:w-auto"
+              className="px-2 py-1.5 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-[#104774]"
             >
               <option value="all">All Status</option>
               <option value="pending">Pending</option>
@@ -491,65 +1346,56 @@ const AdminLeaves = () => {
               <option value="rejected">Rejected</option>
               <option value="cancelled">Cancelled</option>
             </select>
-
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#104774] text-sm w-full md:w-auto"
+              className="px-2 py-1.5 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-[#104774]"
             >
               <option value="all">All Types</option>
               {activeLeaveTypes.map((type) => (
                 <option key={type._id} value={type.name}>
-                  {type.name
-                    .replace(/_/g, " ")
-                    .replace(/\b\w/g, (l) => l.toUpperCase())}
+                  {type.name.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
                 </option>
               ))}
             </select>
           </div>
         </div>
-
-        <div className="mt-2 text-xs md:text-sm text-gray-500">
+        <p className="mt-1 text-[11px] text-gray-500">
           Showing {filteredRequests.length} of {leaveRequests.length} requests
-        </div>
+        </p>
       </div>
 
       {/* Leave Requests Table */}
-      <div className="bg-white rounded-lg md:rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="p-3 md:p-4 border-b border-gray-200 flex items-center space-x-2 md:space-x-3">
-          <Calendar size={20} className="text-[#104774]" />
-          <h3 className="text-base md:text-lg font-semibold text-gray-800">
-            All Leave Requests
-          </h3>
+      <div className="bg-white rounded shadow-sm border border-gray-200 overflow-hidden">
+        <div className="p-2 border-b border-gray-200 flex items-center space-x-2">
+          <Calendar size={16} className="text-[#104774]" />
+          <h3 className="text-sm font-semibold text-gray-800">All Leave Requests</h3>
         </div>
 
         {loading ? (
-          <div className="p-6 md:p-8 text-center">
-            <RefreshCw
-              className="animate-spin mx-auto text-[#104774]"
-              size={28}
-            />
-            <p className="mt-2 text-gray-500 text-sm md:text-base">Loading leave requests...</p>
+          <div className="p-4 text-center">
+            <RefreshCw className="animate-spin mx-auto text-[#104774]" size={20} />
+            <p className="mt-1 text-gray-500 text-xs">Loading leave requests...</p>
           </div>
         ) : filteredRequests.length === 0 ? (
-          <div className="p-6 md:p-8 text-center">
-            <p className="text-gray-500 text-sm md:text-base">No leave requests found</p>
+          <div className="p-4 text-center">
+            <p className="text-gray-500 text-xs">No leave requests found</p>
           </div>
         ) : (
           <>
             <div className="overflow-x-auto">
-              <div className="min-w-[800px] md:min-w-full max-h-[400px] md:max-h-[500px] overflow-y-auto">
+              <div className="min-w-[700px] md:min-w-full max-h-[350px] md:max-h-[400px] overflow-y-auto">
                 <table className="w-full border-collapse">
                   <thead className="bg-[#104774] text-white sticky top-0 z-10">
                     <tr>
-                      <th className="p-2 md:p-3 text-left text-xs md:text-sm font-medium whitespace-nowrap">Employee</th>
-                      <th className="p-2 md:p-3 text-left text-xs md:text-sm font-medium whitespace-nowrap">Type</th>
-                      <th className="p-2 md:p-3 text-left text-xs md:text-sm font-medium whitespace-nowrap">From</th>
-                      <th className="p-2 md:p-3 text-left text-xs md:text-sm font-medium whitespace-nowrap">To</th>
-                      <th className="p-2 md:p-3 text-left text-xs md:text-sm font-medium whitespace-nowrap">Days</th>
-                      <th className="p-2 md:p-3 text-left text-xs md:text-sm font-medium whitespace-nowrap">Balance</th>
-                      <th className="p-2 md:p-3 text-left text-xs md:text-sm font-medium whitespace-nowrap">Status</th>
-                      <th className="p-2 md:p-3 text-left text-xs md:text-sm font-medium whitespace-nowrap">Actions</th>
+                      <th className="p-1.5 text-left text-xs font-medium whitespace-nowrap">Employee</th>
+                      <th className="p-1.5 text-left text-xs font-medium whitespace-nowrap">Type</th>
+                      <th className="p-1.5 text-left text-xs font-medium whitespace-nowrap">From</th>
+                      <th className="p-1.5 text-left text-xs font-medium whitespace-nowrap">To</th>
+                      <th className="p-1.5 text-left text-xs font-medium whitespace-nowrap">Days</th>
+                      <th className="p-1.5 text-left text-xs font-medium whitespace-nowrap">Balance</th>
+                      <th className="p-1.5 text-left text-xs font-medium whitespace-nowrap">Status</th>
+                      <th className="p-1.5 text-left text-xs font-medium whitespace-nowrap">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -563,24 +1409,24 @@ const AdminLeaves = () => {
                         return (
                           <React.Fragment key={req._id}>
                             <tr className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-gray-100 transition-colors`}>
-                              <td className="p-2 md:p-3 text-xs md:text-sm whitespace-nowrap">
-                                <div className="truncate max-w-[120px] md:max-w-none">
+                              <td className="p-1.5 text-xs whitespace-nowrap">
+                                <div className="truncate max-w-[100px] md:max-w-none">
                                   {req.employee?.email || "N/A"}
                                 </div>
                               </td>
-                              <td className="p-2 md:p-3 text-xs md:text-sm capitalize whitespace-nowrap">
+                              <td className="p-1.5 text-xs capitalize whitespace-nowrap">
                                 {req.leaveType.replace(/_/g, " ")}
                               </td>
-                              <td className="p-2 md:p-3 text-xs md:text-sm whitespace-nowrap">
+                              <td className="p-1.5 text-xs whitespace-nowrap">
                                 {format(new Date(req.fromDate), "dd MMM yyyy")}
                               </td>
-                              <td className="p-2 md:p-3 text-xs md:text-sm whitespace-nowrap">
+                              <td className="p-1.5 text-xs whitespace-nowrap">
                                 {format(new Date(req.toDate), "dd MMM yyyy")}
                               </td>
-                              <td className="p-2 md:p-3 text-xs md:text-sm whitespace-nowrap">
+                              <td className="p-1.5 text-xs whitespace-nowrap">
                                 {req.totalDays}
                               </td>
-                              <td className="p-2 md:p-3 text-xs md:text-sm whitespace-nowrap">
+                              <td className="p-1.5 text-xs whitespace-nowrap">
                                 <div className="flex items-center">
                                   {req.currentRemaining ? (
                                     <>
@@ -600,7 +1446,7 @@ const AdminLeaves = () => {
                                       </span>
                                       {!hasSufficientBalance && (
                                         <AlertCircle
-                                          size={14}
+                                          size={12}
                                           className="text-red-500 ml-1"
                                         />
                                       )}
@@ -610,13 +1456,13 @@ const AdminLeaves = () => {
                                   )}
                                 </div>
                               </td>
-                              <td className="p-2 md:p-3">
+                              <td className="p-1.5">
                                 <StatusBadge status={req.status} />
                               </td>
-                              <td className="p-2 md:p-3">
-                                <div className="flex space-x-1 md:space-x-2">
+                              <td className="p-1.5">
+                                <div className="flex space-x-1">
                                   <button
-                                    className="p-1 md:p-1.5 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200"
+                                    className="p-1 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200"
                                     onClick={() =>
                                       setExpandedRequest(
                                         expandedRequest === req._id
@@ -626,12 +1472,12 @@ const AdminLeaves = () => {
                                     }
                                     title="View Details"
                                   >
-                                    <Eye size={14} />
+                                    <Eye size={12} />
                                   </button>
                                   {req.status === "pending" && (
                                     <>
                                       <button
-                                        className="p-1 md:p-1.5 rounded-full bg-green-100 text-green-600 hover:bg-green-200"
+                                        className="p-1 rounded-full bg-green-100 text-green-600 hover:bg-green-200"
                                         onClick={() => {
                                           setSelectedRequest(req);
                                           document
@@ -640,10 +1486,10 @@ const AdminLeaves = () => {
                                         }}
                                         title="Approve"
                                       >
-                                        <CheckCircle size={14} />
+                                        <CheckCircle size={12} />
                                       </button>
                                       <button
-                                        className="p-1 md:p-1.5 rounded-full bg-red-100 text-red-600 hover:bg-red-200"
+                                        className="p-1 rounded-full bg-red-100 text-red-600 hover:bg-red-200"
                                         onClick={() => {
                                           setSelectedRequest(req);
                                           document
@@ -652,7 +1498,7 @@ const AdminLeaves = () => {
                                         }}
                                         title="Reject"
                                       >
-                                        <XCircle size={14} />
+                                        <XCircle size={12} />
                                       </button>
                                     </>
                                   )}
@@ -662,13 +1508,13 @@ const AdminLeaves = () => {
 
                             {expandedRequest === req._id && (
                               <tr>
-                                <td colSpan="8" className="p-3 md:p-6 bg-gray-50">
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
-                                    <div className="bg-white p-3 md:p-5 rounded-lg md:rounded-xl shadow-sm border">
-                                      <h4 className="text-[#104774] font-semibold text-sm md:text-base mb-2 md:mb-3">
+                                <td colSpan="8" className="p-2 bg-gray-50">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                    <div className="bg-white p-2 rounded shadow-sm border">
+                                      <h4 className="text-[#104774] font-semibold text-xs mb-1">
                                         Request Details
                                       </h4>
-                                      <div className="space-y-1 md:space-y-2 text-xs md:text-sm">
+                                      <div className="space-y-1 text-xs">
                                         <p>
                                           <span className="font-medium">Reason:</span>{" "}
                                           {req.reason || "-"}
@@ -704,11 +1550,11 @@ const AdminLeaves = () => {
                                       </div>
                                     </div>
 
-                                    <div className="bg-white p-3 md:p-5 rounded-lg md:rounded-xl shadow-sm border">
-                                      <h4 className="text-[#104774] font-semibold text-sm md:text-base mb-2 md:mb-3">
+                                    <div className="bg-white p-2 rounded shadow-sm border">
+                                      <h4 className="text-[#104774] font-semibold text-xs mb-1">
                                         Balance Information
                                       </h4>
-                                      <div className="space-y-1 md:space-y-2 text-xs md:text-sm">
+                                      <div className="space-y-1 text-xs">
                                         <p>
                                           <span className="font-medium">Remaining at request:</span>{" "}
                                           {req.balanceSnapshot?.remaining?.[
@@ -720,8 +1566,8 @@ const AdminLeaves = () => {
                                           {req.currentRemaining?.[req.leaveType] ?? "-"}
                                         </p>
                                         {!hasSufficientBalance && (
-                                          <p className="text-red-600 font-medium flex items-center mt-1 md:mt-2">
-                                            <AlertCircle size={14} className="mr-1" />
+                                          <p className="text-red-600 font-medium flex items-center mt-1">
+                                            <AlertCircle size={12} className="mr-1" />
                                             Insufficient balance
                                           </p>
                                         )}
@@ -741,8 +1587,8 @@ const AdminLeaves = () => {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="p-3 md:p-4 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-3">
-                <div className="text-xs md:text-sm text-gray-500">
+              <div className="p-2 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-2">
+                <div className="text-xs text-gray-500">
                   Showing {indexOfFirstItem + 1} to{" "}
                   {Math.min(indexOfLastItem, filteredRequests.length)} of{" "}
                   {filteredRequests.length} entries
@@ -751,7 +1597,7 @@ const AdminLeaves = () => {
                   <button
                     onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
-                    className="px-2 md:px-3 py-1 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed text-xs md:text-sm hover:bg-gray-100"
+                    className="px-2 py-1 rounded border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed text-xs hover:bg-gray-100"
                   >
                     Previous
                   </button>
@@ -772,7 +1618,7 @@ const AdminLeaves = () => {
                       <button
                         key={pageNum}
                         onClick={() => setCurrentPage(pageNum)}
-                        className={`px-2 md:px-3 py-1 rounded-lg border text-xs md:text-sm transition ${
+                        className={`px-2 py-1 rounded border text-xs transition ${
                           currentPage === pageNum
                             ? "bg-[#104774] text-white border-[#104774]"
                             : "hover:bg-gray-100 border-gray-300"
@@ -786,7 +1632,7 @@ const AdminLeaves = () => {
                   <button
                     onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                     disabled={currentPage === totalPages}
-                    className="px-2 md:px-3 py-1 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed text-xs md:text-sm hover:bg-gray-100"
+                    className="px-2 py-1 rounded border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed text-xs hover:bg-gray-100"
                   >
                     Next
                   </button>
@@ -800,14 +1646,12 @@ const AdminLeaves = () => {
 
     {/* Sidebar */}
     <div
-      className={`w-full md:w-80 space-y-4 md:space-y-6 ${
-        mobileSidebarOpen ? "block" : "hidden"
-      } md:block`}
+      className={`w-full md:w-56 space-y-3 ${mobileSidebarOpen ? "block" : "hidden"} md:block`}
     >
       {/* Leave Policies */}
-      <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-4 shadow-sm border border-gray-200">
-        <div className="flex items-center justify-between mb-3 md:mb-4">
-          <h3 className="text-base md:text-lg font-semibold">Leave Policies</h3>
+      <div className="bg-white rounded p-2.5 shadow-sm border border-gray-200">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-sm font-semibold">Leave Policies</h3>
           <button
             className="text-[#104774] hover:text-[#0d3a61]"
             onClick={() => {
@@ -815,16 +1659,14 @@ const AdminLeaves = () => {
               document.getElementById("policyModal").classList.remove("hidden");
             }}
           >
-            <Plus size={18} />
+            <Plus size={14} />
           </button>
         </div>
 
         {policies.length === 0 ? (
-          <p className="text-gray-500 text-center py-3 md:py-4 text-sm">
-            No policies set yet
-          </p>
+          <p className="text-gray-500 text-center py-2 text-xs">No policies set yet</p>
         ) : (
-          <div className="space-y-2 md:space-y-3 max-h-60 md:max-h-80 overflow-y-auto">
+          <div className="space-y-1.5 max-h-70 overflow-y-auto">
             {policies.map((p) => {
               const leaves =
                 p.leaves instanceof Map
@@ -834,21 +1676,20 @@ const AdminLeaves = () => {
               return (
                 <div
                   key={p._id}
-                  className="border border-gray-200 rounded-lg p-2 md:p-3 hover:shadow-md transition-shadow"
+                  className="border border-gray-200 rounded p-1.5 hover:shadow-md transition-shadow"
                 >
-                  <div className="flex justify-between items-start mb-1 md:mb-2">
-                    <h4 className="font-medium text-[#104774] text-sm md:text-base">
-                      {p.role.charAt(0).toUpperCase() + p.role.slice(1)} -{" "}
-                      {p.year}
+                  <div className="flex justify-between items-start mb-1">
+                    <h4 className="font-medium text-[#104774] text-xs">
+                      {p.role.charAt(0).toUpperCase() + p.role.slice(1)} - {p.year}
                     </h4>
                     <button
                       onClick={() => handleEditPolicy(p)}
                       className="text-gray-500 hover:text-[#104774]"
                     >
-                      <Edit size={14} />
+                      <Edit size={12} />
                     </button>
                   </div>
-                  <div className="space-y-1 text-xs md:text-sm">
+                  <div className="space-y-0.5 text-xs">
                     {Object.entries(leaves).map(([type, days]) => (
                       <p key={type} className="flex justify-between">
                         <span className="capitalize">
@@ -866,9 +1707,9 @@ const AdminLeaves = () => {
       </div>
 
       {/* Leave Types */}
-      <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-4 shadow-sm border border-gray-200">
-        <div className="flex items-center justify-between mb-3 md:mb-4">
-          <h3 className="text-base md:text-lg font-semibold">Leave Types</h3>
+      <div className="bg-white rounded p-2.5 shadow-sm border border-gray-200">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-sm font-semibold">Leave Types</h3>
           <button
             className="text-[#104774] hover:text-[#0d3a61]"
             onClick={() => {
@@ -877,24 +1718,22 @@ const AdminLeaves = () => {
               document.getElementById("leaveTypeModal").classList.remove("hidden");
             }}
           >
-            <Plus size={18} />
+            <Plus size={14} />
           </button>
         </div>
 
         {leaveTypes.length === 0 ? (
-          <p className="text-gray-500 text-center py-3 md:py-4 text-sm">
-            No leave types set yet
-          </p>
+          <p className="text-gray-500 text-center py-2 text-xs">No leave types set yet</p>
         ) : (
-          <div className="space-y-1 md:space-y-2 max-h-60 md:max-h-80 overflow-y-auto">
+          <div className="space-y-1 max-h-40 overflow-y-auto">
             {leaveTypes.map((type) => (
               <div
                 key={type._id}
-                className="flex justify-between items-center py-1 md:py-2 border-b border-gray-100 last:border-0"
+                className="flex justify-between items-center py-1 border-b border-gray-100 last:border-0"
               >
                 <div className="flex items-center">
                   <span
-                    className={`text-xs md:text-sm ${
+                    className={`text-xs ${
                       type.isActive
                         ? "text-gray-800"
                         : "text-gray-400 line-through"
@@ -905,19 +1744,19 @@ const AdminLeaves = () => {
                       .replace(/\b\w/g, (l) => l.toUpperCase())}
                   </span>
                   {!type.isActive && (
-                    <span className="ml-2 text-xs text-gray-400">(Inactive)</span>
+                    <span className="ml-1 text-xs text-gray-400">(Inactive)</span>
                   )}
                 </div>
-                <div className="flex space-x-1 md:space-x-2">
+                <div className="flex space-x-1">
                   <button
                     onClick={() => handleEditLeaveType(type)}
-                    className="text-gray-500 hover:text-[#104774] p-1"
+                    className="text-gray-500 hover:text-[#104774] p-0.5"
                   >
-                    <Edit size={12} />
+                    <Edit size={10} />
                   </button>
                   <button
                     onClick={() => handleToggleLeaveTypeStatus(type._id)}
-                    className={`p-1 text-xs ${
+                    className={`p-0.5 text-xs ${
                       type.isActive
                         ? "text-yellow-500 hover:text-yellow-700"
                         : "text-green-500 hover:text-green-700"
@@ -927,9 +1766,9 @@ const AdminLeaves = () => {
                   </button>
                   <button
                     onClick={() => handleDeleteLeaveType(type._id)}
-                    className="text-gray-500 hover:text-red-600 p-1"
+                    className="text-gray-500 hover:text-red-600 p-0.5"
                   >
-                    <Trash2 size={12} />
+                    <Trash2 size={10} />
                   </button>
                 </div>
               </div>
@@ -942,28 +1781,28 @@ const AdminLeaves = () => {
     {/* Policy Modal */}
     <div
       id="policyModal"
-      className="fixed inset-0 backdrop-blur-sm  bg-opacity-40 flex items-center justify-center hidden z-50 p-3 md:p-4"
+      className="fixed inset-0 backdrop-blur-sm  bg-opacity-40 flex items-center justify-center hidden z-50 p-2"
     >
-      <div className="bg-white p-4 md:p-6 rounded-lg md:rounded-xl w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl">
-        <h3 className="text-lg font-semibold mb-3 md:mb-4">
+      <div className="bg-white p-3 rounded w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl">
+        <h3 className="text-sm font-semibold mb-2">
           {selectedPolicy ? "Edit Leave Policy" : "Create Leave Policy"}
         </h3>
-        <form onSubmit={handlePolicySubmit} className="space-y-3 md:space-y-4">
+        <form onSubmit={handlePolicySubmit} className="space-y-2">
           <div>
-            <label className="block text-sm font-medium mb-1">Role</label>
+            <label className="block text-xs font-medium mb-0.5">Role</label>
             <select
               value={policyForm.role}
               onChange={(e) =>
                 setPolicyForm({ ...policyForm, role: e.target.value })
               }
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#104774] text-sm md:text-base"
+              className="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#104774] text-xs"
             >
               <option value="employee">Employee</option>
               <option value="hr">HR</option>
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Year</label>
+            <label className="block text-xs font-medium mb-0.5">Year</label>
             <input
               type="number"
               min="2000"
@@ -975,20 +1814,20 @@ const AdminLeaves = () => {
                   year: parseInt(e.target.value) || new Date().getFullYear(),
                 })
               }
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#104774] text-sm md:text-base"
+              className="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#104774] text-xs"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">
+            <label className="block text-xs font-medium mb-0.5">
               Leave Types
             </label>
-            <div className="space-y-2 md:space-y-3">
+            <div className="space-y-1.5">
               {leaveTypes
                 .filter((lt) => lt.isActive)
                 .map((type) => (
                   <div key={type._id}>
-                    <label className="block text-sm font-medium mb-1 capitalize">
+                    <label className="block text-xs font-medium mb-0.5 capitalize">
                       {type.name.replace(/_/g, " ")} Leaves
                     </label>
                     <input
@@ -1004,17 +1843,17 @@ const AdminLeaves = () => {
                           },
                         })
                       }
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#104774] text-sm md:text-base"
+                      className="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#104774] text-xs"
                     />
                   </div>
                 ))}
             </div>
           </div>
 
-          <div className="flex justify-end space-x-2 pt-3 md:pt-4">
+          <div className="flex justify-end space-x-1 pt-2">
             <button
               type="button"
-              className="px-3 md:px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition-colors text-sm md:text-base"
+              className="px-2 py-1 rounded bg-gray-300 hover:bg-gray-400 transition-colors text-xs"
               onClick={() =>
                 document.getElementById("policyModal").classList.add("hidden")
               }
@@ -1023,7 +1862,7 @@ const AdminLeaves = () => {
             </button>
             <button
               type="submit"
-              className="px-3 md:px-4 py-2 rounded-lg bg-[#104774] text-white hover:bg-[#0d3a61] transition-colors text-sm md:text-base"
+              className="px-2 py-1 rounded bg-[#104774] text-white hover:bg-[#0d3a61] transition-colors text-xs"
             >
               {selectedPolicy ? "Update Policy" : "Save Policy"}
             </button>
@@ -1035,15 +1874,15 @@ const AdminLeaves = () => {
     {/* Leave Type Modal */}
     <div
       id="leaveTypeModal"
-      className="fixed inset-0 backdrop-blur-sm  bg-opacity-40 flex items-center justify-center hidden z-50 p-3 md:p-4"
+      className="fixed inset-0 backdrop-blur-sm  bg-opacity-40 flex items-center justify-center hidden z-50 p-2"
     >
-      <div className="bg-white p-4 md:p-6 rounded-lg md:rounded-xl w-full max-w-md border border-gray-200 shadow-2xl">
-        <h3 className="text-lg font-semibold mb-3 md:mb-4">
+      <div className="bg-white p-3 rounded w-full max-w-md border border-gray-200 shadow-2xl">
+        <h3 className="text-sm font-semibold mb-2">
           {selectedLeaveType ? "Edit Leave Type" : "Add Leave Type"}
         </h3>
-        <form onSubmit={handleLeaveTypeSubmit} className="space-y-3 md:space-y-4">
+        <form onSubmit={handleLeaveTypeSubmit} className="space-y-2">
           <div>
-            <label className="block text-sm font-medium mb-1">
+            <label className="block text-xs font-medium mb-0.5">
               Leave Type Name
             </label>
             <input
@@ -1052,19 +1891,19 @@ const AdminLeaves = () => {
               onChange={(e) =>
                 setLeaveTypeForm({ ...leaveTypeForm, name: e.target.value })
               }
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#104774] text-sm md:text-base"
+              className="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#104774] text-xs"
               placeholder="e.g., Work From Home"
               required
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-0.5">
               Use underscores for spaces (e.g., "work_from_home")
             </p>
           </div>
 
-          <div className="flex justify-end space-x-2 pt-2">
+          <div className="flex justify-end space-x-1 pt-1">
             <button
               type="button"
-              className="px-3 md:px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition-colors text-sm md:text-base"
+              className="px-2 py-1 rounded bg-gray-300 hover:bg-gray-400 transition-colors text-xs"
               onClick={() => {
                 document.getElementById("leaveTypeModal").classList.add("hidden");
                 setSelectedLeaveType(null);
@@ -1074,7 +1913,7 @@ const AdminLeaves = () => {
             </button>
             <button
               type="submit"
-              className="px-3 md:px-4 py-2 rounded-lg bg-[#104774] text-white hover:bg-[#0d3a61] transition-colors text-sm md:text-base"
+              className="px-2 py-1 rounded bg-[#104774] text-white hover:bg-[#0d3a61] transition-colors text-xs"
             >
               {selectedLeaveType ? "Update" : "Add"} Leave Type
             </button>
@@ -1084,31 +1923,31 @@ const AdminLeaves = () => {
     </div>
 
     {/* Action Modal */}
-    {/* <div
+    <div
       id="actionModal"
-      className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-40 flex items-center justify-center hidden z-50 p-3 md:p-4"
+      className="fixed inset-0 backdrop-blur-sm  bg-opacity-40 flex items-center justify-center hidden z-50 p-2"
     >
-      <div className="bg-white p-4 md:p-6 rounded-lg md:rounded-xl w-full max-w-md border border-gray-200 shadow-2xl">
-        <h3 className="text-lg font-semibold mb-3 md:mb-4">Process Leave Request</h3>
+      <div className="bg-white p-3 rounded w-full max-w-md mx-2 border border-gray-200 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <h3 className="text-sm font-semibold mb-2">Process Leave Request</h3>
         {selectedRequest && (
           <>
-            <div className="mb-3 md:mb-4 p-3 bg-gray-50 rounded-lg">
-              <p className="text-sm md:text-base">
+            <div className="mb-2 p-2 bg-gray-50 rounded">
+              <p className="text-xs break-words">
                 <strong>Employee:</strong> {selectedRequest.employee?.email}
               </p>
-              <p className="text-sm md:text-base">
+              <p className="text-xs">
                 <strong>Type:</strong> {selectedRequest.leaveType}
               </p>
-              <p className="text-sm md:text-base">
+              <p className="text-xs">
                 <strong>Duration:</strong> {selectedRequest.totalDays} days
               </p>
-              <p className="text-sm md:text-base">
+              <p className="text-xs break-words">
                 <strong>Reason:</strong> {selectedRequest.reason || "-"}
               </p>
 
               {selectedRequest.currentRemaining && (
                 <p
-                  className={`mt-2 text-sm md:text-base ${
+                  className={`mt-1 text-xs break-words ${
                     selectedRequest.currentRemaining[
                       selectedRequest.leaveType
                     ] < selectedRequest.totalDays
@@ -1131,28 +1970,28 @@ const AdminLeaves = () => {
                   {selectedRequest.currentRemaining[
                     selectedRequest.leaveType
                   ] < selectedRequest.totalDays && (
-                    <span className="ml-1">(Insufficient balance)</span>
+                    <span className="ml-0.5">(Insufficient balance)</span>
                   )}
                 </p>
               )}
             </div>
 
-            <div className="mb-3 md:mb-4">
-              <label className="block text-sm font-medium mb-1">
+            <div className="mb-2">
+              <label className="block text-xs font-medium mb-0.5">
                 Remarks (Optional)
               </label>
               <textarea
                 value={actionRemark}
                 onChange={(e) => setActionRemark(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#104774] text-sm md:text-base"
+                className="w-full border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#104774] text-xs"
                 rows="3"
                 placeholder="Add remarks for this action..."
               />
             </div>
 
-            <div className="flex justify-end space-x-2">
+            <div className="flex flex-col sm:flex-row justify-end gap-1">
               <button
-                className="px-3 md:px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition-colors text-sm md:text-base"
+                className="px-2 py-1 rounded bg-gray-300 hover:bg-gray-400 transition-colors text-xs order-2 sm:order-1"
                 onClick={() => {
                   document.getElementById("actionModal").classList.add("hidden");
                   setActionRemark("");
@@ -1160,1238 +1999,28 @@ const AdminLeaves = () => {
               >
                 Cancel
               </button>
-              <button
-                className="px-3 md:px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors text-sm md:text-base"
-                onClick={() => handleAction(selectedRequest._id, "reject")}
-              >
-                Reject
-              </button>
-              <button
-                className="px-3 md:px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors text-sm md:text-base"
-                onClick={() => handleAction(selectedRequest._id, "approve")}
-              >
-                Approve
-              </button>
+              <div className="flex space-x-1 order-1 sm:order-2">
+                <button
+                  className="px-2 py-1 rounded bg-red-600 text-white hover:bg-red-700 transition-colors text-xs flex-1"
+                  onClick={() => handleAction(selectedRequest._id, "reject")}
+                >
+                  Reject
+                </button>
+                <button
+                  className="px-2 py-1 rounded bg-green-600 text-white hover:bg-green-700 transition-colors text-xs flex-1"
+                  onClick={() => handleAction(selectedRequest._id, "approve")}
+                >
+                  Approve
+                </button>
+              </div>
             </div>
           </>
         )}
       </div>
-    </div> */}
-    <div
-  id="actionModal"
-  className="fixed inset-0 backdrop-blur-sm  bg-opacity-40 flex items-center justify-center hidden z-50 p-2 sm:p-3 md:p-4"
->
-  <div className="bg-white p-3 sm:p-4 md:p-6 rounded-lg md:rounded-xl w-full max-w-md mx-2 sm:mx-4 border border-gray-200 shadow-2xl max-h-[90vh] overflow-y-auto">
-    <h3 className="text-base sm:text-lg font-semibold mb-3 md:mb-4">Process Leave Request</h3>
-    {selectedRequest && (
-      <>
-        <div className="mb-3 md:mb-4 p-2 sm:p-3 bg-gray-50 rounded-lg">
-          <p className="text-xs sm:text-sm md:text-base break-words">
-            <strong>Employee:</strong> {selectedRequest.employee?.email}
-          </p>
-          <p className="text-xs sm:text-sm md:text-base">
-            <strong>Type:</strong> {selectedRequest.leaveType}
-          </p>
-          <p className="text-xs sm:text-sm md:text-base">
-            <strong>Duration:</strong> {selectedRequest.totalDays} days
-          </p>
-          <p className="text-xs sm:text-sm md:text-base break-words">
-            <strong>Reason:</strong> {selectedRequest.reason || "-"}
-          </p>
-
-          {selectedRequest.currentRemaining && (
-            <p
-              className={`mt-2 text-xs sm:text-sm md:text-base break-words ${
-                selectedRequest.currentRemaining[
-                  selectedRequest.leaveType
-                ] < selectedRequest.totalDays
-                  ? "text-red-600 font-medium"
-                  : ""
-              }`}
-            >
-              <strong>Remaining Balance:</strong>{" "}
-              {
-                selectedRequest.currentRemaining[
-                  selectedRequest.leaveType
-                ]
-              }
-              /
-              {
-                selectedRequest.balanceSnapshot?.remaining[
-                  selectedRequest.leaveType
-                ]
-              }
-              {selectedRequest.currentRemaining[
-                selectedRequest.leaveType
-              ] < selectedRequest.totalDays && (
-                <span className="ml-1">(Insufficient balance)</span>
-              )}
-            </p>
-          )}
-        </div>
-
-        <div className="mb-3 md:mb-4">
-          <label className="block text-xs sm:text-sm font-medium mb-1">
-            Remarks (Optional)
-          </label>
-          <textarea
-            value={actionRemark}
-            onChange={(e) => setActionRemark(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-2 sm:px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#104774] text-xs sm:text-sm md:text-base"
-            rows="3"
-            placeholder="Add remarks for this action..."
-          />
-        </div>
-
-        <div className="flex flex-col sm:flex-row justify-end gap-2 sm:space-x-2">
-          <button
-            className="px-3 md:px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition-colors text-xs sm:text-sm md:text-base order-3 sm:order-1"
-            onClick={() => {
-              document.getElementById("actionModal").classList.add("hidden");
-              setActionRemark("");
-            }}
-          >
-            Cancel
-          </button>
-          <div className="flex space-x-2 order-1 sm:order-2">
-            <button
-              className="px-3 md:px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors text-xs sm:text-sm md:text-base flex-1"
-              onClick={() => handleAction(selectedRequest._id, "reject")}
-            >
-              Reject
-            </button>
-            <button
-              className="px-3 md:px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors text-xs sm:text-sm md:text-base flex-1"
-              onClick={() => handleAction(selectedRequest._id, "approve")}
-            >
-              Approve
-            </button>
-          </div>
-        </div>
-      </>
-    )}
-  </div>
-</div>
+    </div>
   </div>
 );
-  // return (
-  //   <div className="flex flex-col md:flex-row gap-6 p-4 md:p-6 bg-gray-50 h-[70vh]">
-  //     {/* Mobile Sidebar Toggle */}
-  //     <div className="md:hidden flex justify-between items-center mb-4">
-  //       <h1 className="text-2xl font-bold text-gray-800">
-  //         Admin Leave Management
-  //       </h1>
-  //       <button
-  //         onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
-  //         className="p-2 rounded-lg bg-[#104774] text-white"
-  //       >
-  //         {mobileSidebarOpen ? <X size={24} /> : <Menu size={24} />}
-  //       </button>
-  //     </div>
 
-  //     {/* Main Content */}
-  //     <div className="flex-1 space-y-6">
-  //       {/* Header */}
-  //       <div className="hidden md:flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-  //         <h1 className="text-2xl font-bold text-gray-800">
-  //           Admin Leave Management
-  //         </h1>
-  //         <div className="flex flex-wrap gap-2">
-  //           <button
-  //             className="flex items-center bg-[#104774] text-white px-4 py-2 rounded-lg font-medium hover:bg-[#0d3a61] transition-all duration-200"
-  //             onClick={() => {
-  //               setSelectedPolicy(null);
-  //               document
-  //                 .getElementById("policyModal")
-  //                 .classList.remove("hidden");
-  //             }}
-  //           >
-  //             <Plus size={18} className="mr-2" /> Set Policy
-  //           </button>
-  //           <button
-  //             className="flex items-center bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-all duration-200"
-  //             onClick={fetchData}
-  //           >
-  //             <RefreshCw size={18} className="mr-2" /> Refresh
-  //           </button>
-  //         </div>
-  //       </div>
-
-  //       {/* Stats Cards */}
-  //       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-  //         <StatCard
-  //           title="Total Requests"
-  //           value={stats.total}
-  //           subtitle="This Month"
-  //           icon={Calendar}
-  //           color="bg-blue-500"
-  //         />
-  //         <StatCard
-  //           title="Pending"
-  //           value={stats.pending}
-  //           subtitle="Require Action"
-  //           icon={Clock}
-  //           color="bg-yellow-500"
-  //         />
-  //         <StatCard
-  //           title="Approved"
-  //           value={stats.approved}
-  //           subtitle="This month"
-  //           icon={CheckCircle}
-  //           color="bg-green-500"
-  //         />
-  //         <StatCard
-  //           title="Rejected"
-  //           value={stats.rejected}
-  //           subtitle="Leaves"
-  //           icon={XCircle}
-  //           color="bg-red-500"
-  //         />
-  //       </div>
-
-  //       {/* Filters and Search */}
-  //       <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-  //         <div className="flex flex-col md:flex-row gap-3 md:gap-4">
-  //           <div className="relative flex-1">
-  //             <Search
-  //               className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-  //               size={18}
-  //             />
-  //             <input
-  //               type="text"
-  //               placeholder="Search by employee, type, or reason..."
-  //               value={searchTerm}
-  //               onChange={(e) => setSearchTerm(e.target.value)}
-  //               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#104774]"
-  //             />
-  //           </div>
-
-  //           <div className="flex flex-wrap gap-2">
-  //             <select
-  //               value={statusFilter}
-  //               onChange={(e) => setStatusFilter(e.target.value)}
-  //               className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#104774] text-sm md:text-base"
-  //             >
-  //               <option value="all">All Status</option>
-  //               <option value="pending">Pending</option>
-  //               <option value="approved">Approved</option>
-  //               <option value="rejected">Rejected</option>
-  //               <option value="cancelled">Cancelled</option>
-  //             </select>
-
-  //             <select
-  //               value={typeFilter}
-  //               onChange={(e) => setTypeFilter(e.target.value)}
-  //               className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#104774] text-sm md:text-base"
-  //             >
-  //               <option value="all">All Types</option>
-  //               {activeLeaveTypes.map((type) => (
-  //                 <option key={type._id} value={type.name}>
-  //                   {type.name
-  //                     .replace(/_/g, " ")
-  //                     .replace(/\b\w/g, (l) => l.toUpperCase())}
-  //                 </option>
-  //               ))}
-  //             </select>
-  //           </div>
-  //         </div>
-
-  //         <div className="mt-2 text-sm text-gray-500">
-  //           Showing {filteredRequests.length} of {leaveRequests.length} requests
-  //         </div>
-  //       </div>
-
-  //       {/* Leave Requests Table */}
-  //       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-  //         <div className="p-4 border-b border-gray-200 flex items-center space-x-3">
-  //           <Calendar size={24} className="text-[#104774]" />
-  //           <h3 className="text-lg font-semibold text-gray-800">
-  //             All Leave Requests
-  //           </h3>
-  //         </div>
-
-  //         {loading ? (
-  //           <div className="p-8 text-center">
-  //             <RefreshCw
-  //               className="animate-spin mx-auto text-[#104774]"
-  //               size={32}
-  //             />
-  //             <p className="mt-2 text-gray-500">Loading leave requests...</p>
-  //           </div>
-  //         ) : filteredRequests.length === 0 ? (
-  //           <div className="p-8 text-center">
-  //             <p className="text-gray-500">No leave requests found</p>
-  //           </div>
-  //         ) : (
-  //           <>
-  //             {/* <div className="overflow-x-auto">
-  //               <table className="w-full border-collapse">
-  //                 <thead className="bg-[#104774] text-white">
-  //                   <tr>
-  //                     <th className="p-3 text-left font-medium text-sm md:text-base">Employee</th>
-  //                     <th className="p-3 text-left font-medium text-sm md:text-base">Type</th>
-  //                     <th className="p-3 text-left font-medium text-sm md:text-base">From</th>
-  //                     <th className="p-3 text-left font-medium text-sm md:text-base">To</th>
-  //                     <th className="p-3 text-left font-medium text-sm md:text-base">Days</th>
-  //                     <th className="p-3 text-left font-medium text-sm md:text-base">Balance</th>
-  //                     <th className="p-3 text-left font-medium text-sm md:text-base">Status</th>
-  //                     <th className="p-3 text-left font-medium text-sm md:text-base">Actions</th>
-  //                   </tr>
-  //                 </thead>
-  //                 <tbody>
-  //                   {currentItems.map((req) => {
-  //                     const hasSufficientBalance =
-  //                       req.currentRemaining &&
-  //                       req.currentRemaining[req.leaveType] >= req.totalDays;
-
-  //                     return (
-  //                       <React.Fragment key={req._id}>
-  //                         <tr className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
-  //                           <td className="p-3 text-sm md:text-base">
-  //                             {req.employee?.email || "N/A"}
-  //                           </td>
-  //                           <td className="p-3 text-sm md:text-base capitalize">
-  //                             {req.leaveType.replace(/_/g, " ")}
-  //                           </td>
-  //                           <td className="p-3 text-sm md:text-base">
-  //                             {new Date(req.fromDate).toLocaleDateString()}
-  //                           </td>
-  //                           <td className="p-3 text-sm md:text-base">
-  //                             {new Date(req.toDate).toLocaleDateString()}
-  //                           </td>
-  //                           <td className="p-3 text-sm md:text-base">{req.totalDays}</td>
-  //                           <td className="p-3 text-sm md:text-base">
-  //                             <div className="flex items-center">
-  //                               {req.currentRemaining ? (
-  //                                 <>
-  //                                   <span
-  //                                     className={
-  //                                       hasSufficientBalance
-  //                                         ? "text-green-600"
-  //                                         : "text-red-600"
-  //                                     }
-  //                                   >
-  //                                     {req.currentRemaining[req.leaveType]}/
-  //                                     {
-  //                                       req.balanceSnapshot?.remaining[
-  //                                         req.leaveType
-  //                                       ]
-  //                                     }
-  //                                   </span>
-  //                                   {!hasSufficientBalance && (
-  //                                     <AlertCircle
-  //                                       size={16}
-  //                                       className="text-red-500 ml-1"
-  //                                     />
-  //                                   )}
-  //                                 </>
-  //                               ) : (
-  //                                 <span className="text-gray-400">N/A</span>
-  //                               )}
-  //                             </div>
-  //                           </td>
-  //                           <td className="p-3">
-  //                             <StatusBadge status={req.status} />
-  //                           </td>
-  //                           <td className="p-3">
-  //                             <div className="flex space-x-2">
-  //                               <button
-  //                                 className="text-[#104774] hover:text-[#0d3a61] p-1 rounded"
-  //                                 onClick={() =>
-  //                                   setExpandedRequest(
-  //                                     expandedRequest === req._id
-  //                                       ? null
-  //                                       : req._id
-  //                                   )
-  //                                 }
-  //                                 title="View Details"
-  //                               >
-  //                                 <Eye size={18} />
-  //                               </button>
-  //                               {req.status === "pending" && (
-  //                                 <>
-  //                                   <button
-  //                                     className="text-green-600 hover:text-green-800 p-1 rounded"
-  //                                     onClick={() => {
-  //                                       setSelectedRequest(req);
-  //                                       document.getElementById("actionModal").classList.remove("hidden");
-  //                                     }}
-  //                                     title="Approve"
-  //                                   >
-  //                                     <CheckCircle size={18} />
-  //                                   </button>
-  //                                   <button
-  //                                     className="text-red-600 hover:text-red-800 p-1 rounded"
-  //                                     onClick={() => {
-  //                                       setSelectedRequest(req);
-  //                                       document.getElementById("actionModal").classList.remove("hidden");
-  //                                     }}
-  //                                     title="Reject"
-  //                                   >
-  //                                     <XCircle size={18} />
-  //                                   </button>
-  //                                 </>
-  //                               )}
-  //                             </div>
-  //                           </td>
-  //                         </tr>
-  //                         {expandedRequest === req._id && (
-  //                           <tr className="bg-gray-50">
-  //                             <td colSpan="8" className="p-4">
-  //                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-  //                                 <div>
-  //                                   <h4 className="font-medium mb-2">
-  //                                     Request Details
-  //                                   </h4>
-  //                                   <p>
-  //                                     <span className="font-medium">
-  //                                       Reason:
-  //                                     </span>{" "}
-  //                                     {req.reason || "-"}
-  //                                   </p>
-  //                                   <p>
-  //                                     <span className="font-medium">
-  //                                       Applied On:
-  //                                     </span>{" "}
-  //                                     {new Date(req.appliedAt).toLocaleString()}
-  //                                   </p>
-  //                                   {req.processedBy && (
-  //                                     <p>
-  //                                       <span className="font-medium">
-  //                                         Processed By:
-  //                                       </span>{" "}
-  //                                       {req.processedBy?.email || "Admin"}
-  //                                     </p>
-  //                                   )}
-  //                                   {req.processedAt && (
-  //                                     <p>
-  //                                       <span className="font-medium">
-  //                                         Processed At:
-  //                                       </span>{" "}
-  //                                       {new Date(
-  //                                         req.processedAt
-  //                                       ).toLocaleString()}
-  //                                     </p>
-  //                                   )}
-  //                                   {req.remarks && (
-  //                                     <p>
-  //                                       <span className="font-medium">
-  //                                         Remarks:
-  //                                       </span>{" "}
-  //                                       {req.remarks}
-  //                                     </p>
-  //                                   )}
-  //                                 </div>
-  //                                 <div>
-  //                                   <h4 className="font-medium mb-2">
-  //                                     Balance Information
-  //                                   </h4>
-  //                                   <p>
-  //                                     <span className="font-medium">
-  //                                       Remaining at request:
-  //                                     </span>{" "}
-  //                                     {req.balanceSnapshot?.remaining?.[
-  //                                       req.leaveType
-  //                                     ] ?? "-"}
-  //                                   </p>
-  //                                   <p>
-  //                                     <span className="font-medium">
-  //                                       Current remaining:
-  //                                     </span>{" "}
-  //                                     {req.currentRemaining?.[req.leaveType] ??
-  //                                       "-"}
-  //                                   </p>
-  //                                   {!hasSufficientBalance && (
-  //                                     <p className="text-red-600 font-medium mt-2">
-  //                                       <AlertCircle
-  //                                         size={16}
-  //                                         className="inline mr-1"
-  //                                       />
-  //                                       Insufficient balance for this request
-  //                                     </p>
-  //                                   )}
-  //                                 </div>
-  //                               </div>
-  //                             </td>
-  //                           </tr>
-  //                         )}
-  //                       </React.Fragment>
-  //                     );
-  //                   })}
-  //                 </tbody>
-  //               </table>
-  //             </div>
-
-  //             {totalPages > 1 && (
-  //               <div className="p-4 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4">
-  //                 <div className="text-sm text-gray-500">
-  //                   Showing {indexOfFirstItem + 1} to{" "}
-  //                   {Math.min(indexOfLastItem, filteredRequests.length)} of{" "}
-  //                   {filteredRequests.length} entries
-  //                 </div>
-  //                 <div className="flex space-x-1">
-  //                   <button
-  //                     onClick={() =>
-  //                       setCurrentPage((prev) => Math.max(prev - 1, 1))
-  //                     }
-  //                     disabled={currentPage === 1}
-  //                     className="px-3 py-1 rounded border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-  //                   >
-  //                     Previous
-  //                   </button>
-
-  //                   {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-  //                     let pageNum;
-  //                     if (totalPages <= 5) {
-  //                       pageNum = i + 1;
-  //                     } else if (currentPage <= 3) {
-  //                       pageNum = i + 1;
-  //                     } else if (currentPage >= totalPages - 2) {
-  //                       pageNum = totalPages - 4 + i;
-  //                     } else {
-  //                       pageNum = currentPage - 2 + i;
-  //                     }
-
-  //                     return (
-  //                       <button
-  //                         key={pageNum}
-  //                         onClick={() => setCurrentPage(pageNum)}
-  //                         className={`px-3 py-1 rounded border text-sm ${
-  //                           currentPage === pageNum
-  //                             ? "bg-[#104774] text-white border-[#104774]"
-  //                             : "border-gray-300"
-  //                         }`}
-  //                       >
-  //                         {pageNum}
-  //                       </button>
-  //                     );
-  //                   })}
-
-  //                   <button
-  //                     onClick={() =>
-  //                       setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-  //                     }
-  //                     disabled={currentPage === totalPages}
-  //                     className="px-3 py-1 rounded border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-  //                   >
-  //                     Next
-  //                   </button>
-  //                 </div>
-  //               </div>
-  //             )} */}
-  //             <div className="overflow-x-auto">
-  //               <div className="max-h-[300px] overflow-y-auto border border-gray-200 rounded-xl shadow-sm">
-  //                 <table className="min-w-full divide-y divide-gray-200">
-  //                   {/* Header */}
-  //                   <thead className="bg-[#104774] text-white sticky top-0 z-10">
-  //                     <tr>
-  //                       <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-  //                         Employee
-  //                       </th>
-  //                       <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-  //                         Type
-  //                       </th>
-  //                       <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-  //                         From
-  //                       </th>
-  //                       <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-  //                         To
-  //                       </th>
-  //                       <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-  //                         Days
-  //                       </th>
-  //                       <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-  //                         Balance
-  //                       </th>
-  //                       <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-  //                         Status
-  //                       </th>
-  //                       <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">
-  //                         Actions
-  //                       </th>
-  //                     </tr>
-  //                   </thead>
-
-  //                   {/* Body */}
-
-  //                   <tbody className="divide-y divide-gray-100">
-  //                     {currentItems
-  //                       .sort(
-  //                         (a, b) =>
-  //                           new Date(b.appliedAt) - new Date(a.appliedAt)
-  //                       ) // 👈 latest first
-  //                       .map((req, index) => {
-  //                         const hasSufficientBalance =
-  //                           req.currentRemaining &&
-  //                           req.currentRemaining[req.leaveType] >=
-  //                             req.totalDays;
-
-  //                         return (
-  //                           <React.Fragment key={req._id}>
-  //                             {/* Row */}
-  //                             <tr
-  //                               className={`${
-  //                                 index % 2 === 0 ? "bg-white" : "bg-gray-50"
-  //                               } hover:bg-gray-100 transition-colors`}
-  //                             >
-  //                               <td className="px-6 py-3 text-sm">
-  //                                 {req.employee?.email || "N/A"}
-  //                               </td>
-  //                               <td className="px-6 py-3 text-sm capitalize">
-  //                                 {req.leaveType.replace(/_/g, " ")}
-  //                               </td>
-  //                               <td className="px-6 py-3 text-sm">
-  //                                 {format(
-  //                                   new Date(req.fromDate),
-  //                                   "dd MMM yyyy"
-  //                                 )}
-  //                               </td>
-  //                               <td className="px-6 py-3 text-sm">
-  //                                 {format(new Date(req.toDate), "dd MMM yyyy")}
-  //                               </td>
-  //                               <td className="px-6 py-3 text-sm">
-  //                                 {req.totalDays}
-  //                               </td>
-  //                               <td className="px-6 py-3 text-sm">
-  //                                 <div className="flex items-center">
-  //                                   {req.currentRemaining ? (
-  //                                     <>
-  //                                       <span
-  //                                         className={
-  //                                           hasSufficientBalance
-  //                                             ? "text-green-600 font-medium"
-  //                                             : "text-red-600 font-medium"
-  //                                         }
-  //                                       >
-  //                                         {req.currentRemaining[req.leaveType]}/
-  //                                         {
-  //                                           req.balanceSnapshot?.remaining[
-  //                                             req.leaveType
-  //                                           ]
-  //                                         }
-  //                                       </span>
-  //                                       {!hasSufficientBalance && (
-  //                                         <AlertCircle
-  //                                           size={16}
-  //                                           className="text-red-500 ml-1"
-  //                                         />
-  //                                       )}
-  //                                     </>
-  //                                   ) : (
-  //                                     <span className="text-gray-400">N/A</span>
-  //                                   )}
-  //                                 </div>
-  //                               </td>
-  //                               <td className="px-6 py-3">
-  //                                 <StatusBadge status={req.status} />
-  //                               </td>
-  //                               <td className="px-6 py-3">
-  //                                 <div className="flex space-x-2">
-  //                                   <button
-  //                                     className="p-1.5 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200"
-  //                                     onClick={() =>
-  //                                       setExpandedRequest(
-  //                                         expandedRequest === req._id
-  //                                           ? null
-  //                                           : req._id
-  //                                       )
-  //                                     }
-  //                                     title="View Details"
-  //                                   >
-  //                                     <Eye size={16} />
-  //                                   </button>
-  //                                   {req.status === "pending" && (
-  //                                     <>
-  //                                       <button
-  //                                         className="p-1.5 rounded-full bg-green-100 text-green-600 hover:bg-green-200"
-  //                                         onClick={() => {
-  //                                           setSelectedRequest(req);
-  //                                           document
-  //                                             .getElementById("actionModal")
-  //                                             .classList.remove("hidden");
-  //                                         }}
-  //                                         title="Approve"
-  //                                       >
-  //                                         <CheckCircle size={16} />
-  //                                       </button>
-  //                                       <button
-  //                                         className="p-1.5 rounded-full bg-red-100 text-red-600 hover:bg-red-200"
-  //                                         onClick={() => {
-  //                                           setSelectedRequest(req);
-  //                                           document
-  //                                             .getElementById("actionModal")
-  //                                             .classList.remove("hidden");
-  //                                         }}
-  //                                         title="Reject"
-  //                                       >
-  //                                         <XCircle size={16} />
-  //                                       </button>
-  //                                     </>
-  //                                   )}
-  //                                 </div>
-  //                               </td>
-  //                             </tr>
-
-  //                             {/* Expanded details */}
-  //                             {expandedRequest === req._id && (
-  //                               <tr>
-  //                                 <td colSpan="8" className="p-6 bg-gray-50">
-  //                                   <div className="grid md:grid-cols-2 gap-6">
-  //                                     {/* Request Details */}
-  //                                     <div className="bg-white p-5 rounded-xl shadow-sm border">
-  //                                       <h4 className="text-[#104774] font-semibold text-base mb-3">
-  //                                         Request Details
-  //                                       </h4>
-  //                                       <div className="space-y-2 text-sm">
-  //                                         <p>
-  //                                           <span className="font-medium">
-  //                                             Reason:
-  //                                           </span>{" "}
-  //                                           {req.reason || "-"}
-  //                                         </p>
-  //                                         <p>
-  //                                           <span className="font-medium">
-  //                                             Applied On:
-  //                                           </span>{" "}
-  //                                           {format(
-  //                                             new Date(req.appliedAt),
-  //                                             "dd MMM yyyy, hh:mm a"
-  //                                           )}
-  //                                         </p>
-  //                                         {req.processedBy && (
-  //                                           <p>
-  //                                             <span className="font-medium">
-  //                                               Processed By:
-  //                                             </span>{" "}
-  //                                             {req.processedBy?.email ||
-  //                                               "Admin"}
-  //                                           </p>
-  //                                         )}
-  //                                         {req.processedAt && (
-  //                                           <p>
-  //                                             <span className="font-medium">
-  //                                               Processed At:
-  //                                             </span>{" "}
-  //                                             {format(
-  //                                               new Date(req.processedAt),
-  //                                               "dd MMM yyyy, hh:mm a"
-  //                                             )}
-  //                                           </p>
-  //                                         )}
-  //                                         {req.remarks && (
-  //                                           <p>
-  //                                             <span className="font-medium">
-  //                                               Remarks:
-  //                                             </span>{" "}
-  //                                             {req.remarks}
-  //                                           </p>
-  //                                         )}
-  //                                       </div>
-  //                                     </div>
-
-  //                                     {/* Balance Info */}
-  //                                     <div className="bg-white p-5 rounded-xl shadow-sm border">
-  //                                       <h4 className="text-[#104774] font-semibold text-base mb-3">
-  //                                         Balance Information
-  //                                       </h4>
-  //                                       <div className="space-y-2 text-sm">
-  //                                         <p>
-  //                                           <span className="font-medium">
-  //                                             Remaining at request:
-  //                                           </span>{" "}
-  //                                           {req.balanceSnapshot?.remaining?.[
-  //                                             req.leaveType
-  //                                           ] ?? "-"}
-  //                                         </p>
-  //                                         <p>
-  //                                           <span className="font-medium">
-  //                                             Current remaining:
-  //                                           </span>{" "}
-  //                                           {req.currentRemaining?.[
-  //                                             req.leaveType
-  //                                           ] ?? "-"}
-  //                                         </p>
-  //                                         {!hasSufficientBalance && (
-  //                                           <p className="text-red-600 font-medium flex items-center mt-2">
-  //                                             <AlertCircle
-  //                                               size={16}
-  //                                               className="mr-1"
-  //                                             />
-  //                                             Insufficient balance for this
-  //                                             request
-  //                                           </p>
-  //                                         )}
-  //                                       </div>
-  //                                     </div>
-  //                                   </div>
-  //                                 </td>
-  //                               </tr>
-  //                             )}
-  //                           </React.Fragment>
-  //                         );
-  //                       })}
-  //                   </tbody>
-  //                 </table>
-  //               </div>
-  //             </div>
-
-  //             {/* Pagination */}
-  //             {totalPages > 1 && (
-  //               <div className="p-4 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4">
-  //                 <div className="text-sm text-gray-500">
-  //                   Showing {indexOfFirstItem + 1} to{" "}
-  //                   {Math.min(indexOfLastItem, filteredRequests.length)} of{" "}
-  //                   {filteredRequests.length} entries
-  //                 </div>
-  //                 <div className="flex space-x-1">
-  //                   <button
-  //                     onClick={() =>
-  //                       setCurrentPage((prev) => Math.max(prev - 1, 1))
-  //                     }
-  //                     disabled={currentPage === 1}
-  //                     className="px-3 py-1 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm hover:bg-gray-100"
-  //                   >
-  //                     Previous
-  //                   </button>
-
-  //                   {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-  //                     let pageNum;
-  //                     if (totalPages <= 5) {
-  //                       pageNum = i + 1;
-  //                     } else if (currentPage <= 3) {
-  //                       pageNum = i + 1;
-  //                     } else if (currentPage >= totalPages - 2) {
-  //                       pageNum = totalPages - 4 + i;
-  //                     } else {
-  //                       pageNum = currentPage - 2 + i;
-  //                     }
-
-  //                     return (
-  //                       <button
-  //                         key={pageNum}
-  //                         onClick={() => setCurrentPage(pageNum)}
-  //                         className={`px-3 py-1 rounded-lg border text-sm transition ${
-  //                           currentPage === pageNum
-  //                             ? "bg-[#104774] text-white border-[#104774]"
-  //                             : "hover:bg-gray-100 border-gray-300"
-  //                         }`}
-  //                       >
-  //                         {pageNum}
-  //                       </button>
-  //                     );
-  //                   })}
-
-  //                   <button
-  //                     onClick={() =>
-  //                       setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-  //                     }
-  //                     disabled={currentPage === totalPages}
-  //                     className="px-3 py-1 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm hover:bg-gray-100"
-  //                   >
-  //                     Next
-  //                   </button>
-  //                 </div>
-  //               </div>
-  //             )}
-  //           </>
-  //         )}
-  //       </div>
-  //     </div>
-
-  //     {/* Sidebar */}
-  //     <div
-  //       className={`w-full md:w-80 space-y-6 ${
-  //         mobileSidebarOpen ? "block" : "hidden"
-  //       } md:block`}
-  //     >
-  //       {/* Leave Policies */}
-  //       <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-  //         <div className="flex items-center justify-between mb-4">
-  //           <h3 className="text-lg font-semibold">Leave Policies</h3>
-  //           <button
-  //             className="text-[#104774] hover:text-[#0d3a61]"
-  //             onClick={() => {
-  //               setSelectedPolicy(null);
-  //               document
-  //                 .getElementById("policyModal")
-  //                 .classList.remove("hidden");
-  //             }}
-  //           >
-  //             <Plus size={20} />
-  //           </button>
-  //         </div>
-
-  //         {policies.length === 0 ? (
-  //           <p className="text-gray-500 text-center py-4">
-  //             No policies set yet
-  //           </p>
-  //         ) : (
-  //           <div className="space-y-3 max-h-80 overflow-y-auto">
-  //             {policies.map((p) => {
-  //               const leaves =
-  //                 p.leaves instanceof Map
-  //                   ? Object.fromEntries(p.leaves)
-  //                   : p.leaves;
-
-  //               return (
-  //                 <div
-  //                   key={p._id}
-  //                   className="border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow"
-  //                 >
-  //                   <div className="flex justify-between items-start mb-2">
-  //                     <h4 className="font-medium text-[#104774]">
-  //                       {p.role.charAt(0).toUpperCase() + p.role.slice(1)} -{" "}
-  //                       {p.year}
-  //                     </h4>
-  //                     <button
-  //                       onClick={() => handleEditPolicy(p)}
-  //                       className="text-gray-500 hover:text-[#104774]"
-  //                     >
-  //                       <Edit size={16} />
-  //                     </button>
-  //                   </div>
-  //                   <div className="space-y-1 text-sm">
-  //                     {Object.entries(leaves).map(([type, days]) => (
-  //                       <p key={type} className="flex justify-between">
-  //                         <span className="capitalize">
-  //                           {type.replace(/_/g, " ")}:
-  //                         </span>{" "}
-  //                         <span className="font-medium">{days}</span>
-  //                       </p>
-  //                     ))}
-  //                   </div>
-  //                 </div>
-  //               );
-  //             })}
-  //           </div>
-  //         )}
-  //       </div>
-
-  //       {/* Leave Types */}
-  //       <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-  //         <div className="flex items-center justify-between mb-4">
-  //           <h3 className="text-lg font-semibold">Leave Types</h3>
-  //           <button
-  //             className="text-[#104774] hover:text-[#0d3a61]"
-  //             onClick={() => {
-  //               setSelectedLeaveType(null);
-  //               setLeaveTypeForm({ name: "", isActive: true });
-  //               document
-  //                 .getElementById("leaveTypeModal")
-  //                 .classList.remove("hidden");
-  //             }}
-  //           >
-  //             <Plus size={20} />
-  //           </button>
-  //         </div>
-
-  //         {leaveTypes.length === 0 ? (
-  //           <p className="text-gray-500 text-center py-4">
-  //             No leave types set yet
-  //           </p>
-  //         ) : (
-  //           <div className="space-y-2 max-h-80 overflow-y-auto">
-  //             {leaveTypes.map((type) => (
-  //               <div
-  //                 key={type._id}
-  //                 className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0"
-  //               >
-  //                 <div className="flex items-center">
-  //                   <span
-  //                     className={`text-sm ${
-  //                       type.isActive
-  //                         ? "text-gray-800"
-  //                         : "text-gray-400 line-through"
-  //                     }`}
-  //                   >
-  //                     {type.name
-  //                       .replace(/_/g, " ")
-  //                       .replace(/\b\w/g, (l) => l.toUpperCase())}
-  //                   </span>
-  //                   {!type.isActive && (
-  //                     <span className="ml-2 text-xs text-gray-400">
-  //                       (Inactive)
-  //                     </span>
-  //                   )}
-  //                 </div>
-  //                 <div className="flex space-x-2">
-  //                   <button
-  //                     onClick={() => handleEditLeaveType(type)}
-  //                     className="text-gray-500 hover:text-[#104774]"
-  //                   >
-  //                     <Edit size={14} />
-  //                   </button>
-  //                   <button
-  //                     onClick={() => handleToggleLeaveTypeStatus(type._id)}
-  //                     className={
-  //                       type.isActive
-  //                         ? "text-yellow-500 hover:text-yellow-700"
-  //                         : "text-green-500 hover:text-green-700"
-  //                     }
-  //                   >
-  //                     {type.isActive ? "Disable" : "Enable"}
-  //                   </button>
-  //                   <button
-  //                     onClick={() => handleDeleteLeaveType(type._id)}
-  //                     className="text-gray-500 hover:text-red-600"
-  //                   >
-  //                     <Trash2 size={14} />
-  //                   </button>
-  //                 </div>
-  //               </div>
-  //             ))}
-  //           </div>
-  //         )}
-  //       </div>
-  //     </div>
-
-  //     {/* Policy Modal */}
-  //     <div
-  //       id="policyModal"
-  //       className="fixed inset-0 backdrop-blur-sm bg-opacity-40 flex items-center justify-center hidden z-50 p-4"
-  //     >
-  //       <div
-  //         className="bg-white p-6 rounded-xl w-full max-w-md max-h-[90vh] overflow-y-auto"
-  //         shadow-2xl
-  //       >
-  //         <h3 className="text-lg font-semibold mb-4">
-  //           {selectedPolicy ? "Edit Leave Policy" : "Create Leave Policy"}
-  //         </h3>
-  //         <form onSubmit={handlePolicySubmit} className="space-y-4">
-  //           <div>
-  //             <label className="block text-sm font-medium mb-1">Role</label>
-  //             <select
-  //               value={policyForm.role}
-  //               onChange={(e) =>
-  //                 setPolicyForm({ ...policyForm, role: e.target.value })
-  //               }
-  //               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#104774]"
-  //             >
-  //               <option value="employee">Employee</option>
-  //               <option value="hr">HR</option>
-  //             </select>
-  //           </div>
-  //           <div>
-  //             <label className="block text-sm font-medium mb-1">Year</label>
-  //             <input
-  //               type="number"
-  //               min="2000"
-  //               max="2100"
-  //               value={policyForm.year}
-  //               onChange={(e) =>
-  //                 setPolicyForm({
-  //                   ...policyForm,
-  //                   year: parseInt(e.target.value) || new Date().getFullYear(),
-  //                 })
-  //               }
-  //               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#104774]"
-  //             />
-  //           </div>
-
-  //           <div>
-  //             <label className="block text-sm font-medium mb-1">
-  //               Leave Types
-  //             </label>
-  //             <div className="space-y-3">
-  //               {leaveTypes
-  //                 .filter((lt) => lt.isActive)
-  //                 .map((type) => (
-  //                   <div key={type._id}>
-  //                     <label className="block text-sm font-medium mb-1 capitalize">
-  //                       {type.name.replace(/_/g, " ")} Leaves
-  //                     </label>
-  //                     <input
-  //                       type="number"
-  //                       min="0"
-  //                       value={policyForm.leaves[type.name] || 0}
-  //                       onChange={(e) =>
-  //                         setPolicyForm({
-  //                           ...policyForm,
-  //                           leaves: {
-  //                             ...policyForm.leaves,
-  //                             [type.name]: parseInt(e.target.value) || 0,
-  //                           },
-  //                         })
-  //                       }
-  //                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#104774]"
-  //                     />
-  //                   </div>
-  //                 ))}
-  //             </div>
-  //           </div>
-
-  //           <div className="flex justify-end space-x-2 pt-4">
-  //             <button
-  //               type="button"
-  //               className="px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition-colors"
-  //               onClick={() =>
-  //                 document.getElementById("policyModal").classList.add("hidden")
-  //               }
-  //             >
-  //               Cancel
-  //             </button>
-  //             <button
-  //               type="submit"
-  //               className="px-4 py-2 rounded-lg bg-[#104774] text-white hover:bg-[#0d3a61] transition-colors"
-  //             >
-  //               {selectedPolicy ? "Update Policy" : "Save Policy"}
-  //             </button>
-  //           </div>
-  //         </form>
-  //       </div>
-  //     </div>
-
-  //     {/* Leave Type Modal */}
-  //     <div
-  //       id="leaveTypeModal"
-  //       className="fixed inset-0 backdrop-blur-sm bg-opacity-40 flex items-center justify-center hidden z-50 p-4"
-  //     >
-  //       <div className="bg-white p-6 rounded-xl w-full max-w-md border border-gray-200 shadow-2xl">
-  //         <h3 className="text-lg font-semibold mb-4">
-  //           {selectedLeaveType ? "Edit Leave Type" : "Add Leave Type"}
-  //         </h3>
-  //         <form onSubmit={handleLeaveTypeSubmit} className="space-y-4">
-  //           <div>
-  //             <label className="block text-sm font-medium mb-1">
-  //               Leave Type Name
-  //             </label>
-  //             <input
-  //               type="text"
-  //               value={leaveTypeForm.name}
-  //               onChange={(e) =>
-  //                 setLeaveTypeForm({ ...leaveTypeForm, name: e.target.value })
-  //               }
-  //               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#104774]"
-  //               placeholder="e.g., Work From Home"
-  //               required
-  //             />
-  //             <p className="text-xs text-gray-500 mt-1">
-  //               Use underscores for spaces (e.g., "work_from_home")
-  //             </p>
-  //           </div>
-
-  //           <div className="flex justify-end space-x-2 pt-2">
-  //             <button
-  //               type="button"
-  //               className="px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition-colors"
-  //               onClick={() => {
-  //                 document
-  //                   .getElementById("leaveTypeModal")
-  //                   .classList.add("hidden");
-  //                 setSelectedLeaveType(null);
-  //               }}
-  //             >
-  //               Cancel
-  //             </button>
-  //             <button
-  //               type="submit"
-  //               className="px-4 py-2 rounded-lg bg-[#104774] text-white hover:bg-[#0d3a61] transition-colors"
-  //             >
-  //               {selectedLeaveType ? "Update" : "Add"} Leave Type
-  //             </button>
-  //           </div>
-  //         </form>
-  //       </div>
-  //     </div>
-
-  //     {/* Action Modal */}
-  //     <div
-  //       id="actionModal"
-  //       className="fixed inset-0 backdrop-blur-sm bg-opacity-40 flex items-center justify-center hidden z-50 p-4"
-  //     >
-  //       <div className="bg-white p-6 rounded-xl w-full max-w-md border border-gray-200 shadow-2xl">
-  //         <h3 className="text-lg font-semibold mb-4">Process Leave Request</h3>
-  //         {selectedRequest && (
-  //           <>
-  //             <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-  //               <p>
-  //                 <strong>Employee:</strong> {selectedRequest.employee?.email}
-  //               </p>
-  //               <p>
-  //                 <strong>Type:</strong> {selectedRequest.leaveType}
-  //               </p>
-  //               <p>
-  //                 <strong>Duration:</strong> {selectedRequest.totalDays} days
-  //               </p>
-  //               <p>
-  //                 <strong>Reason:</strong> {selectedRequest.reason || "-"}
-  //               </p>
-
-  //               {selectedRequest.currentRemaining && (
-  //                 <p
-  //                   className={`mt-2 ${
-  //                     selectedRequest.currentRemaining[
-  //                       selectedRequest.leaveType
-  //                     ] < selectedRequest.totalDays
-  //                       ? "text-red-600 font-medium"
-  //                       : ""
-  //                   }`}
-  //                 >
-  //                   <strong>Remaining Balance:</strong>{" "}
-  //                   {
-  //                     selectedRequest.currentRemaining[
-  //                       selectedRequest.leaveType
-  //                     ]
-  //                   }
-  //                   /
-  //                   {
-  //                     selectedRequest.balanceSnapshot?.remaining[
-  //                       selectedRequest.leaveType
-  //                     ]
-  //                   }
-  //                   {selectedRequest.currentRemaining[
-  //                     selectedRequest.leaveType
-  //                   ] < selectedRequest.totalDays && (
-  //                     <span className="ml-1">(Insufficient balance)</span>
-  //                   )}
-  //                 </p>
-  //               )}
-  //             </div>
-
-  //             <div className="mb-4">
-  //               <label className="block text-sm font-medium mb-1">
-  //                 Remarks (Optional)
-  //               </label>
-  //               <textarea
-  //                 value={actionRemark}
-  //                 onChange={(e) => setActionRemark(e.target.value)}
-  //                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#104774]"
-  //                 rows="3"
-  //                 placeholder="Add remarks for this action..."
-  //               />
-  //             </div>
-
-  //             <div className="flex justify-end space-x-2">
-  //               <button
-  //                 className="px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition-colors"
-  //                 onClick={() => {
-  //                   document
-  //                     .getElementById("actionModal")
-  //                     .classList.add("hidden");
-  //                   setActionRemark("");
-  //                 }}
-  //               >
-  //                 Cancel
-  //               </button>
-  //               <button
-  //                 className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
-  //                 onClick={() => handleAction(selectedRequest._id, "reject")}
-  //               >
-  //                 Reject
-  //               </button>
-  //               <button
-  //                 className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors"
-  //                 onClick={() => handleAction(selectedRequest._id, "approve")}
-  //               >
-  //                 Approve
-  //               </button>
-  //             </div>
-  //           </>
-  //         )}
-  //       </div>
-  //     </div>
-  //   </div>
-  // );
 };
 
 export default AdminLeaves;
