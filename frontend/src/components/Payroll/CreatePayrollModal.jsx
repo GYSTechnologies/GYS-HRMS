@@ -940,7 +940,6 @@ import React, { useState, useEffect } from "react";
 import axiosInstance from "../../utils/axiosInstance";
 import NotificationToast from "../../components/common/NotificationToast";
 
-
 const PRIMARY = "#104774";
 const PRIMARY_HOVER = "#0d3a61";
 
@@ -958,9 +957,8 @@ const CreatePayrollModal = ({
   const [selectedDepartment, setSelectedDepartment] = useState("");
   const [checkingPayrolls, setCheckingPayrolls] = useState(false);
 
+  const [notifications, setNotifications] = useState([]);
 
-    const [notifications, setNotifications] = useState([]);
-  
   const [formData, setFormData] = useState({
     employeeId: "",
     month: new Date().getMonth() + 1,
@@ -1374,7 +1372,6 @@ const CreatePayrollModal = ({
   const currentYear = new Date().getFullYear();
   const years = [currentYear - 1, currentYear, currentYear + 1];
 
-
   return (
     <div className="fixed inset-0 backdrop-blur-sm bg-opacity-40 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg p-4 md:p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-xl">
@@ -1630,7 +1627,9 @@ const CreatePayrollModal = ({
 
           {/* Salary Breakdown */}
           <div className="bg-gray-50 p-3 md:p-4 rounded-lg">
-            <h3 className="text-base md:text-lg font-semibold mb-2 md:mb-3">Salary Breakdown</h3>
+            <h3 className="text-base md:text-lg font-semibold mb-2 md:mb-3">
+              Salary Breakdown
+            </h3>
             <div className="space-y-1 md:space-y-2 text-sm md:text-base">
               <div className="flex justify-between">
                 <span>Basic Salary:</span>
@@ -1720,357 +1719,6 @@ const CreatePayrollModal = ({
       </div>
     </div>
   );
-  
-  // return (
-  //   <div className="fixed inset-0 backdrop-blur-sm bg-opacity-40 flex items-center justify-center p-4 z-50">
-  //     <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-xl">
-  //       <div className="flex items-center justify-between mb-6">
-  //         <div className="flex items-center gap-4">
-  //           <h2 className="text-xl font-semibold text-gray-800">
-  //             Create New Payroll
-  //           </h2>
-  //           {/* keep month/year shown in header but remove visible input fields below */}
-  //           <span className="text-gray-600">
-  //             {months[formData.month - 1]} {formData.year}
-  //           </span>
-  //         </div>
-  //         <button
-  //           onClick={onClose}
-  //           className="text-gray-400 hover:text-gray-600"
-  //         >
-  //           ✖
-  //         </button>
-  //       </div>
-
-  //       <form onSubmit={handleSubmit} className="space-y-6">
-  //         {/* Department & Employee */}
-  //         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-  //           <div>
-  //             <label className="block text-sm font-medium text-gray-700 mb-2">
-  //               Department *
-  //             </label>
-  //             <select
-  //               value={selectedDepartment}
-  //               onChange={handleDepartmentChange}
-  //               required
-  //               className="w-full p-3 border border-gray-300 rounded-md"
-  //             >
-  //               <option value="">Select Department</option>
-  //               {departments.map((d) => (
-  //                 <option key={d} value={d}>
-  //                   {d}
-  //                 </option>
-  //               ))}
-  //             </select>
-  //           </div>
-
-  //           <div>
-  //             <label className="block text-sm font-medium text-gray-700 mb-2">
-  //               Employee *
-  //             </label>
-  //             <select
-  //               name="employeeId"
-  //               value={formData.employeeId}
-  //               onChange={handleInputChange}
-  //               required
-  //               disabled={!selectedDepartment || checkingPayrolls}
-  //               className="w-full p-3 border border-gray-300 rounded-md"
-  //             >
-  //               <option value="">Select Employee</option>
-  //               {checkingPayrolls ? (
-  //                 <option disabled>Checking payroll status...</option>
-  //               ) : employees.length === 0 && selectedDepartment ? (
-  //                 <option disabled>
-  //                   All employees already have payroll for this period
-  //                 </option>
-  //               ) : (
-  //                 employees.map((emp) => (
-  //                   <option key={emp._id} value={emp._id}>
-  //                     {emp.firstName} {emp.lastName} ({emp.employeeId})
-  //                   </option>
-  //                 ))
-  //               )}
-  //             </select>
-  //           </div>
-  //         </div>
-
-  //         {/* Month/Year Selection (HIDDEN) */}
-  //         {/* The visible select inputs were removed per request — month/year remain in formData and are submitted.
-  //             If you need to change month/year programmatically, call handleMonthYearChange('month', x) or ('year', y).
-  //             We keep hidden inputs so the values are part of the form submission and accessible to any browser-based tooling. */}
-  //         <input type="hidden" name="month" value={formData.month} />
-  //         <input type="hidden" name="year" value={formData.year} />
-
-  //         {/* Salary Inputs */}
-  //         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-  //           <div>
-  //             <label className="block text-sm font-medium text-gray-700 mb-2">
-  //               Basic Salary *
-  //             </label>
-  //             <input
-  //               name="basic"
-  //               type="number"
-  //               value={formData.basic}
-  //               onChange={handleInputChange}
-  //               required
-  //               min={0}
-  //               className="w-full p-3 border border-gray-300 rounded-md"
-  //             />
-  //           </div>
-  //           <div>
-  //             <label className="block text-sm font-medium text-gray-700 mb-2">
-  //               HRA
-  //             </label>
-  //             <input
-  //               name="hra"
-  //               type="number"
-  //               value={formData.hra}
-  //               onChange={handleInputChange}
-  //               min={0}
-  //               className="w-full p-3 border border-gray-300 rounded-md"
-  //             />
-  //           </div>
-  //           <div className="grid grid-cols-2 gap-4">
-  //             <div>
-  //               <label className="block text-sm font-medium text-gray-700 mb-2">
-  //                 Tax (%)
-  //               </label>
-  //               <input
-  //                 name="taxPercentage"
-  //                 type="number"
-  //                 value={formData.taxPercentage}
-  //                 onChange={handleInputChange}
-  //                 min={0}
-  //                 max={100}
-  //                 step={0.1}
-  //                 className="w-full p-3 border border-gray-300 rounded-md"
-  //               />
-  //             </div>
-  //             <div>
-  //               <label className="block text-sm font-medium text-gray-700 mb-2">
-  //                 Tax Amount
-  //               </label>
-  //               <input
-  //                 name="tax"
-  //                 type="number"
-  //                 value={formData.tax}
-  //                 onChange={handleInputChange}
-  //                 readOnly
-  //                 className="w-full p-3 border border-gray-300 rounded-md bg-gray-100"
-  //               />
-  //             </div>
-  //           </div>
-  //         </div>
-
-  //         {/* Allowances */}
-  //         <div>
-  //           <label className="block text-sm font-medium text-gray-700 mb-2">
-  //             Allowances
-  //           </label>
-  //           <div className="space-y-3">
-  //             <div className="flex gap-2">
-  //               <input
-  //                 placeholder="Title"
-  //                 value={currentAllowance.title}
-  //                 onChange={(e) =>
-  //                   setCurrentAllowance((prev) => ({
-  //                     ...prev,
-  //                     title: e.target.value,
-  //                   }))
-  //                 }
-  //                 className="flex-1 p-2 border rounded"
-  //               />
-  //               <input
-  //                 placeholder="Amount"
-  //                 type="number"
-  //                 value={currentAllowance.amount}
-  //                 onChange={(e) =>
-  //                   setCurrentAllowance((prev) => ({
-  //                     ...prev,
-  //                     amount: Number(e.target.value),
-  //                   }))
-  //                 }
-  //                 className="w-28 p-2 border rounded"
-  //               />
-  //               <button
-  //                 type="button"
-  //                 onClick={addAllowance}
-  //                 className="px-3 py-2 bg-green-600 text-white rounded"
-  //               >
-  //                 Add
-  //               </button>
-  //             </div>
-  //             {formData.allowances.map((a, idx) => (
-  //               <div
-  //                 key={idx}
-  //                 className="flex items-center justify-between p-2 bg-gray-50 rounded"
-  //               >
-  //                 <span>
-  //                   {a.title}: ₹{(a.amount || 0).toLocaleString()}
-  //                 </span>
-  //                 <button
-  //                   type="button"
-  //                   onClick={() => removeAllowance(idx)}
-  //                   className="text-red-600"
-  //                 >
-  //                   Remove
-  //                 </button>
-  //               </div>
-  //             ))}
-  //           </div>
-  //         </div>
-
-  //         {/* Deductions */}
-  //         <div>
-  //           <label className="block text-sm font-medium text-gray-700 mb-2">
-  //             Deductions
-  //           </label>
-  //           <div className="space-y-3">
-  //             <div className="flex gap-2">
-  //               <input
-  //                 placeholder="Title"
-  //                 value={currentDeduction.title}
-  //                 onChange={(e) =>
-  //                   setCurrentDeduction((prev) => ({
-  //                     ...prev,
-  //                     title: e.target.value,
-  //                   }))
-  //                 }
-  //                 className="flex-1 p-2 border rounded"
-  //               />
-  //               <input
-  //                 placeholder="Amount"
-  //                 type="number"
-  //                 value={currentDeduction.amount}
-  //                 onChange={(e) =>
-  //                   setCurrentDeduction((prev) => ({
-  //                     ...prev,
-  //                     amount: Number(e.target.value),
-  //                   }))
-  //                 }
-  //                 className="w-28 p-2 border rounded"
-  //               />
-  //               <button
-  //                 type="button"
-  //                 onClick={addDeduction}
-  //                 className="px-3 py-2 bg-green-600 text-white rounded"
-  //               >
-  //                 Add
-  //               </button>
-  //             </div>
-  //             {formData.deductions.map((d, idx) => (
-  //               <div
-  //                 key={idx}
-  //                 className="flex items-center justify-between p-2 bg-gray-50 rounded"
-  //               >
-  //                 <span>
-  //                   {d.title}: ₹{(d.amount || 0).toLocaleString()}
-  //                 </span>
-  //                 <button
-  //                   type="button"
-  //                   onClick={() => removeDeduction(idx)}
-  //                   className="text-red-600"
-  //                 >
-  //                   Remove
-  //                 </button>
-  //               </div>
-  //             ))}
-  //           </div>
-  //         </div>
-
-  //         <div className="bg-gray-50 p-4 rounded-lg">
-  //           <h3 className="text-lg font-semibold mb-3">Salary Breakdown</h3>
-  //           <div className="space-y-2">
-  //             <div className="flex justify-between">
-  //               <span>Basic Salary:</span>
-  //               <span>₹{Number(formData.basic || 0).toLocaleString()}</span>
-  //             </div>
-  //             <div className="flex justify-between">
-  //               <span>HRA:</span>
-  //               <span>₹{Number(formData.hra || 0).toLocaleString()}</span>
-  //             </div>
-  //             <div className="flex justify-between">
-  //               <span>Allowances:</span>
-  //               <span>₹{totalAllowances.toLocaleString()}</span>
-  //             </div>
-  //             <div className="flex justify-between text-green-600 font-medium">
-  //               <span>Total Earnings:</span>
-  //               <span>
-  //                 ₹
-  //                 {(
-  //                   Number(formData.basic || 0) +
-  //                   Number(formData.hra || 0) +
-  //                   totalAllowances
-  //                 ).toLocaleString()}
-  //               </span>
-  //             </div>
-
-  //             <hr className="my-2" />
-
-  //             <div className="flex justify-between">
-  //               <span>Deductions:</span>
-  //               <span className="text-red-600">
-  //                 -₹{sumItems(formData.deductions).toLocaleString()}
-  //               </span>
-  //             </div>
-  //             <div className="flex justify-between">
-  //               <span>Tax ({formData.taxPercentage || 0}%):</span>
-  //               <span className="text-red-600">
-  //                 -₹{Number(formData.tax || 0).toLocaleString()}
-  //               </span>
-  //             </div>
-
-  //             <div className="flex justify-between text-red-600 font-medium">
-  //               <span>Total Deductions:</span>
-  //               <span>
-  //                 -₹
-  //                 {(
-  //                   sumItems(formData.deductions) + Number(formData.tax || 0)
-  //                 ).toLocaleString()}
-  //               </span>
-  //             </div>
-
-  //             <hr className="my-2" />
-
-  //             <div className="flex justify-between text-lg font-bold pt-2">
-  //               <span>Net Pay:</span>
-  //               <span className="text-green-600">
-  //                 ₹
-  //                 {(
-  //                   Number(formData.basic || 0) +
-  //                   Number(formData.hra || 0) +
-  //                   totalAllowances -
-  //                   (sumItems(formData.deductions) + Number(formData.tax || 0))
-  //                 ).toLocaleString()}
-  //               </span>
-  //             </div>
-  //           </div>
-  //         </div>
-
-  //         {/* Actions */}
-  //         <div className="flex justify-end gap-3">
-  //           <button
-  //             type="button"
-  //             onClick={onClose}
-  //             className="px-4 py-2 border rounded"
-  //           >
-  //             Cancel
-  //           </button>
-  //           <button
-  //             type="submit"
-  //             disabled={loading || !formData.employeeId}
-  //             className="px-4 py-2 rounded text-white"
-  //             style={{ backgroundColor: PRIMARY }}
-  //           >
-  //             {loading ? "Creating..." : "Create Payroll"}
-  //           </button>
-  //         </div>
-  //       </form>
-  //     </div>
-  //   </div>
-  // );
-
-
 };
 
 export default CreatePayrollModal;

@@ -1325,7 +1325,7 @@ export const downloadPayslip = async (req, res) => {
     doc
       .fontSize(10)
       .fillColor("#555")
-      .text("Innovating Tomorrow, Today", { align: "center" });
+      .text("CIN NUMBER - U62099UT2025OPC019100", { align: "center" });
     doc.moveDown(0.3);
     doc
       .fontSize(9)
@@ -1334,9 +1334,9 @@ export const downloadPayslip = async (req, res) => {
         "H N C 1 Sayam Enklavya, Haridwar, Dehradun, Uttarakhand, India - 249401",
         { align: "center" }
       );
-    doc.text("Phone: +91-8273370028 | Email: info@gystechnologies.com", {
-      align: "center",
-    });
+    // doc.text("Phone: +91-8273370028 | Email: info@gystechnologies.com", {
+    //   align: "center",
+    // });
 
     doc.moveDown(0.5);
     doc
@@ -1533,7 +1533,7 @@ export const downloadPayslip = async (req, res) => {
       .fillColor("#000")
       .text("NET PAY", tableLeft + 10, currentY);
     doc.text(
-      `₹${payroll.netPay.toLocaleString("en-IN")}`,
+      `${payroll.netPay.toLocaleString("en-IN")}`,
       tableLeft + 400,
       currentY,
       { align: "right" }
@@ -1544,7 +1544,7 @@ export const downloadPayslip = async (req, res) => {
     doc.font("Helvetica").fontSize(9).fillColor("#555");
     if (payroll.approvedByUser) {
       doc.text(
-        `Approved By: ${payroll.approvedByUser.name || "Gaurav Kakran"} (${payroll.approvedByUser.email})`,
+        `Approved By: ${payroll.approvedByUser.name || "Gaurav Kakran"}`,
         tableLeft,
         currentY
       );
@@ -1576,24 +1576,24 @@ export const downloadPayslip = async (req, res) => {
         "This is a computer generated payslip and does not require signature.",
         { align: "center" }
       );
-    doc.text(
-      `Generated on: ${new Date().toLocaleDateString("en-IN", {
-        day: "2-digit",
-        month: "long",
-        year: "numeric",
-      })}`,
-      { align: "center" }
-    );
-    doc.text(`Status: ${payroll.status.toUpperCase()}`, { align: "center" });
+    // doc.text(
+    //   `Generated on: ${new Date().toLocaleDateString("en-IN", {
+    //     day: "2-digit",
+    //     month: "long",
+    //     year: "numeric",
+    //   })}`,
+    //   { align: "center" }
+    // );
+    // doc.text(`Status: ${payroll.status.toUpperCase()}`, { align: "center" });
 
     doc.moveDown(0.5);
-    doc
-      .fontSize(7)
-      .fillColor("#aaa")
-      .text(
-        `Payroll ID: ${payroll._id} • Employee ID: ${payroll.employeeProfile.employeeId}`,
-        { align: "center" }
-      );
+    // doc
+    //   .fontSize(7)
+    //   .fillColor("#aaa")
+    //   .text(
+    //     `Payroll ID: ${payroll._id} • Employee ID: ${payroll.employeeProfile.employeeId}`,
+    //     { align: "center" }
+    //   );
 
     doc.end();
   } catch (error) {
@@ -1661,13 +1661,11 @@ export const approvePayroll = async (req, res) => {
       payroll.approvedAt = new Date();
       payroll.rejectionReason = undefined;
 
-      // ✅ SAVE UPDATED PAYROLL
+      //  SAVE UPDATED PAYROLL
       await payroll.save();
 
-      // ✅ GENERATE PAYSLIP (tumhara existing code yahan rahega)
-      // ... [REST OF YOUR EXISTING PAYSLIP CODE] ...
+
     } else if (action === "reject") {
-      // ... [YOUR EXISTING REJECTION CODE] ...
     }
 
     const populatedPayroll = await Payroll.findById(payroll._id)
